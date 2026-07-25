@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerary Builder | NextGen Travel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Itinerary builder — dark themed drag-to-add day planning -->
+    <style>
+        :root { --admin-bg: #0a0a0a; --admin-card: #141414; --admin-border: #222; --admin-accent: #d4a373; --admin-text: #e0e0e0; --admin-muted: #666; }
+        body { background: var(--admin-bg); color: var(--admin-text); font-family: 'Inter', sans-serif; }
+        .builder-header { padding: 4rem 0 2rem; border-bottom: 1px solid var(--admin-border); margin-bottom: 2rem; }
+        .day-card { background: var(--admin-card); border: 1px solid var(--admin-border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+        .day-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .day-card-header h5 { margin: 0; font-family: 'Playfair Display', serif; color: white; }
+        .activity-item { background: rgba(255,255,255,0.03); border: 1px solid var(--admin-border); border-radius: 6px; padding: 1rem; margin-bottom: 0.75rem; }
+        .activity-item .time-badge { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--admin-accent); }
+        .builder-input { background: transparent; border: 1px solid var(--admin-border); color: white; padding: 0.5rem 0.75rem; border-radius: 4px; width: 100%; font-size: 0.85rem; }
+        .builder-input:focus { border-color: var(--admin-accent); box-shadow: none; }
+        .builder-input::placeholder { color: var(--admin-muted); }
+        .btn-accent { background: var(--admin-accent); color: #000; border: none; border-radius: 4px; padding: 0.5rem 1.25rem; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+        .btn-accent:hover { opacity: 0.85; color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--admin-border); color: var(--admin-text); border-radius: 4px; padding: 0.5rem 1.25rem; font-size: 0.75rem; }
+        .btn-outline:hover { border-color: var(--admin-accent); color: white; }
+        .btn-danger-sm { background: transparent; border: 1px solid rgba(239,68,68,0.3); color: #ef4444; border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+        .my-itineraries { background: var(--admin-card); border: 1px solid var(--admin-border); border-radius: 8px; padding: 1.5rem; }
+        .itin-item { padding: 0.75rem 0; border-bottom: 1px solid var(--admin-border); display: flex; justify-content: space-between; align-items: center; }
+        .itin-item:last-child { border-bottom: none; }
+        .empty-state { text-align: center; padding: 3rem; color: var(--admin-muted); }
+        .doc-badge { display: inline-block; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 3px; margin-left: 0.5rem; }
+        .doc-badge-domestic { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .doc-badge-international { background: rgba(59,130,246,0.15); color: #3b82f6; }
+        .doc-badge-unknown { background: rgba(234,179,8,0.15); color: #eab308; }
+        .itin-doc-hint { font-size: 0.7rem; color: var(--admin-muted); margin-top: 0.25rem; font-style: italic; }
+        @media (max-width: 768px) { .builder-header { text-align: center; } }
+        .login-prompt { text-align: center; padding: 4rem 2rem; }
+        .login-prompt h3 { font-family: 'Playfair Display', serif; color: white; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top px-4 py-3 nav-scrolled">
+        <div class="container-fluid">
+            <a class="navbar-brand serif fw-bold text-white fs-3" href="index.html">NextGen</a>
+            <div class="ms-auto d-flex align-items-center gap-4">
+                <a href="index.html#destinations" class="text-white text-decoration-none small tracking-widest d-none d-md-block">Destinations</a>
+                <button class="btn btn-outline-light rounded-0 px-4 py-2 small tracking-widest" data-bs-toggle="modal" data-bs-target="#auth-modal">Signup / Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 100px;">
+        <div class="builder-header">
+            <h1 class="display-4 serif text-white">Itinerary Builder</h1>
+            <p class="text-muted small">Design your perfect journey — day by day, step by step.</p>
+        </div>
+
+        <div id="login-prompt" class="login-prompt" style="display:none;">
+            <h3>Sign in to build your itinerary</h3>
+            <p class="text-muted small">Create, save, and customize your dream trip.</p>
+            <button class="btn-accent" data-bs-toggle="modal" data-bs-target="#auth-modal">Sign In</button>
+        </div>
+
+        <div id="builder-content" style="display:none;">
+            <div class="row g-4">
+                <div class="col-lg-8">                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex gap-3 align-items-center">
+                            <input type="text" id="itin-name" class="builder-input" style="width: 250px;" placeholder="My Custom Trip" value="My Dream Journey">
+                            <span class="small opacity-50" id="day-count">1 day</span>
+                        </div>
+                        <button class="btn-accent" onclick="addDay()"><i class="bi bi-plus-lg"></i> Add Day</button>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-5">
+                            <label class="small tracking-widest mb-2 opacity-50">From (Country / City)</label>
+                            <input type="text" id="itin-from-loc" class="builder-input" placeholder="e.g. Kano, Nigeria or New York" list="global-locations">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="small tracking-widest mb-2 opacity-50">To (Country / Destination)</label>
+                            <input type="text" id="itin-to-loc" class="builder-input" placeholder="e.g. Abuja, Nigeria or Bali" list="global-locations">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end pb-2">
+                            <div>
+                                <span class="small tracking-widest opacity-50 d-block mb-1">Travel Docs</span>
+                                <span id="itin-doc-badge" class="doc-badge doc-badge-unknown">AUTO-DETECT</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <p id="itin-doc-hint" class="itin-doc-hint">Enter your travel locations above to see which travel documents are needed.</p>
+                        </div>
+                    </div>
+                    <div id="days-container"></div>
+                    <div class="mt-3">
+                        <button class="btn-accent" onclick="saveItinerary()"><i class="bi bi-save"></i> Save Itinerary</button>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="my-itineraries">
+                        <h6 class="tracking-widest mb-3 opacity-50">My Saved Itineraries</h6>
+                        <div id="saved-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+<script src="js/api.js"></script>
+    <datalist id="global-locations"></datalist>
+    <datalist id="global-countries"></datalist>
+    <script>
+        let dayCounter = 1;
+
+        // ===== SMART DOCUMENT DETECTION =====
+        window._countryNames = new Set();
+        window._cityToCountry = {
+          'abuja': 'Nigeria', 'kano': 'Nigeria', 'lagos': 'Nigeria', 'ibadan': 'Nigeria',
+          'port harcourt': 'Nigeria', 'aba': 'Nigeria', 'kaduna': 'Nigeria',
+          'benin city': 'Nigeria', 'enugu': 'Nigeria', 'jos': 'Nigeria',
+          'calabar': 'Nigeria', 'warri': 'Nigeria', 'owerri': 'Nigeria',
+          'akure': 'Nigeria', 'abeokuta': 'Nigeria', 'onitsha': 'Nigeria',
+          'ilorin': 'Nigeria', 'uyo': 'Nigeria', 'sokoto': 'Nigeria',
+          'johannesburg': 'South Africa', 'durban': 'South Africa', 'pretoria': 'South Africa',
+          'mumbai': 'India', 'delhi': 'India', 'bangalore': 'India',
+          'hyderabad': 'India', 'chennai': 'India', 'kolkata': 'India',
+          'pune': 'India', 'ahmedabad': 'India', 'jaipur': 'India',
+          'shanghai': 'China', 'shenzhen': 'China', 'guangzhou': 'China',
+          'beijing': 'China', 'tianjin': 'China', 'chongqing': 'China',
+          'milan': 'Italy', 'naples': 'Italy', 'turin': 'Italy',
+          'palermo': 'Italy', 'genoa': 'Italy', 'florence': 'Italy',
+          'rome': 'Italy', 'madrid': 'Spain', 'london': 'United Kingdom',
+          'osaka': 'Japan',
+          'birmingham': 'United Kingdom', 'manchester': 'United Kingdom',
+          'liverpool': 'United Kingdom', 'glasgow': 'United Kingdom',
+          'los angeles': 'United States', 'chicago': 'United States',
+          'houston': 'United States', 'phoenix': 'United States',
+          'philadelphia': 'United States', 'san antonio': 'United States',
+          'san diego': 'United States', 'dallas': 'United States',
+          'miami': 'United States', 'seattle': 'United States',
+          'toronto': 'Canada', 'vancouver': 'Canada', 'montreal': 'Canada',
+          'calgary': 'Canada', 'edmonton': 'Canada', 'ottawa': 'Canada',
+          'melbourne': 'Australia', 'sydney': 'Australia', 'brisbane': 'Australia',
+          'perth': 'Australia', 'adelaide': 'Australia',
+          'accra': 'Ghana', 'kumasi': 'Ghana', 'nairobi': 'Kenya',
+          'mombasa': 'Kenya', 'kisumu': 'Kenya', 'dubai': 'UAE',
+          'abu dhabi': 'UAE', 'sharjah': 'UAE', 'hong kong': 'China',
+          'singapore': 'Singapore', 'kuala lumpur': 'Malaysia'
+        };
+        window._destToCountry = {
+          'amalfi poetry': 'Italy', 'amalfi': 'Italy', 'alpine silence': 'Switzerland',
+          'swiss alps': 'Switzerland', 'alps': 'Switzerland', 'kyoto ritual': 'Japan',
+          'kyoto': 'Japan', 'dolomites dawn': 'Italy', 'dolomites': 'Italy',
+          'santorini horizon': 'Greece', 'santorini': 'Greece', 'icelandic element': 'Iceland',
+          'iceland': 'Iceland', 'marrakech mystique': 'Morocco', 'marrakech': 'Morocco',
+          'banff solitude': 'Canada', 'banff': 'Canada', 'patagonia frontier': 'Argentina',
+          'patagonia': 'Argentina', 'queenstown aether': 'New Zealand', 'queenstown': 'New Zealand',
+          'bali temple': 'Indonesia', 'bali': 'Indonesia', 'provence golden': 'France',
+          'provence': 'France', 'maldives azure': 'Maldives', 'maldives': 'Maldives',
+          'tuscany golden': 'Italy', 'tuscany': 'Italy', 'seychelles dream': 'Seychelles',
+          'seychelles': 'Seychelles', 'paris eternal': 'France', 'paris': 'France',
+          'venice timeless': 'Italy', 'venice': 'Italy', 'costa rica wild': 'Costa Rica',
+          'costa rica': 'Costa Rica', 'nepal ascent': 'Nepal', 'nepal': 'Nepal',
+          'mozambique shore': 'Mozambique', 'mozambique': 'Mozambique', 'big sur': 'United States',
+          'sedona vortex': 'United States', 'sedona': 'United States', 'norwegian fjords': 'Norway',
+          'norway': 'Norway', 'sri lanka spice': 'Sri Lanka', 'sri lanka': 'Sri Lanka',
+          'azores mystic': 'Portugal', 'azores': 'Portugal', 'orlando wonder': 'United States',
+          'orlando': 'United States', 'tokyo boundless': 'Japan', 'tokyo': 'Japan',
+          'dubai spectacle': 'UAE', 'dubai': 'UAE', 'barcelona vibe': 'Spain',
+          'barcelona': 'Spain', 'cancun paradise': 'Mexico', 'cancun': 'Mexico',
+          'greek islands sun': 'Greece', 'greek islands': 'Greece',
+          'mauritius haven': 'Mauritius', 'mauritius': 'Mauritius',
+          'cape town': 'South Africa', 'zanzibar': 'Tanzania',
+          'nairobi': 'Kenya', 'egypt': 'Egypt', 'bangkok': 'Thailand',
+          'phuket': 'Thailand', 'seville': 'Spain',
+          'new york': 'United States', 'tulum': 'Mexico',
+          'rio de janeiro': 'Brazil', 'rio': 'Brazil', 'cusco': 'Peru',
+          'buenos aires': 'Argentina', 'amazon': 'Brazil',
+          'sydney': 'Australia', 'bora bora': 'French Polynesia',
+          'great barrier reef': 'Australia', 'fiji': 'Fiji',
+          'antarctica': 'Antarctica'
+        };
+
+        function extractCountryFrom(str) {
+          if (!str) return null;
+          const s = str.trim();
+          if (!s) return null;
+          // Exact match
+          for (const country of window._countryNames) {
+            if (s.toLowerCase() === country.toLowerCase()) return country;
+          }
+          // Comma-separated
+          const commaIdx = s.lastIndexOf(',');
+          if (commaIdx > -1) {
+            const afterComma = s.substring(commaIdx + 1).trim();
+            for (const country of window._countryNames) {
+              if (afterComma.toLowerCase() === country.toLowerCase()) return country;
+            }
+          }
+          // City lookup
+          const lower = s.toLowerCase();
+          if (window._cityToCountry[lower]) return window._cityToCountry[lower];
+          // Dest lookup
+          if (window._destToCountry[lower]) return window._destToCountry[lower];
+          return null;
+        }
+
+        function updateItinDocBadge() {
+          var fromVal = document.getElementById('itin-from-loc')?.value || '';
+          var toVal = document.getElementById('itin-to-loc')?.value || '';
+          // Fallback to profile country if from field is empty
+          if (!fromVal) {
+            try {
+              var user = JSON.parse(localStorage.getItem('nextgen_user'));
+              if (user && user.country) fromVal = user.country;
+            } catch (_) {}
+          }
+          var fromCountry = extractCountryFrom(fromVal);
+          var toCountry = extractCountryFrom(toVal);
+          var badge = document.getElementById('itin-doc-badge');
+          var hint = document.getElementById('itin-doc-hint');
+          if (!badge || !hint) return;
+          if (fromCountry && toCountry && fromCountry.toLowerCase() === toCountry.toLowerCase()) {
+            badge.textContent = 'DOMESTIC';
+            badge.className = 'doc-badge doc-badge-domestic';
+            hint.textContent = 'Domestic travel — Identity Card is required. Passport is optional.';
+          } else if (fromCountry && toCountry && fromCountry.toLowerCase() !== toCountry.toLowerCase()) {
+            badge.textContent = 'PASSPORT';
+            badge.className = 'doc-badge doc-badge-international';
+            hint.textContent = 'International travel — Passport is required. Identity Card is optional.';
+          } else if (fromVal || toVal) {
+            badge.textContent = 'AUTO-DETECT';
+            badge.className = 'doc-badge doc-badge-unknown';
+            hint.textContent = 'Enter full country name or use "City, Country" format for accurate detection.';
+          } else {
+            badge.textContent = 'AUTO-DETECT';
+            badge.className = 'doc-badge doc-badge-unknown';
+            hint.textContent = 'Enter your travel locations above to see which travel documents are needed.';
+          }
+        }
+
+        // Sync global locations for autocomplete
+        async function itinSyncLocations() {
+          try {
+            const resp = await fetch('https://restcountries.com/v3.1/all?fields=name,capital');
+            const countries = await resp.json();
+            countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+            const locList = document.getElementById('global-locations');
+            const countryList = document.getElementById('global-countries');
+            countries.forEach(c => {
+              const opt1 = document.createElement('option');
+              opt1.value = c.name.common;
+              locList.appendChild(opt1);
+              window._countryNames.add(c.name.common);
+              const opt2 = document.createElement('option');
+              opt2.value = c.name.common;
+              countryList.appendChild(opt2);
+              if (c.capital && c.capital[0]) {
+                const capOpt = document.createElement('option');
+                capOpt.value = c.capital[0] + ', ' + c.name.common;
+                locList.appendChild(capOpt);
+              }
+            });
+            ['USA', 'UK', 'United States', 'United Kingdom', 'UAE', 'U.S.A', 'England', 'Britain', 'America'].forEach(function(c) {
+              window._countryNames.add(c);
+            });
+          } catch (_) {}
+        }
+
+        let dayCounter = 1;
+
+        function checkAuth() {
+            const token = api.getToken();
+            if (token) {
+                document.getElementById('login-prompt').style.display = 'none';
+                document.getElementById('builder-content').style.display = 'block';
+                loadSaved();
+            } else {
+                document.getElementById('login-prompt').style.display = 'block';
+                document.getElementById('builder-content').style.display = 'none';
+            }
+        }
+
+        function createDayHTML(dayNum) {
+            return `
+                <div class="day-card" data-day="${dayNum}">
+                    <div class="day-card-header">
+                        <h5>Day ${dayNum}</h5>
+                        <button class="btn-danger-sm" onclick="removeDay(${dayNum})"><i class="bi bi-trash"></i></button>
+                    </div>
+                    <div class="activities-container" data-day="${dayNum}">
+                        <div class="activity-item">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-2">
+                                    <input type="text" class="builder-input time-input" placeholder="09:00" style="font-size:0.75rem;">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="builder-input title-input" placeholder="Activity title">
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="builder-input location-input" placeholder="Location">
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <button class="btn-danger-sm" onclick="this.closest('.activity-item').remove()"><i class="bi bi-x"></i></button>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <textarea class="builder-input desc-input" rows="2" placeholder="Description..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-outline btn-sm mt-2" onclick="addActivity(${dayNum})" style="font-size:0.7rem;">+ Add Activity</button>
+                </div>
+            `;
+        }
+
+        function addDay() {
+            dayCounter++;
+            const container = document.getElementById('days-container');
+            container.insertAdjacentHTML('beforeend', createDayHTML(dayCounter));
+            updateDayCount();
+        }
+
+        function removeDay(num) {
+            const card = document.querySelector(`.day-card[data-day="${num}"]`);
+            if (card && document.querySelectorAll('.day-card').length > 1) {
+                card.remove();
+                renumberDays();
+            }
+        }
+
+        function renumberDays() {
+            document.querySelectorAll('.day-card').forEach((card, i) => {
+                card.dataset.day = i + 1;
+                card.querySelector('h5').textContent = `Day ${i + 1}`;
+                card.querySelector('.activities-container').dataset.day = i + 1;
+                card.querySelector('button[onclick*="addActivity"]').setAttribute('onclick', `addActivity(${i + 1})`);
+                card.querySelector('button[onclick*="removeDay"]').setAttribute('onclick', `removeDay(${i + 1})`);
+            });
+            dayCounter = document.querySelectorAll('.day-card').length;
+            updateDayCount();
+        }
+
+        function addActivity(dayNum) {
+            const container = document.querySelector(`.activities-container[data-day="${dayNum}"]`);
+            const html = `
+                <div class="activity-item">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-2">
+                            <input type="text" class="builder-input time-input" placeholder="09:00" style="font-size:0.75rem;">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="builder-input title-input" placeholder="Activity title">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="builder-input location-input" placeholder="Location">
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <button class="btn-danger-sm" onclick="this.closest('.activity-item').remove()"><i class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <textarea class="builder-input desc-input" rows="2" placeholder="Description..."></textarea>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function updateDayCount() {
+            const count = document.querySelectorAll('.day-card').length;
+            document.getElementById('day-count').textContent = count + ' day' + (count > 1 ? 's' : '');
+        }
+
+        async function saveItinerary() {
+            const name = document.getElementById('itin-name').value || 'My Trip';
+            const dayCards = document.querySelectorAll('.day-card');
+            const items = [];
+            dayCards.forEach(card => {
+                const dayNum = parseInt(card.dataset.day);
+                card.querySelectorAll('.activity-item').forEach(item => {
+                    items.push({
+                        day_number: dayNum,
+                        title: item.querySelector('.title-input')?.value || '',
+                        description: item.querySelector('.desc-input')?.value || '',
+                        location: item.querySelector('.location-input')?.value || '',
+                        time_slot: item.querySelector('.time-input')?.value || '',
+                    });
+                });
+            });
+
+            try {
+                await api.createItinerary({ name, days: dayCards.length, items });
+                showToast('Itinerary saved!');
+                loadSaved();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function loadSaved() {
+            const list = document.getElementById('saved-list');
+            try {
+                const itineraries = await api.getItineraries();
+                if (itineraries.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><p class="small">No itineraries yet. Build your first one!</p></div>';
+                    return;
+                }
+                list.innerHTML = itineraries.map(i => `
+                    <div class="itin-item">
+                        <div>
+                            <strong style="color:white;font-size:0.85rem;">${i.name}</strong>
+                            <span class="d-block small opacity-50">${i.days} day${i.days > 1 ? 's' : ''} · ${(i.items || []).length} activities</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn-outline btn-sm" onclick="loadItinerary(${i.id})" style="font-size:0.6rem;">Load</button>
+                            <button class="btn-danger-sm" onclick="deleteItinerary(${i.id})"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = '<div class="empty-state"><p class="small">Error loading itineraries.</p></div>';
+            }
+        }
+
+        async function loadItinerary(id) {
+            try {
+                const list = await api.getItineraries();
+                const itin = list.find(i => i.id === id);
+                if (!itin) return;
+                document.getElementById('itin-name').value = itin.name;
+                const container = document.getElementById('days-container');
+                container.innerHTML = '';
+                dayCounter = 0;
+                const dayGroups = {};
+                (itin.items || []).forEach(item => {
+                    if (!dayGroups[item.day_number]) dayGroups[item.day_number] = [];
+                    dayGroups[item.day_number].push(item);
+                });
+                Object.entries(dayGroups).sort((a, b) => a[0] - b[0]).forEach(([day, acts]) => {
+                    dayCounter++;
+                    const card = document.createElement('div');
+                    card.className = 'day-card';
+                    card.dataset.day = parseInt(day);
+                    card.innerHTML = `
+                        <div class="day-card-header">
+                            <h5>Day ${day}</h5>
+                            <button class="btn-danger-sm" onclick="removeDay(${parseInt(day)})"><i class="bi bi-trash"></i></button>
+                        </div>
+                        <div class="activities-container" data-day="${parseInt(day)}">
+                            ${acts.map(a => `
+                                <div class="activity-item">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-2">
+                                            <input type="text" class="builder-input time-input" value="${a.time_slot || ''}" style="font-size:0.75rem;">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="text" class="builder-input title-input" value="${a.title || ''}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="text" class="builder-input location-input" value="${a.location || ''}">
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <button class="btn-danger-sm" onclick="this.closest('.activity-item').remove()"><i class="bi bi-x"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <textarea class="builder-input desc-input" rows="2">${a.description || ''}</textarea>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="btn-outline btn-sm mt-2" onclick="addActivity(${parseInt(day)})" style="font-size:0.7rem;">+ Add Activity</button>
+                    `;
+                    container.appendChild(card);
+                });
+                updateDayCount();
+            } catch (err) {
+                alert('Error loading itinerary');
+            }
+        }
+
+        async function deleteItinerary(id) {
+            if (!confirm('Delete this itinerary?')) return;
+            try {
+                await api.deleteItinerary(id);
+                showToast('Itinerary deleted');
+                loadSaved();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:2rem;right:2rem;background:#141414;border:1px solid #333;padding:1rem 1.5rem;border-radius:8px;color:white;font-size:0.85rem;z-index:2000;';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            // Add first day
+            const container = document.getElementById('days-container');
+            container.innerHTML = createDayHTML(1);
+            updateDayCount();
+
+            // Init smart document detection
+            itinSyncLocations();
+            document.getElementById('itin-from-loc')?.addEventListener('input', updateItinDocBadge);
+            document.getElementById('itin-from-loc')?.addEventListener('change', updateItinDocBadge);
+            document.getElementById('itin-to-loc')?.addEventListener('input', updateItinDocBadge);
+            document.getElementById('itin-to-loc')?.addEventListener('change', updateItinDocBadge);
+
+            // Listen for auth changes
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-bs-target="#auth-modal"]');
+                if (btn) setTimeout(checkAuth, 500);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | NextGen Travel</title>
+    <!-- Bootstrap 5.3 + Icons + Custom fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Admin dashboard dark theme styles -->
+    <style>
+        :root {
+            --admin-bg: #0a0a0a;
+            --admin-card: #141414;
+            --admin-border: #222;
+            --admin-accent: #d4a373;
+            --admin-text: #e0e0e0;
+            --admin-muted: #666;
+            --admin-success: #22c55e;
+            --admin-danger: #ef4444;
+            --admin-warning: #eab308;
+        }
+        body { background: var(--admin-bg); color: var(--admin-text); font-family: 'Inter', sans-serif; }
+        
+        /* ===== Login Screen ===== */
+        .admin-login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--admin-bg);
+        }
+        .admin-login-card {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            padding: 3rem;
+            width: 100%;
+            max-width: 420px;
+        }
+        .admin-login-card input {
+            background: transparent;
+            border: 1px solid var(--admin-border);
+            color: white;
+            border-radius: 0;
+            padding: 0.75rem 1rem;
+        }
+        .admin-login-card input:focus {
+            border-color: var(--admin-accent);
+            box-shadow: none;
+        }
+        .admin-login-card input::placeholder { color: var(--admin-muted); }
+        .admin-login-btn {
+            background: var(--admin-accent);
+            color: #000;
+            border: none;
+            border-radius: 0;
+            padding: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: opacity 0.3s;
+        }
+        .admin-login-btn:hover { opacity: 0.85; color: #000; }
+        .admin-login-error { color: var(--admin-danger); font-size: 0.8rem; display: none; }
+
+        /* Dashboard Layout */
+        .admin-wrapper { display: none; min-height: 100vh; }
+        .admin-sidebar {
+            width: 260px;
+            background: var(--admin-card);
+            border-right: 1px solid var(--admin-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            overflow-y: auto;
+        }
+        .admin-sidebar-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--admin-border);
+        }
+        .admin-sidebar-brand span { color: var(--admin-accent); }
+        .admin-sidebar-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--admin-muted);
+            margin-bottom: 0.75rem;
+            padding-left: 0.75rem;
+        }
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.75rem;
+            color: var(--admin-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+        .admin-nav-item:hover { color: var(--admin-text); background: rgba(255,255,255,0.05); }
+        .admin-nav-item.active { color: var(--admin-accent); background: rgba(212,163,115,0.1); }
+        .admin-nav-item i { width: 18px; font-size: 1rem; }
+        .admin-logout-nav {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--admin-border);
+        }
+        .admin-logout-nav .admin-nav-item { color: var(--admin-danger); }
+
+        /* Main Content */
+        .admin-main {
+            margin-left: 260px;
+            padding: 2rem 2.5rem;
+            min-height: 100vh;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .admin-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            color: white;
+            margin: 0;
+        }
+        .admin-header-badge {
+            background: var(--admin-accent);
+            color: #000;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 700;
+            border-radius: 4px;
+        }
+
+        /* Stats Cards */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        .stat-card-icon {
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        .stat-card-value { font-size: 1.75rem; font-weight: 700; color: white; }
+        .stat-card-label { font-size: 0.7rem; color: var(--admin-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+        .stat-card-change { font-size: 0.7rem; margin-top: 0.25rem; }
+
+        /* Sections */
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+
+        /* Tables */
+        .admin-table-wrap {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .admin-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--admin-muted);
+            border-bottom: 1px solid var(--admin-border);
+            font-weight: 600;
+        }
+        .admin-table td {
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .admin-table .empty-row td { text-align: center; color: var(--admin-muted); padding: 3rem 1rem; }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        .status-confirmed { background: rgba(34,197,94,0.15); color: var(--admin-success); }
+        .status-pending { background: rgba(234,179,8,0.15); color: var(--admin-warning); }
+        .status-cancelled { background: rgba(239,68,68,0.15); color: var(--admin-danger); }
+
+        .admin-btn {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .admin-btn:hover { opacity: 0.8; }
+        .admin-btn-sm { padding: 0.2rem 0.5rem; font-size: 0.6rem; }
+        .admin-btn-success { background: var(--admin-success); color: #000; }
+        .admin-btn-warning { background: var(--admin-warning); color: #000; }
+        .admin-btn-danger { background: var(--admin-danger); color: white; }
+        .admin-btn-outline { background: transparent; border: 1px solid var(--admin-border); color: var(--admin-text); }
+        .admin-btn-accent { background: var(--admin-accent); color: #000; }
+
+        /* Forms in modal/admin */
+        .admin-modal { background: var(--admin-card); border: 1px solid var(--admin-border); border-radius: 8px; padding: 2rem; }
+        .admin-modal input, .admin-modal select, .admin-modal textarea {
+            background: transparent;
+            border: 1px solid var(--admin-border);
+            color: white;
+            border-radius: 0;
+            padding: 0.6rem 0.75rem;
+            width: 100%;
+            font-size: 0.85rem;
+        }
+        .admin-modal input:focus, .admin-modal select:focus, .admin-modal textarea:focus {
+            border-color: var(--admin-accent);
+            box-shadow: none;
+        }
+        .admin-modal input::placeholder, .admin-modal textarea::placeholder { color: var(--admin-muted); }
+        .admin-modal select option { background: var(--admin-card); color: white; }
+        .admin-modal label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--admin-muted); margin-bottom: 0.4rem; display: block; }
+        .admin-modal .form-group { margin-bottom: 1rem; }
+
+        /* Action toolbar */
+        .admin-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .admin-toolbar-left { display: flex; gap: 0.75rem; align-items: center; }
+        .admin-toolbar input, .admin-toolbar select {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+        .admin-toolbar input:focus, .admin-toolbar select:focus { border-color: var(--admin-accent); box-shadow: none; }
+        .admin-toolbar input::placeholder { color: var(--admin-muted); }
+
+        /* Detail modal overlay */
+        .admin-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .admin-overlay.show { display: flex; }
+        .admin-overlay-content {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .admin-overlay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .admin-overlay-header h3 { font-size: 1.2rem; color: white; margin: 0; font-family: 'Playfair Display', serif; }
+        .admin-overlay-close {
+            background: none; border: none; color: var(--admin-muted); font-size: 1.5rem; cursor: pointer;
+        }
+        .admin-overlay-close:hover { color: white; }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .admin-sidebar { width: 100%; height: auto; position: relative; padding: 1rem; }
+            .admin-main { margin-left: 0; padding: 1rem; }
+            .admin-wrapper { display: none; flex-direction: column; }
+            .stat-grid { grid-template-columns: 1fr 1fr; }
+            .admin-toolbar { flex-direction: column; gap: 0.75rem; align-items: stretch; }
+            .admin-table-wrap { overflow-x: auto; }
+        }
+
+        /* Dashboard chart placeholder */
+        .admin-chart-placeholder {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--admin-muted);
+        }
+
+        /* Toast notification */
+        .admin-toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
+            display: none;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+        }
+        .admin-toast.show { display: flex; align-items: center; gap: 0.75rem; }
+        .admin-toast i { font-size: 1.1rem; }
+        .admin-toast.success i { color: var(--admin-success); }
+        .admin-toast.error i { color: var(--admin-danger); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .admin-mobile-toggle {
+            display: none;
+            background: none;
+            border: 1px solid var(--admin-border);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .admin-sidebar-close {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--admin-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+        @media (max-width: 768px) {
+            .admin-mobile-toggle { display: block; }
+            .admin-sidebar { display: none; }
+            .admin-sidebar.show { display: flex; }
+            .admin-sidebar-close { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="admin-login-screen" class="admin-login-screen">
+    <div class="admin-login-card">
+        <div class="text-center mb-4">
+            <h2 class="serif text-white fs-3 mb-1">NextGen</h2>
+            <p class="small opacity-50">Admin Sanctuary</p>
+        </div>
+        <form id="admin-login-form">
+            <div class="mb-3">
+                <label class="small tracking-widest mb-2 opacity-50">Admin Email</label>
+                <input type="email" id="admin-email" value="admin@nextgen.com" required>
+            </div>
+            <div class="mb-4">
+                <label class="small tracking-widest mb-2 opacity-50">Password</label>
+                <input type="password" id="admin-password" required>
+            </div>
+            <div id="admin-login-error" class="admin-login-error mb-3">Invalid admin credentials. Please try again.</div>
+            <button type="submit" class="admin-login-btn w-100">Enter Sanctuary</button>
+        </form>
+        <div class="text-center mt-3">
+            <a href="index.html" class="small opacity-50 text-white text-decoration-none">← Back to Site</a>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Dashboard -->
+<div id="admin-wrapper" class="admin-wrapper">
+
+    <!-- ==================== SIDEBAR NAVIGATION ==================== -->
+    <nav class="admin-sidebar" id="admin-sidebar">
+        <button class="admin-sidebar-close" id="admin-sidebar-close">✕</button>
+        <a href="#" class="admin-sidebar-brand">NextGen <span>Admin</span></a>
+
+        <div class="admin-sidebar-label">Main</div>
+        <button class="admin-nav-item active" data-section="dashboard">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+        </button>
+        <button class="admin-nav-item" data-section="bookings">
+            <i class="bi bi-journal-text"></i> Bookings
+        </button>
+        <button class="admin-nav-item" data-section="destinations">
+            <i class="bi bi-geo-alt-fill"></i> Destinations
+        </button>
+        <button class="admin-nav-item" data-section="trips">
+            <i class="bi bi-truck"></i> Trips
+        </button>
+
+        <div class="admin-sidebar-label mt-3">Management</div>
+        <button class="admin-nav-item" data-section="users">
+            <i class="bi bi-people-fill"></i> Users
+        </button>
+        <button class="admin-nav-item" data-section="contacts">
+            <i class="bi bi-envelope-fill"></i> Contact Submissions
+        </button>
+        <button class="admin-nav-item" data-section="newsletter">
+            <i class="bi bi-megaphone-fill"></i> Newsletter
+        </button>
+        <button class="admin-nav-item" data-section="logs">
+            <i class="bi bi-clock-history"></i> Audit Logs
+        </button>
+        <button class="admin-nav-item" data-section="documents">
+            <i class="bi bi-file-text"></i> Documents
+        </button>
+
+        <div class="admin-logout-nav">
+            <button class="admin-nav-item" id="admin-logout-btn">
+                <i class="bi bi-box-arrow-left"></i> Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== MAIN CONTENT AREA ==================== -->
+    <main class="admin-main">
+        <div class="admin-header">
+            <div class="d-flex align-items-center gap-3">
+                <button class="admin-mobile-toggle" id="admin-mobile-toggle"><i class="bi bi-list"></i></button>
+                <h1 id="admin-page-title">Dashboard</h1>
+            </div>
+            <span class="admin-header-badge" id="admin-header-badge">Admin</span>
+        </div>
+
+        <!-- Section: Dashboard -->
+        <div id="section-dashboard" class="admin-section active">
+            <div class="stat-grid" id="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(212,163,115,0.15); color: var(--admin-accent);"><i class="bi bi-journal-text"></i></div>
+                    <div class="stat-card-value" id="stat-bookings">0</div>
+                    <div class="stat-card-label">Total Bookings</div>
+                    <div class="stat-card-change" id="stat-bookings-change" style="color: var(--admin-success);">↑ Active reservations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(34,197,94,0.15); color: var(--admin-success);"><i class="bi bi-currency-dollar"></i></div>
+                    <div class="stat-card-value" id="stat-revenue">$0</div>
+                    <div class="stat-card-label">Total Revenue</div>
+                    <div class="stat-card-change" id="stat-revenue-change" style="color: var(--admin-muted);">All time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(59,130,246,0.15); color: #3b82f6;"><i class="bi bi-people-fill"></i></div>
+                    <div class="stat-card-value" id="stat-users">0</div>
+                    <div class="stat-card-label">Registered Users</div>
+                    <div class="stat-card-change" id="stat-users-change" style="color: var(--admin-muted);">Total accounts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(168,85,247,0.15); color: #a855f7;"><i class="bi bi-star-fill"></i></div>
+                    <div class="stat-card-value" id="stat-reviews">0</div>
+                    <div class="stat-card-label">Reviews</div>
+                    <div class="stat-card-change" id="stat-reviews-change" style="color: var(--admin-muted);">Guest reviews</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(234,179,8,0.15); color: var(--admin-warning);"><i class="bi bi-envelope-fill"></i></div>
+                    <div class="stat-card-value" id="stat-contacts">0</div>
+                    <div class="stat-card-label">Contact Messages</div>
+                    <div class="stat-card-change" id="stat-contacts-change" style="color: var(--admin-muted);">Unread inquiries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-icon" style="background: rgba(236,72,153,0.15); color: #ec4899;"><i class="bi bi-megaphone-fill"></i></div>
+                    <div class="stat-card-value" id="stat-newsletter">0</div>
+                    <div class="stat-card-label">Newsletter Subscribers</div>
+                    <div class="stat-card-change" id="stat-newsletter-change" style="color: var(--admin-muted);">Email subscribers</div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="admin-table-wrap">
+                        <div style="padding: 1rem 1rem 0; font-size: 0.8rem; color: white; letter-spacing: 0.05em;">Recent Bookings</div>
+                        <table class="admin-table">
+                            <thead><tr><th>Ref</th><th>Guest</th><th>Destination</th><th>Status</th></tr></thead>
+                            <tbody id="dashboard-recent-bookings"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="admin-table-wrap">
+                        <div style="padding: 1rem 1rem 0; font-size: 0.8rem; color: white; letter-spacing: 0.05em;">Recent Contacts</div>
+                        <table class="admin-table">
+                            <thead><tr><th>Name</th><th>Email</th><th>Subject</th><th>Date</th></tr></thead>
+                            <tbody id="dashboard-recent-contacts"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Bookings -->
+        <div id="section-bookings" class="admin-section">
+            <div class="admin-toolbar">
+                <div class="admin-toolbar-left">
+                    <input type="text" id="bookings-search" placeholder="Search bookings..." style="width: 220px;">
+                    <select id="bookings-filter-status">
+                        <option value="all">All Status</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <span class="small opacity-50" id="bookings-count">0 bookings</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Ref</th>
+                            <th>Guest Name</th>
+                            <th>Destination</th>
+                            <th>Date</th>
+                            <th>Guests</th>
+                            <th>Total</th>
+                            <th>Travel Doc</th>
+                            <th>Hotel</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookings-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Destinations -->
+        <div id="section-destinations" class="admin-section">
+            <div class="admin-toolbar">
+                <button class="admin-btn admin-btn-accent" onclick="openDestModal()"><i class="bi bi-plus-lg"></i> Add Destination</button>
+                <span class="small opacity-50" id="dest-count">0 destinations</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Edition</th>
+                            <th>Price</th>
+                            <th>Vibe</th>
+                            <th>Itinerary Steps</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="destinations-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Trips -->
+        <div id="section-trips" class="admin-section">
+            <div class="admin-toolbar">
+                <button class="admin-btn admin-btn-accent" onclick="openTripModal()"><i class="bi bi-plus-lg"></i> Add Trip</button>
+                <span class="small opacity-50" id="trips-count">0 trips</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Capacity</th>
+                            <th>Booked</th>
+                            <th>Available</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trips-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Users -->
+        <div id="section-users" class="admin-section">
+            <div class="admin-toolbar">
+                <input type="text" id="users-search" placeholder="Search users..." style="width: 220px;">
+                <span class="small opacity-50" id="users-count">0 users</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Passport</th>
+                            <th>ID Card</th>
+                            <th>Verified</th>
+                            <th>Registered</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Contacts -->
+        <div id="section-contacts" class="admin-section">
+            <div class="admin-toolbar">
+                <input type="text" id="contacts-search" placeholder="Search messages..." style="width: 220px;">
+                <span class="small opacity-50" id="contacts-count">0 messages</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Subject</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                            <th>Read</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contacts-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Newsletter -->
+        <div id="section-newsletter" class="admin-section">
+            <div class="admin-toolbar">
+                <input type="text" id="newsletter-search" placeholder="Search subscribers..." style="width: 220px;">
+                <span class="small opacity-50" id="newsletter-count">0 subscribers</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Email</th><th>Subscribed Date</th></tr>
+                    </thead>
+                    <tbody id="newsletter-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Audit Logs -->
+        <div id="section-logs" class="admin-section">
+            <div class="admin-toolbar">
+                <span class="small opacity-50" id="logs-count">0 entries</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Admin</th><th>Action</th><th>Details</th><th>IP</th><th>Date</th></tr>
+                    </thead>
+                    <tbody id="logs-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Documents -->
+        <div id="section-documents" class="admin-section">
+            <div class="admin-toolbar">
+                <div class="admin-toolbar-left">
+                    <input type="text" id="documents-search" placeholder="Search users..." style="width: 220px;">
+                    <select id="documents-filter-status">
+                        <option value="all">All Documents</option>
+                        <option value="passport">Has Passport</option>
+                        <option value="idcard">Has ID Card</option>
+                        <option value="both">Has Both</option>
+                        <option value="none">No Documents</option>
+                    </select>
+                </div>
+                <span class="small opacity-50" id="documents-count">0 users</span>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Passport</th>
+                            <th>ID Card</th>
+                            <th>Doc Status</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documents-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Overlay for modals -->
+    <div class="admin-overlay" id="admin-overlay">
+        <div class="admin-overlay-content">
+            <div class="admin-overlay-header">
+                <h3 id="overlay-title">Edit Destination</h3>
+                <button class="admin-overlay-close" onclick="closeOverlay()">✕</button>
+            </div>
+            <div id="overlay-body"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="admin-toast" id="admin-toast">
+        <i class="bi bi-check-circle-fill"></i>
+        <span id="toast-message">Action completed.</span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+<script src="js/api.js?v=2"></script>
+<script src="js/admin.js?v=2"></script>
+</body>
+</html>

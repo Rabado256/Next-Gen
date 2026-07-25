@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results | NextGen Travel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Search results page — flight/hotel/holiday listings, filters, availability -->
+    <style>
+        /* Search Results Specific Styles */
+        .doc-badge-sm { display: inline-block; font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 3px; margin-left: 0.4rem; vertical-align: middle; }
+        .doc-badge-passport { background: rgba(59,130,246,0.12); color: #2563eb; }
+        .doc-badge-identity { background: rgba(34,197,94,0.12); color: #16a34a; }
+        .doc-banner { background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; }
+        .doc-banner-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .doc-banner-icon.domestic { background: #dcfce7; color: #16a34a; }
+        .doc-banner-icon.international { background: #dbeafe; color: #2563eb; }
+        .doc-banner-icon.unknown { background: #fef3c7; color: #d97706; }
+
+        .results-header-sticky {
+            position: sticky;
+            top: 72px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .condensed-search {
+            display: flex;
+            align-items: center;
+            background: #f4f4f4;
+            border-radius: 100px;
+            padding: 0.25rem 0.25rem 0.25rem 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .condensed-search input {
+            border: none;
+            background: transparent;
+            font-size: 0.9rem;
+            font-weight: 500;
+            outline: none;
+            flex: 1;
+        }
+
+        .condensed-search .search-btn {
+            background: var(--primary-black);
+            color: white;
+            border: none;
+            border-radius: 100px;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-sidebar {
+            position: sticky;
+            top: 140px;
+            height: fit-content;
+        }
+
+        .filter-group {
+            margin-bottom: 2rem;
+        }
+
+        .filter-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(0,0,0,0.4);
+            margin-bottom: 1rem;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--primary-black);
+            cursor: pointer;
+        }
+
+        .filter-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-black);
+        }
+
+        .result-card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        }
+
+        .result-card-img {
+            height: 240px;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .result-card-body {
+            padding: 1.5rem;
+        }
+
+        .result-card-tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--comptoir-ochre);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .result-card-title {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-card-meta {
+            font-size: 0.85rem;
+            color: rgba(0,0,0,0.5);
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 1rem;
+        }
+
+        .result-price {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .btn-explore-sm {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.75rem;
+            border-radius: 100px;
+            border: 1px solid var(--primary-black);
+            background: transparent;
+            color: var(--primary-black);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+        }
+
+        .btn-explore-sm:hover {
+            background: var(--primary-black);
+            color: white;
+        }
+
+        .navbar.nav-scrolled {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .navbar.nav-scrolled .navbar-brand,
+        .navbar.nav-scrolled .text-white,
+        .navbar.nav-scrolled .btn-outline-light {
+            color: var(--primary-black) !important;
+            border-color: var(--primary-black) !important;
+        }
+
+        @media (max-width: 768px) {
+            .filter-sidebar {
+                position: static;
+                margin-bottom: 2rem;
+            }
+        }
+
+        /* Availability Check Overlay */
+        .avail-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avail-modal {
+            background: #fff;
+            padding: 3rem 2.5rem;
+            max-width: 460px;
+            width: 92%;
+            text-align: center;
+        }
+        .avail-content { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .avail-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid #eee;
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: avail-spin 0.8s linear infinite;
+        }
+        @keyframes avail-spin { to { transform: rotate(360deg); } }
+        .avail-icon {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: 700;
+        }
+        .avail-icon-success { background: #d4edda; color: #155724; }
+        .avail-icon-fail { background: #f8d7da; color: #721c24; }
+        .avail-status {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #333;
+        }
+        .avail-suggestion {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: -0.25rem;
+        }
+        .avail-dates {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 0.5rem 0;
+        }
+        .avail-dates .btn-alt-date {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            border: 1px solid #ddd;
+            background: #fafafa;
+            color: #333;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .avail-dates .btn-alt-date:hover {
+            border-color: #000;
+            background: #000;
+            color: #fff;
+        }
+        .avail-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+            margin-top: 0.75rem;
+        }
+        .avail-actions .btn { font-size: 0.75rem; letter-spacing: 0.05em; }
+    </style>
+</head>
+<body class="bg-white">
+
+    <!-- Standard Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top px-4 py-3">
+        <div class="container-fluid">
+            <a class="navbar-brand serif fw-bold text-white fs-3" href="index.html">NextGen</a>
+            <div class="ms-auto d-flex align-items-center gap-4">
+                <a href="index.html#destinations" class="text-white text-decoration-none small tracking-widest d-none d-md-block">Destinations</a>
+                <a href="index.html#inspirations" class="text-white text-decoration-none small tracking-widest d-none d-md-block">Inspirations</a>
+                <button class="btn btn-outline-light rounded-0 px-4 py-2 small tracking-widest" data-bs-toggle="modal" data-bs-target="#auth-modal">Signup / Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header (Gap for fixed nav) -->
+    <div style="height: 80px;"></div>
+
+    <!-- Sticky Condensed Search Bar -->
+    <header class="results-header-sticky">
+        <div class="container">
+            <div class="condensed-search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3 opacity-50"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="Search destinations, vibes, or experiences..." value="Italy, Mediterranean" id="search-query-input">
+                <button class="search-btn">Search</button>
+            </div>
+            <!-- Travel Documents Banner -->
+            <div id="search-doc-banner" class="doc-banner" style="display:none;">
+                <div id="search-doc-icon" class="doc-banner-icon unknown">?</div>
+                <div>
+                    <strong id="search-doc-title" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Travel Documents</strong>
+                    <p id="search-doc-desc" class="mb-0 small text-muted" style="font-size:0.75rem;"></p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container py-5">
+        <div class="row">
+            <!-- Filter Sidebar -->
+            <aside class="col-lg-3">
+                <div class="filter-sidebar pe-lg-4">
+                    <h2 class="serif mb-4">Filters</h2>
+                    
+                    <div class="filter-group">
+                        <div class="filter-title">Price Range</div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="p1">
+                            <label for="p1">$0 - $2,000</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="p2">
+                            <label for="p2">$2,000 - $5,000</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="p3">
+                            <label for="p3">$5,000+</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="filter-title">Vibe</div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="v1" checked>
+                            <label for="v1">Romantic</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="v2">
+                            <label for="v2">Adventure</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="v3">
+                            <label for="v3">Solo Silence</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="v4">
+                            <label for="v4">Family Heritage</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="filter-title">Duration</div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="d1">
+                            <label for="d1">1-3 Days</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="d2" checked>
+                            <label for="d2">4-7 Days</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="d3">
+                            <label for="d3">8-14 Days</label>
+                        </div>
+                        <div class="filter-option">
+                            <input type="checkbox" id="d4">
+                            <label for="d4">2 Weeks+</label>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Results Grid -->
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <p class="small text-muted mb-0">Showing 18 curated sanctuaries</p>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-black text-decoration-none small dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
+                            Sort by: Featured
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end rounded-0 border-0 shadow-sm">
+                            <li><a class="dropdown-item small" href="#">Price: Low to High</a></li>
+                            <li><a class="dropdown-item small" href="#">Price: High to Low</a></li>
+                            <li><a class="dropdown-item small" href="#">Newest First</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Amalfi -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=amalfi" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=600&h=400" alt="Amalfi" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Romantic Sanctuary</span>
+                                <h3 class="result-card-title">Amalfi Coast, Italy</h3>
+                                <p class="result-card-meta">June 17 — June 24 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$2,450 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Kyoto -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=kyoto" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=600&h=400" alt="Kyoto" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Solo Silence</span>
+                                <h3 class="result-card-title">Kyoto Ritual, Japan</h3>
+                                <p class="result-card-meta">Oct 12 — Oct 19 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$3,100 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Alps -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=alps" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=400" alt="Alps" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Peak Solitude</span>
+                                <h3 class="result-card-title">Swiss Alps, Switzerland</h3>
+                                <p class="result-card-meta">Jan 10 — Jan 15 // 5 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$4,200 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Dolomites -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=dolomites" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=600&h=400" alt="Dolomites" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Adventure Quest</span>
+                                <h3 class="result-card-title">The Dolomites, Italy</h3>
+                                <p class="result-card-meta">July 05 — July 12 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$2,800 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Marrakech -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=marrakech" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&q=80&w=600&h=400" alt="Marrakech" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Medina Mystery</span>
+                                <h3 class="result-card-title">Marrakech, Morocco</h3>
+                                <p class="result-card-meta">Sept 20 — Sept 27 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$1,950 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Santorini -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=santorini" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&q=80&w=600&h=400" alt="Santorini" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Azure Escape</span>
+                                <h3 class="result-card-title">Santorini, Greece</h3>
+                                <p class="result-card-meta">June 10 — June 17 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$3,400 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Iceland -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=iceland" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1504214208698-ea1916a2195a?auto=format&fit=crop&q=80&w=600&h=400" alt="Iceland" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Wild Elemental</span>
+                                <h3 class="result-card-title">Iceland</h3>
+                                <p class="result-card-meta">Mar 03 — Mar 10 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$4,500 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Patagonia -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=patagonia" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&q=80&w=600&h=400" alt="Patagonia" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">End of the World</span>
+                                <h3 class="result-card-title">Patagonia, Argentina</h3>
+                                <p class="result-card-meta">Nov 15 — Nov 25 // 10 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$5,200 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Queenstown -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=queenstown" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&q=80&w=600&h=400" alt="Queenstown" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Adrenaline Peak</span>
+                                <h3 class="result-card-title">Queenstown, New Zealand</h3>
+                                <p class="result-card-meta">Feb 08 — Feb 15 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$4,700 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Maldives -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=maldives" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&q=80&w=600&h=400" alt="Maldives" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Ocean Sanctuary</span>
+                                <h3 class="result-card-title">The Maldives</h3>
+                                <p class="result-card-meta">Dec 20 — Dec 27 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$6,200 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Tuscany -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=tuscany" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=600&h=400" alt="Tuscany" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Hills of Gold</span>
+                                <h3 class="result-card-title">Tuscany, Italy</h3>
+                                <p class="result-card-meta">May 12 — May 19 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$3,800 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Bali -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=bali" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600&h=400" alt="Bali" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Island Spirit</span>
+                                <h3 class="result-card-title">Bali, Indonesia</h3>
+                                <p class="result-card-meta">Aug 05 — Aug 12 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$2,800 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Tokyo -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=tokyo" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=600&h=400" alt="Tokyo" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Future Family</span>
+                                <h3 class="result-card-title">Tokyo, Japan</h3>
+                                <p class="result-card-meta">Apr 10 — Apr 17 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$5,200 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Barcelona -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=barcelona" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=600&h=400" alt="Barcelona" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Catalan Soul</span>
+                                <h3 class="result-card-title">Barcelona, Spain</h3>
+                                <p class="result-card-meta">Sept 05 — Sept 12 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$3,800 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Costa Rica -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=costa-rica" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=600&h=400" alt="Costa Rica" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Pura Vida</span>
+                                <h3 class="result-card-title">Costa Rica</h3>
+                                <p class="result-card-meta">July 20 — July 27 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$3,600 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Dubai -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=dubai" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=600&h=400" alt="Dubai" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Desert Oasis</span>
+                                <h3 class="result-card-title">Dubai, UAE</h3>
+                                <p class="result-card-meta">Oct 15 — Oct 22 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$5,500 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Cancun -->
+                    <div class="col-md-6">
+                        <a href="destination.html?id=cancun" class="result-card">
+                            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600&h=400" alt="Cancun" class="result-card-img">
+                            <div class="result-card-body">
+                                <span class="result-card-tag">Mayan Coast</span>
+                                <h3 class="result-card-title">Cancun, Mexico</h3>
+                                <p class="result-card-meta">Nov 10 — Nov 17 // 7 Nights</p>
+                                <div class="result-card-footer">
+                                    <div class="result-price">$3,400 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <span class="btn-explore-sm">Explore</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <nav id="pagination-nav" class="mt-5"></nav>
+            </div>
+        </div>
+    </main>
+
+    <!-- Standard Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <h3 class="serif fw-bold mb-2">NextGen</h3>
+                    <p class="small opacity-50" style="max-width: 260px;">Curated journeys beyond the ordinary. Every destination is a story waiting to be lived.</p>
+                </div>
+                <div class="footer-links">
+                    <h6>Discover</h6>
+                    <a href="destination.html">Destinations</a>
+                    <a href="index.html#inspirations">Inspirations</a>
+                    <a href="index.html#about">About</a>
+                    <a href="blog.html">Blog</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-links">
+                    <h6>Support</h6>
+                    <a href="help.html">FAQ</a>
+                    <a href="legal.html">Cancellation Policy</a>
+                    <a href="#">Track Booking</a>
+                    <a href="mailto:curated@nextgentravel.com">24/7 Support</a>
+                </div>
+                <div class="footer-links">
+                    <h6>Newsletter</h6>
+                    <p class="small opacity-50 mb-3">Join our inner circle for curated sanctuary updates.</p>
+                    <form id="newsletter-form" class="d-flex gap-2">
+                        <input type="email" class="form-control bg-transparent border-secondary text-white rounded-0 form-control-sm" placeholder="Email address" required>
+                        <button type="submit" class="btn btn-outline-light btn-sm rounded-0">Join</button>
+                    </form>
+                </div>
+                <div class="footer-links">
+                    <h6>Connect</h6>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                        <a href="#" aria-label="Twitter"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                        <a href="#" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                    </div>
+                    <h6 class="mt-4">Preferences</h6>
+                    <div class="d-flex gap-2">
+                        <div class="footer-country">Global <span style="opacity:0.4;">▼</span></div>
+                        <div class="footer-currency">USD <span style="opacity:0.4;">▼</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-links">
+                    <a href="legal.html">Privacy Policy</a>
+                    <a href="legal.html">Terms of Use</a>
+                    <a href="legal.html">Site Map</a>
+                    <a href="admin.html" class="opacity-50">Admin</a>
+                </div>
+                <p class="small opacity-50">&copy; 2026 NextGen Travel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Availability Check Overlay -->
+    <div id="avail-overlay" class="avail-overlay" style="display:none;">
+        <div class="avail-modal">
+            <!-- Loading State -->
+            <div id="avail-loading" class="avail-content">
+                <div class="avail-spinner"></div>
+                <p class="avail-status">Checking Availability</p>
+                <p class="avail-suggestion" id="avail-checking-dest"></p>
+            </div>
+            <!-- Success State -->
+            <div id="avail-success" class="avail-content" style="display:none;">
+                <div class="avail-icon avail-icon-success">✓</div>
+                <p class="avail-status">Sanctuary Available</p>
+                <p class="avail-suggestion">Redirecting you now...</p>
+            </div>
+            <!-- Fail State -->
+            <div id="avail-fail" class="avail-content" style="display:none;">
+                <div class="avail-icon avail-icon-fail">✕</div>
+                <p class="avail-status">Fully Booked for <span id="avail-date"></span></p>
+                <p class="avail-suggestion">We suggest these alternative dates:</p>
+                <div id="avail-alternatives" class="avail-dates"></div>
+                <div class="avail-actions">
+                    <button id="avail-continue" class="btn btn-dark rounded-0 py-2">Continue to Reserve Anyway</button>
+                    <button id="avail-close" class="btn btn-outline-dark rounded-0 py-2">Browse Other Destinations</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+<script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // ===== SMART DOCUMENT DETECTION =====
+        window._srCountryNames = new Set(['USA','UK','United States','United Kingdom','UAE','U.S.A','England','Britain','America']);
+        // Populate country names from dest-to-country values (reverse lookup)
+        window._srDestToCountry = {
+          'amalfi':'Italy','amalfi coast':'Italy','swiss alps':'Switzerland','kyoto':'Japan',
+          'dolomites':'Italy','santorini':'Greece','iceland':'Iceland','marrakech':'Morocco',
+          'banff':'Canada','patagonia':'Argentina','queenstown':'New Zealand','bali':'Indonesia',
+          'provence':'France','maldives':'Maldives','tuscany':'Italy','seychelles':'Seychelles',
+          'paris':'France','venice':'Italy','costa rica':'Costa Rica','nepal':'Nepal',
+          'mozambique':'Mozambique','big sur':'United States','sedona':'United States',
+          'norway':'Norway','sri lanka':'Sri Lanka','azores':'Portugal','orlando':'United States',
+          'tokyo':'Japan','dubai':'UAE','barcelona':'Spain','cancun':'Mexico',
+          'greek islands':'Greece','mauritius':'Mauritius',
+          'cape town':'South Africa','zanzibar':'Tanzania','nairobi':'Kenya','egypt':'Egypt',
+          'bangkok':'Thailand','phuket':'Thailand','jaipur':'India','seville':'Spain',
+          'new york':'United States','tulum':'Mexico','rio de janeiro':'Brazil','cusco':'Peru',
+          'buenos aires':'Argentina','amazon':'Brazil','sydney':'Australia',
+          'bora bora':'French Polynesia','great barrier reef':'Australia','fiji':'Fiji',
+          'antarctica':'Antarctica'
+        };
+        // Build reverse country lookup from dest-to-country values
+        Object.values(window._srDestToCountry).forEach(function(c) { window._srCountryNames.add(c); });
+        // Add common countries manually for safety
+        ['Nigeria','South Africa','India','China','Italy','United Kingdom','United States','Canada','Australia',
+         'Ghana','Kenya','UAE','Singapore','Malaysia','France','Spain','Germany','Japan','Thailand',
+         'Indonesia','Maldives','Greece','Morocco','Iceland','New Zealand','Argentina','Chile','Peru',
+         'Brazil','Mexico','Costa Rica','Norway','Portugal','Egypt','Tanzania','Mauritius','Fiji',
+         'French Polynesia','Antarctica','Netherlands','Sweden','Denmark','Ireland','Turkey'].forEach(function(c) { window._srCountryNames.add(c); });
+        window._srCityToCountry = {
+          'abuja':'Nigeria','kano':'Nigeria','lagos':'Nigeria','ibadan':'Nigeria',
+          'port harcourt':'Nigeria','aba':'Nigeria','kaduna':'Nigeria',
+          'benin city':'Nigeria','enugu':'Nigeria','jos':'Nigeria',
+          'calabar':'Nigeria','warri':'Nigeria','owerri':'Nigeria',
+          'akure':'Nigeria','abeokuta':'Nigeria','onitsha':'Nigeria',
+          'ilorin':'Nigeria','uyo':'Nigeria','sokoto':'Nigeria',
+          'johannesburg':'South Africa','durban':'South Africa','pretoria':'South Africa',
+          'mumbai':'India','delhi':'India','bangalore':'India',
+          'milan':'Italy','naples':'Italy','florence':'Italy',
+          'los angeles':'United States','chicago':'United States','miami':'United States',
+          'toronto':'Canada','vancouver':'Canada','montreal':'Canada',
+          'melbourne':'Australia','sydney':'Australia','brisbane':'Australia',
+          'nairobi':'Kenya','mombasa':'Kenya','dubai':'UAE',
+          'singapore':'Singapore','kuala lumpur':'Malaysia'
+        };
+
+
+        function srExtractCountry(str) {
+          if (!str) return null;
+          const s = str.trim().toLowerCase();
+          if (!s) return null;
+          for (const c of window._srCountryNames) { if (s === c.toLowerCase()) return c; }
+          const ci = s.lastIndexOf(',');
+          if (ci > -1) {
+            const ac = s.substring(ci + 1).trim();
+            for (const c of window._srCountryNames) { if (ac === c.toLowerCase()) return c; }
+          }
+          if (window._srCityToCountry[s]) return window._srCityToCountry[s];
+          if (window._srDestToCountry[s]) return window._srDestToCountry[s];
+          return null;
+        }
+
+        function updateSearchDocBanner() {
+          var user = JSON.parse(localStorage.getItem('nextgen_user'));
+          var banner = document.getElementById('search-doc-banner');
+          var icon = document.getElementById('search-doc-icon');
+          var title = document.getElementById('search-doc-title');
+          var desc = document.getElementById('search-doc-desc');
+          if (!banner || !icon || !title || !desc) return;
+          // Try to detect user's country from profile or URL
+          var query = (document.getElementById('search-query-input')?.value || '').toLowerCase();
+          var params = new URLSearchParams(window.location.search);
+          var urlFrom = params.get('from') || '';
+          var urlQuery = params.get('q') || '';
+          var userCountry = null;
+          if (urlFrom) {
+            userCountry = srExtractCountry(urlFrom);
+          } else if (user) {
+            // Try to guess from stored user data (they might have a country saved)
+            userCountry = user.country || null;
+          }
+          // Determine the destination country from the query
+          var destCountry = srExtractCountry(query) || srExtractCountry(urlQuery);
+          if (!destCountry && query) {
+            // Try matching destination titles
+            for (var key in window._srDestToCountry) {
+              if (query.includes(key)) { destCountry = window._srDestToCountry[key]; break; }
+            }
+          }
+          if (userCountry && destCountry) {
+            banner.style.display = 'flex';
+            if (userCountry.toLowerCase() === destCountry.toLowerCase()) {
+              icon.className = 'doc-banner-icon domestic';
+              icon.textContent = 'ID';
+              title.textContent = 'Domestic Travel';
+              desc.textContent = 'Identity Card is required. Passport is optional for ' + destCountry + '.';
+            } else {
+              icon.className = 'doc-banner-icon international';
+              icon.textContent = 'P';
+              title.textContent = 'International Travel';
+              desc.textContent = 'Passport is required for travel to ' + destCountry + '.';
+            }
+          } else if (query || urlQuery) {
+            banner.style.display = 'flex';
+            icon.className = 'doc-banner-icon unknown';
+            icon.textContent = '?';
+            title.textContent = 'Travel Documents';
+            desc.textContent = 'Sign in and enter your departure location to see required documents for this destination.';
+          } else {
+            banner.style.display = 'none';
+          }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Smart document detection on search
+            updateSearchDocBanner();
+            document.getElementById('search-query-input')?.addEventListener('input', updateSearchDocBanner);
+
+            // Availability Check on Explore click
+            const overlay = document.getElementById('avail-overlay');
+            const loading = document.getElementById('avail-loading');
+            const success = document.getElementById('avail-success');
+            const fail = document.getElementById('avail-fail');
+
+            function checkAvailability(redirectUrl, destName) {
+                // Reset states
+                loading.style.display = 'flex';
+                success.style.display = 'none';
+                fail.style.display = 'none';
+                overlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                document.getElementById('avail-checking-dest').textContent = destName || '';
+
+                // Simulate real-time availability check (1.8s)
+                setTimeout(() => {
+                    const available = Math.random() > 0.35; // ~65% chance available
+
+                    if (available) {
+                        loading.style.display = 'none';
+                        success.style.display = 'flex';
+                        setTimeout(() => {
+                            window.location.href = redirectUrl;
+                        }, 900);
+                    } else {
+                        loading.style.display = 'none';
+                        fail.style.display = 'flex';
+
+                        // Show today's date
+                        const today = new Date();
+                        document.getElementById('avail-date').textContent =
+                            today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+                        // Generate 3 random alternative dates within 60 days
+                        const altContainer = document.getElementById('avail-alternatives');
+                        altContainer.innerHTML = '';
+                        const usedDates = new Set();
+                        for (let i = 0; i < 3; i++) {
+                            let d;
+                            let dateStr;
+                            do {
+                                d = new Date();
+                                d.setDate(d.getDate() + 3 + Math.floor(Math.random() * 55));
+                                dateStr = d.toISOString().split('T')[0];
+                            } while (usedDates.has(dateStr));
+                            usedDates.add(dateStr);
+
+                            const btn = document.createElement('button');
+                            btn.className = 'btn-alt-date';
+                            btn.textContent = d.toLocaleDateString('en-US', {
+                                weekday: 'short', month: 'short', day: 'numeric'
+                            });
+                            btn.addEventListener('click', () => {
+                                window.location.href = redirectUrl + '&date=' + dateStr;
+                            });
+                            altContainer.appendChild(btn);
+                        }
+
+                        // Continue anyway
+                        document.getElementById('avail-continue').onclick = () => {
+                            window.location.href = redirectUrl;
+                        };
+                        // Close overlay
+                        document.getElementById('avail-close').onclick = () => {
+                            overlay.style.display = 'none';
+                            document.body.style.overflow = '';
+                        };
+                    }
+                }, 1800);
+            }
+
+            // Intercept result card clicks (event delegation for dynamic cards too)
+            document.querySelector('#search-results-page .row.g-4').addEventListener('click', (e) => {
+                const card = e.target.closest('.result-card');
+                if (!card) return;
+                e.preventDefault();
+                const href = card.getAttribute('href');
+                const destName = card.querySelector('.result-card-title')?.textContent || '';
+                const destTag = card.querySelector('.result-card-tag')?.textContent || '';
+                checkAvailability(href, destName + ' // ' + destTag);
+            });
+
+            // Also intercept the condensed search button
+            document.querySelector('.condensed-search .search-btn')?.addEventListener('click', (e) => {
+                const input = document.querySelector('.condensed-search input');
+                const query = input ? input.value.trim() : '';
+                if (query) {
+                    window.location.href = 'search-results.html?q=' + encodeURIComponent(query);
+                }
+            });
+        });
+    </script>
+
+    <!-- Dynamic search results renderer -->
+    <script>
+    const PER_PAGE = 6;
+
+    function renderPage(page, items, grid, heading) {
+        const totalPages = Math.ceil(items.length / PER_PAGE);
+        const start = (page - 1) * PER_PAGE;
+        const pageItems = items.slice(start, start + PER_PAGE);
+
+        if (heading && page === 1) {
+            heading.textContent = `Showing ${items.length} curated ${items.length === 1 ? 'sanctuary' : 'sanctuaries'}`;
+        }
+
+        const vibeLabels = {
+            romantic: 'Romantic Sanctuary', adventure: 'Adventure Escape', solo: 'Solo Silence',
+            family: 'Family Heritage', cultural: 'Cultural Journey', wellness: 'Wellness Retreat'
+        };
+
+        grid.innerHTML = pageItems.map(d => {
+            const vibe = d.vibe || 'romantic';
+            const label = vibeLabels[vibe] || 'Curated Sanctuary';
+            const img = d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600&h=400';
+            const price = d.price ? '$' + (d.price / 2).toLocaleString() + ' <span class="small opacity-50 fw-normal">/ person</span>' : 'Contact us';
+            return `<div class="col-md-6">
+                <a href="destination.html?id=${encodeURIComponent(escapeHtml(d.id))}" class="result-card">
+                    <img src="${escapeHtml(img)}" alt="${escapeHtml(d.title || d.id)}" class="result-card-img">
+                    <div class="result-card-body">
+                        <span class="result-card-tag">${escapeHtml(label)}</span>
+                        <h3 class="result-card-title">${escapeHtml(d.title || d.id)}${d.country ? ', ' + escapeHtml(d.country) : ''}</h3>
+                        <p class="result-card-meta">${escapeHtml(d.edition || 'Curated Journey')}</p>
+                        <div class="result-card-footer">
+                            <div class="result-price">${price}</div>
+                            <span class="btn-explore-sm">Explore</span>
+                        </div>
+                    </div>
+                </a>
+            </div>`;
+        }).join('');
+
+        // Render pagination nav
+        const nav = document.getElementById('pagination-nav');
+        if (totalPages <= 1) { nav.innerHTML = ''; return; }
+        let html = '<ul class="pagination justify-content-center">';
+        html += `<li class="page-item ${page === 1 ? 'disabled' : ''}"><a class="page-link border-0 text-black bg-transparent" href="#" data-page="${page - 1}">Prev</a></li>`;
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<li class="page-item ${i === page ? 'active' : ''}"><a class="page-link border-0 ${i === page ? 'bg-black text-white' : 'text-black bg-transparent'} rounded-circle mx-1" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" href="#" data-page="${i}">${i}</a></li>`;
+        }
+        html += `<li class="page-item ${page === totalPages ? 'disabled' : ''}"><a class="page-link border-0 text-black bg-transparent" href="#" data-page="${page + 1}">Next</a></li>`;
+        html += '</ul>';
+        nav.innerHTML = html;
+
+        nav.querySelectorAll('[data-page]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                renderPage(parseInt(a.dataset.page), items, grid, heading);
+            });
+        });
+    }
+
+    (async () => {
+        let dests;
+        try {
+            dests = await api.getDestinations();
+        } catch (_) { return; }
+        if (!dests || dests.length === 0) return;
+
+        const resultsGrid = document.querySelector('#search-results-page .row.g-4');
+        const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+        if (!resultsGrid) return;
+
+        // Filter by search query if present
+        const params = new URLSearchParams(window.location.search);
+        const query = (params.get('q') || '').toLowerCase();
+        let filtered = dests;
+        if (query) {
+            filtered = dests.filter(d =>
+                (d.title || '').toLowerCase().includes(query) ||
+                (d.country || '').toLowerCase().includes(query) ||
+                (d.edition || '').toLowerCase().includes(query) ||
+                (d.id || '').toLowerCase().includes(query)
+            );
+        }
+
+        if (heading) {
+            heading.textContent = `Showing ${filtered.length} curated ${filtered.length === 1 ? 'sanctuary' : 'sanctuaries'}`;
+        }
+
+        renderPage(1, filtered, resultsGrid, heading);
+    })();
+    </script>
+</body>
+</html>

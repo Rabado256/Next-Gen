@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email | NextGen Travel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Inline styles for dark result card layout -->
+    <style>
+        .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; padding: 2rem; }
+        .result-card { background: #111; border: 1px solid #222; padding: 3rem; text-align: center; width: 100%; max-width: 420px; }
+        .result-card .icon { font-size: 3rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <!-- ==================== EMAIL VERIFICATION PAGE ==================== -->
+    <div class="auth-page">
+        <div class="result-card">
+            <!-- Dynamic status icon: hourglass / checkmark / cross -->
+            <div id="result-icon" class="icon" style="color: #eab308;">⏳</div>
+            <h2 class="serif text-white fs-4 mb-3" id="result-title">Verifying...</h2>
+            <p class="small opacity-50" id="result-msg">Please wait while we verify your email.</p>
+            <div class="mt-4"><a href="index.html" class="small text-white opacity-50">← Back to Home</a></div>
+        </div>
+    </div>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+<script src="js/api.js"></script>
+    <script>
+        (async () => {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            if (!token) {
+                document.getElementById('result-icon').textContent = '✕';
+                document.getElementById('result-icon').style.color = '#ef4444';
+                document.getElementById('result-title').textContent = 'Invalid Link';
+                document.getElementById('result-msg').textContent = 'No verification token provided.';
+                return;
+            }
+            try {
+                await api.post('/auth/verify-email', { token });
+                document.getElementById('result-icon').textContent = '✓';
+                document.getElementById('result-icon').style.color = '#22c55e';
+                document.getElementById('result-title').textContent = 'Email Verified!';
+                document.getElementById('result-msg').innerHTML = 'Your email has been verified. You can now <a href="index.html" style="color:#d4a373;">login to your account</a>.';
+            } catch (err) {
+                document.getElementById('result-icon').textContent = '✕';
+                document.getElementById('result-icon').style.color = '#ef4444';
+                document.getElementById('result-title').textContent = 'Verification Failed';
+                document.getElementById('result-msg').textContent = err.message;
+            }
+        })();
+    </script>
+</body>
+</html>

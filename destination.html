@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen Travel | Destination</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom destination page styles (overlay, gallery, booking bar) -->
+</head>
+<body class="bg-white">
+
+    <div class="row g-0">
+        <div class="col-lg-6 vh-100 position-sticky top-0 d-none d-lg-block overflow-hidden bg-black">
+            <img id="dest-hero" src="" alt="" class="w-100 h-100 object-fit-cover ken-burns" style="opacity: 0.8;">
+        </div>
+
+        <main class="col-lg-6 p-5 p-lg-5">
+            <div class="px-lg-5">
+                <nav class="mb-5">
+                    <a href="index.html#destinations" class="text-black text-decoration-none tracking-widest small fw-bold">&larr; Back to Destinations</a>
+                </nav>
+
+                <h6 id="dest-edition" class="tracking-widest mb-3 reveal-up"></h6>
+                <h1 id="dest-title" class="display-1 reveal-up mb-5"></h1>
+                
+                <p id="dest-desc" class="lead mb-5 reveal-up" style="line-height: 2;"></p>
+
+                <!-- Live Stats Widget -->
+                <div class="stats-widget rounded-0 reveal-snap mb-5 border border-dark border-opacity-10" style="background: #fafafa; color: #000;">
+                    <div class="stat-item">
+                        <span class="stat-label">Current Weather</span>
+                        <span class="stat-value" id="stat-weather">--°C</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Local Time</span>
+                        <span class="stat-value" id="stat-time">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Currency Exchange</span>
+                        <span class="stat-value" id="stat-currency">1 USD = --</span>
+                    </div>
+                </div>
+
+                <div class="py-5 border-top border-bottom border-dark my-5 reveal-up">
+                    <div class="row g-4 text-center">
+                        <div class="col-3">
+                            <i class="bi bi-airplane fs-2"></i>
+                            <p class="small tracking-widest mt-2">Private</p>
+                        </div>
+                        <div class="col-3">
+                            <i class="bi bi-house fs-2"></i>
+                            <p class="small tracking-widest mt-2">Sanctuary</p>
+                        </div>
+                        <div class="col-3">
+                            <i class="bi bi-map fs-2"></i>
+                            <p class="small tracking-widest mt-2">Curated</p>
+                        </div>
+                        <div class="col-3">
+                            <i class="bi bi-cup-hot fs-2"></i>
+                            <p class="small tracking-widest mt-2">Slow Travel</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dest-itinerary" class="itinerary-editorial"></div>
+
+                <!-- Required Documents -->
+            <section class="border border-dark p-4 mt-5 reveal-up" style="background:#fafafa;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="tracking-widest mb-2" style="font-size:0.7rem;color:var(--comptoir-navy);">Required Documents</h6>
+                        <p class="small mb-0" id="dest-doc-text">Sign in to see which travel documents are required for this destination.</p>
+                    </div>
+                    <span id="dest-doc-badge" class="doc-badge-sm doc-badge-unknown" style="display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;">AUTO-DETECT</span>
+                </div>
+            </section>
+
+            <section class="bg-black text-white p-5 mt-5 reveal-up">
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
+                            <h6 class="tracking-widest mb-2 opacity-50">Investment</h6>
+                            <h1 class="display-3 mb-0" id="total-price">$4,200</h1>
+                            <p class="small mt-2">All-Inclusive Sanctuary Package</p>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="mb-4">
+                                <label class="small tracking-widest mb-2">Guests</label>
+                                <input type="number" id="traveler-count" class="form-control bg-transparent text-white border-white rounded-0" value="1" min="1">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a id="checkout-link" href="checkout.html" class="btn btn-outline-light w-100 rounded-0 py-3">Reserve Your Journey</a>
+                                <button id="wishlist-btn" class="btn btn-outline-light rounded-0 py-3 px-4" title="Save to My Sanctuaries">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Reviews Section -->
+                <section class="mt-5 pt-3 reveal-up" id="reviews-section">
+                    <h2 class="serif mb-4">Sanctuary Reviews</h2>
+                    <div id="review-summary" class="d-flex align-items-center gap-3 mb-4">
+                        <span class="display-4 fw-bold" id="review-avg">0.0</span>
+                        <div>
+                            <div id="review-stars-display" style="color: #d4a373; font-size: 1.2rem;"></div>
+                            <span class="small text-muted" id="review-count">0 reviews</span>
+                        </div>
+                    </div>
+                    <div id="reviews-list" class="mb-4"></div>
+                    <div id="review-form-container">
+                        <h6 class="tracking-widest mb-3">Share Your Experience</h6>
+                        <div class="mb-2">
+                            <div id="star-rating" class="d-flex gap-1" style="font-size: 1.5rem; cursor: pointer;">
+                                <span data-star="1">☆</span><span data-star="2">☆</span><span data-star="3">☆</span><span data-star="4">☆</span><span data-star="5">☆</span>
+                            </div>
+                        </div>
+                        <textarea id="review-comment" class="form-control border-dark rounded-0 mb-2" rows="2" placeholder="Write your review..."></textarea>
+                        <button class="btn btn-dark rounded-0 btn-sm" onclick="submitReview()">Submit Review</button>
+                    </div>
+                </section>
+
+                <!-- Availability Calendar -->
+                <section class="mt-5 pt-3 reveal-up" id="availability-section">
+                    <h2 class="serif mb-4">Availability</h2>
+                    <div id="calendar-grid" class="row g-2"></div>
+                    <p class="small text-muted mt-2">✓ = Available &nbsp; ▢ = Limited &nbsp; ✕ = Unavailable</p>
+                </section>
+            </div>
+            <div id="page-error" class="page-error">
+                <h2>Could not load destination</h2>
+                <p>The server may be offline. Please try again later.</p>
+                <a href="index.html" style="color: #000; text-decoration: underline; font-size: 0.85rem;">Return home</a>
+            </div>
+        </main>
+        <div id="page-loading">
+            <div class="loading-spinner"></div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 0.8rem; letter-spacing: 0.1em; color: #888;">Loading sanctuary…</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <h3 class="serif fw-bold mb-2">NextGen</h3>
+                    <p class="small opacity-50" style="max-width: 260px;">Curated journeys beyond the ordinary. Every destination is a story waiting to be lived.</p>
+                </div>
+                <div class="footer-links">
+                    <h6>Discover</h6>
+                    <a href="destination.html">Destinations</a>
+                    <a href="index.html#inspirations">Inspirations</a>
+                    <a href="index.html#about">About</a>
+                    <a href="blog.html">Blog</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-links">
+                    <h6>Support</h6>
+                    <a href="help.html">FAQ</a>
+                    <a href="legal.html">Cancellation Policy</a>
+                    <a href="#">Track Booking</a>
+                    <a href="mailto:curated@nextgentravel.com">24/7 Support</a>
+                </div>
+                <div class="footer-links">
+                    <h6>Newsletter</h6>
+                    <p class="small opacity-50 mb-3">Join our inner circle for curated sanctuary updates.</p>
+                    <form id="newsletter-form" class="d-flex gap-2">
+                        <input type="email" class="form-control bg-transparent border-secondary text-white rounded-0 form-control-sm" placeholder="Email address" required>
+                        <button type="submit" class="btn btn-outline-light btn-sm rounded-0">Join</button>
+                    </form>
+                </div>
+                <div class="footer-links">
+                    <h6>Connect</h6>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                        <a href="#" aria-label="Twitter">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="#" aria-label="Instagram">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                        <a href="#" aria-label="YouTube">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                    <h6 class="mt-4">Preferences</h6>
+                    <div class="d-flex gap-2">
+                        <div class="footer-country">Global <span style="opacity:0.4;">▼</span></div>
+                        <div class="footer-currency">USD <span style="opacity:0.4;">▼</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-links">
+                    <a href="legal.html">Privacy Policy</a>
+                    <a href="legal.html">Terms of Use</a>
+                    <a href="legal.html">Site Map</a>
+                    <a href="admin.html" class="opacity-50">Admin</a>
+                </div>
+                <p class="small opacity-50">&copy; 2026 NextGen Travel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Availability Check Overlay -->
+    <div id="avail-overlay" class="avail-overlay" style="display:none;">
+        <div class="avail-modal">
+            <div id="avail-loading" class="avail-content">
+                <div class="avail-spinner"></div>
+                <p class="avail-status">Checking Availability</p>
+                <p class="avail-suggestion" id="avail-checking-dest"></p>
+            </div>
+            <div id="avail-success" class="avail-content" style="display:none;">
+                <div class="avail-icon avail-icon-success">✓</div>
+                <p class="avail-status">Sanctuary Available</p>
+                <p class="avail-suggestion">Redirecting you now...</p>
+            </div>
+            <div id="avail-fail" class="avail-content" style="display:none;">
+                <div class="avail-icon avail-icon-fail">✕</div>
+                <p class="avail-status">Fully Booked for <span id="avail-date"></span></p>
+                <p class="avail-suggestion">We suggest these alternative dates:</p>
+                <div id="avail-alternatives" class="avail-dates"></div>
+                <div class="avail-actions">
+                    <button id="avail-continue" class="btn btn-dark rounded-0 py-2">Continue to Reserve Anyway</button>
+                    <button id="avail-close" class="btn btn-outline-dark rounded-0 py-2">Pick Another Date</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Avail check overlay (same design as search-results) */
+        .avail-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .avail-modal {
+            background: #fff; padding: 3rem 2.5rem; max-width: 460px; width: 92%; text-align: center;
+        }
+        .avail-content { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .avail-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid #eee; border-top-color: #000;
+            border-radius: 50%;
+            animation: avail-spin 0.8s linear infinite;
+        }
+        @keyframes avail-spin { to { transform: rotate(360deg); } }
+        .avail-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; }
+        .avail-icon-success { background: #d4edda; color: #155724; }
+        .avail-icon-fail { background: #f8d7da; color: #721c24; }
+        .avail-status { font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #333; }
+        .avail-suggestion { font-size: 0.8rem; color: #888; margin-top: -0.25rem; }
+        .avail-dates { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 0.5rem 0; }
+        .avail-dates .btn-alt-date {
+            padding: 0.5rem 1rem; font-size: 0.75rem;
+            border: 1px solid #ddd; background: #fafafa; color: #333;
+            border-radius: 0; cursor: pointer; transition: all 0.2s;
+        }
+        .avail-dates .btn-alt-date:hover { border-color: #000; background: #000; color: #fff; }
+        .avail-actions { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin-top: 0.75rem; }
+        .avail-actions .btn { font-size: 0.75rem; letter-spacing: 0.05em; }
+
+        /* Page loading overlay */
+        #page-loading {
+            position: fixed; inset: 0; z-index: 9998;
+            background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 1.5rem;
+            transition: opacity 0.4s ease;
+        }
+        #page-loading.hidden { opacity: 0; pointer-events: none; }
+        .loading-spinner {
+            width: 44px; height: 44px;
+            border: 3px solid #eee; border-top-color: #000;
+            border-radius: 50%;
+            animation: avail-spin 0.8s linear infinite;
+        }
+        .page-error {
+            display: none;
+            text-align: center; padding: 4rem 2rem;
+        }
+        .page-error.show { display: block; }
+        .page-error h2 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .page-error p { font-size: 0.85rem; color: #888; }
+    </style>
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+<script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        async function cacheDestinationsFromApi() {
+            try {
+                const dests = await api.getDestinations();
+                const mapped = Object.fromEntries(dests.map(d => [d.id, {
+                    hero: d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1000',
+                    img: d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1000',
+                    edition: d.edition || 'Edition // ' + d.title,
+                    title: (d.title || d.id).toUpperCase(),
+                    desc: d.description || d.desc || '',
+                    price: d.price || 0,
+                    steps: d.steps || []
+                }]));
+                localStorage.setItem('nextgen_destinations', JSON.stringify(mapped));
+            } catch (_) {}
+        }
+
+        function getDestinations() {
+            const stored = localStorage.getItem('nextgen_destinations');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                return Object.fromEntries(Object.entries(parsed).map(([id, d]) => [id, {
+                    hero: d.hero || d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1000',
+                    edition: d.edition || 'Edition // ' + (d.title || id),
+                    title: (d.title || id).toUpperCase(),
+                    desc: d.desc || d.description || '',
+                    price: d.price || 0,
+                    steps: d.steps || []
+                }]));
+            }
+            return null;
+        }
+
+        (async () => {
+        try {
+            await cacheDestinationsFromApi();
+        } catch (_) {}
+        let destinations;
+        try {
+        destinations = getDestinations() || {
+            amalfi: {
+                hero: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 01 // Positano',
+                title: 'AMALFI POETRY',
+                desc: 'A curated journey along the Amalfi Coast. Experience the Mediterranean through a lens of absolute stillness, where the only sounds are waves against ancient cliffs and cicadas in the lemon groves.',
+                price: 4200,
+                steps: [
+                    { title: 'The Arrival', text: 'A private transfer from Naples through the winding coastal roads. Settle into a 17th-century villa where time feels suspended.' },
+                    { title: 'The Lemon Ritual', text: 'Explore the ancient terraced groves of Amalfi. Witness the heritage of limoncello production in absolute silence.' },
+                    { title: 'The Azure Void', text: 'A wooden boat journey to hidden coves. Swim in crystal waters and dine under the stars.' }
+                ]
+            },
+            alps: {
+                hero: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 02 // Zermatt',
+                title: 'ALPINE SILENCE',
+                desc: 'A journey into the heart of the Swiss Alps, where peaks pierce the clouds and the air carries the scent of pine and snow. Stillness at 4,000 metres.',
+                price: 4800,
+                steps: [
+                    { title: 'The Ascent', text: 'Board the Glacier Express for a panoramic rail journey to Zermatt. Your chalet awaits at the foot of the Matterhorn.' },
+                    { title: 'The High Trail', text: 'A guided hike through alpine meadows dotted with wildflowers. Stop at a mountain hut for cheese and wine with a view.' },
+                    { title: 'The Star Peak', text: 'Rise before dawn for a helicopter ascent to a remote peak. Watch the sunrise paint the Alps in gold and rose.' }
+                ]
+            },
+            kyoto: {
+                hero: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 03 // Higashiyama',
+                title: 'KYOTO RITUAL',
+                desc: 'Step into an ancient rhythm of mossy temples, bamboo groves, and tea ceremonies. Kyoto moves at its own pace — slow, deliberate, and deeply peaceful.',
+                price: 3900,
+                steps: [
+                    { title: 'The Temple Path', text: 'Walk the Philosopher\'s Path at dawn, when the cherry blossoms frame every step and the temples are still silent.' },
+                    { title: 'The Tea Lesson', text: 'A private tea ceremony in a 300-year-old machiya. Learn the art of presence from a master of the tradition.' },
+                    { title: 'The Mountain Retreat', text: 'Escape to a ryokan in the bamboo forest. Soak in an onsen under the stars, then sleep on tatami.' }
+                ]
+            },
+            dolomites: {
+                hero: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 04 // Alta Badia',
+                title: 'DOLOMITES DAWN',
+                desc: 'The pale stone peaks of the Dolomites glow rose and gold at sunrise. A land of dramatic cliffs, alpine meadows, and refuges serving world-class cuisine at altitude.',
+                price: 4500,
+                steps: [
+                    { title: 'The Sunrise Hike', text: 'Ascend to a mountain refuge before first light. Watch the Enrosadira — the moment the peaks catch fire in the dawn.' },
+                    { title: 'The Alpine Table', text: 'Lunch on a terrace at 2,500 metres. Locally foraged mushrooms, speck, and a glass of Lagrein with the clouds below you.' },
+                    { title: 'The Via Ferrata', text: 'Traverse a cliffside via ferrata with a seasoned guide. Safe, exhilarating, and unforgettable.' }
+                ]
+            },
+            santorini: {
+                hero: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 05 // Oia',
+                title: 'SANTORINI HORIZON',
+                desc: 'Blue domes, whitewashed walls, and sunsets that stop the world. Santorini is the Cycladic dream — volcanic, luminous, and utterly romantic.',
+                price: 4400,
+                steps: [
+                    { title: 'The Caldera View', text: 'Check into a cave suite carved into the caldera cliff. Your private terrace overlooks the infinite blue of the Aegean.' },
+                    { title: 'The Vineyard Walk', text: 'Tour a volcanic vineyard where Assyrtiko grapes grow in the ash. Taste wines that carry the mineral soul of the island.' },
+                    { title: 'The Sunset Sail', text: 'A catamaran cruise around the caldera. Swim in hot springs, eat grilled fish, and watch the sun drown in the sea.' }
+                ]
+            },
+            iceland: {
+                hero: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 06 // Reykjavik',
+                title: 'ICELANDIC ELEMENT',
+                desc: 'Fire, ice, water, and light. Iceland is a raw landscape of waterfalls, glaciers, volcanoes, and the northern lights dancing above it all.',
+                price: 5200,
+                steps: [
+                    { title: 'The Golden Circle', text: 'Visit Thingvellir National Park, Geysir, and Gullfoss. Walk between tectonic plates on a path carved by ancient forces.' },
+                    { title: 'The Glacier Lagoon', text: 'Kayak among icebergs at Jökulsárlón. The ice glows blue in the midnight sun or under the aurora.' },
+                    { title: 'The Northern Chase', text: 'Drive into the dark interior with an aurora guide. Wait for the sky to ignite in green and violet curtains.' }
+                ]
+            },
+            marrakech: {
+                hero: 'https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 07 // Medina',
+                title: 'MARRAKECH MYSTIQUE',
+                desc: 'A sensory immersion into the ochre city. Spice markets, hidden riads, and the Atlas Mountains on the horizon — Marrakech is a feast for the wandering soul.',
+                price: 3600,
+                steps: [
+                    { title: 'The Riad Sanctuary', text: 'Arrive at a hidden riad in the heart of the medina. Mint tea on the rooftop as the call to prayer echoes across the city.' },
+                    { title: 'The Souk Walk', text: 'Wander the labyrinthine souks with a local guide. Saffron, leather, lanterns — every stall tells a story.' },
+                    { title: 'The Atlas Escape', text: 'A day trip into the Atlas Mountains. Visit a Berber village, share couscous with a family, and breathe the mountain air.' }
+                ]
+            },
+            banff: {
+                hero: 'https://images.unsplash.com/photo-1508737804141-4c3b688e2548?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 08 // Banff',
+                title: 'BANFF SOLITUDE',
+                desc: 'Turquoise glacial lakes, towering pines, and the raw grandeur of the Canadian Rockies. Banff is wilderness on a monumental scale.',
+                price: 4900,
+                steps: [
+                    { title: 'The Lake Trail', text: 'Hike to Lake Louise at sunrise. The water is a shade of blue that seems impossible — milked by glacial silt.' },
+                    { title: 'The Mountain Lodge', text: 'Check into a backcountry lodge accessible only by foot or helicopter. No roads, no crowds — just mountains.' },
+                    { title: 'The Wildlife Watch', text: 'A guided walk through the Bow Valley. Grizzly bears, elk, and wolves roam these valleys, and you will see them.' }
+                ]
+            },
+            patagonia: {
+                hero: 'https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 09 // Torres del Paine',
+                title: 'PATAGONIA FRONTIER',
+                desc: 'The wind-scoured wilderness at the end of the world. Granite spires, electric-blue icebergs, and steppes that stretch to the horizon.',
+                price: 5600,
+                steps: [
+                    { title: 'The W Trek', text: 'Trek through the heart of Torres del Paine. Pass turquoise lakes, ancient forests, and glaciers that calve into the wind.' },
+                    { title: 'The Ice Walk', text: 'Don crampons and walk on Grey Glacier. The ice creaks and groans beneath you — a living, moving giant.' },
+                    { title: 'The Pampa Evening', text: 'Return to an estancia for a dinner of lamb asado. Watch the Southern Cross emerge over the endless plain.' }
+                ]
+            },
+            queenstown: {
+                hero: 'https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 10 // Queenstown',
+                title: 'QUEENSTOWN AETHER',
+                desc: 'Nestled between Lake Wakatipu and the Remarkables, Queenstown is the adventure capital that also knows how to be still. Thrills and tranquillity in equal measure.',
+                price: 4700,
+                steps: [
+                    { title: 'The Mountain Ascent', text: 'Take the gondola to Bob\'s Peak for a panoramic view. Then paraglide down for the ride of your life.' },
+                    { title: 'The Wine Cruise', text: 'A private boat across Lake Wakatipu to the vineyards of Gibbston Valley. Pinot noir with a mountain backdrop.' },
+                    { title: 'The Milford Sound', text: 'A scenic flight to Milford Sound. Cruise past waterfalls that plunge a thousand metres straight into the fiord.' }
+                ]
+            },
+            bali: {
+                hero: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 11 // Ubud',
+                title: 'BALI TEMPLE',
+                desc: 'Rice terraces, temple ceremonies, and the jungle hum of cicadas. Bali is a spiritual canvas where every day begins with incense and ends with sunset.',
+                price: 3800,
+                steps: [
+                    { title: 'The Rice Walk', text: 'Trek through the Tegallalang rice terraces at sunrise. Watch farmers tend paddies that have fed families for generations.' },
+                    { title: 'The Temple Circuit', text: 'Visit Besakih Mother Temple and Tirta Empul. Bathe in the holy spring and receive a blessing from a priest.' },
+                    { title: 'The Ubud Stay', text: 'Stay in a jungle villa with an infinity pool overlooking the canopy. Yoga at dawn, fresh fruit, and the sound of the river.' }
+                ]
+            },
+            provence: {
+                hero: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 12 // Luberon',
+                title: 'PROVENCE GOLDEN',
+                desc: 'Lavender fields, sunflower meadows, and hilltop villages drenched in golden light. Provence is the art of slow living — a place to wander, taste, and dream.',
+                price: 4100,
+                steps: [
+                    { title: 'The Village Trail', text: 'Walk from Gordes to Roussillon through ochre cliffs and lavender fields. Each village is a postcard made real.' },
+                    { title: 'The Market Morning', text: 'Visit the market in Apt. Choose cheeses, olives, and honey with help from the farmers who made them.' },
+                    { title: 'The Vineyard Evening', text: 'A private tasting at a Châteauneuf-du-Pape estate. The sunset lingers here, and so will you.' }
+                ]
+            },
+            maldives: {
+                hero: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 13 // North Atoll',
+                title: 'MALDIVES AZURE',
+                desc: 'Overwater villas, coral gardens, and water so clear you can see your shadow on the sand 20 metres below. The Maldives is the dictionary definition of paradise.',
+                price: 5800,
+                steps: [
+                    { title: 'The Villa Arrival', text: 'A seaplane from Malé whisks you to your private island. Your overwater villa has a glass floor and a ladder to the ocean.' },
+                    { title: 'The Reef Snorkel', text: 'Snorkel a house reef teeming with turtles, rays, and schools of neon fish. The water is warm enough to stay in all day.' },
+                    { title: 'The Sandbank Dinner', text: 'A private boat takes you to a sandbank at sunset. A table is set in the shallows, candles flicker, and the sky turns violet.' }
+                ]
+            },
+            // Romantic additions
+            tuscany: {
+                hero: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 14 // Chianti',
+                title: 'TUSCANY GOLDEN',
+                desc: 'Rolling vineyards, cypress-lined roads, and hilltop towns drenched in golden light. Tuscany is the soul of Italy — a place to sip, wander, and fall in love.',
+                price: 4400,
+                steps: [
+                    { title: 'The Vineyard Tour', text: 'A private tasting at a Chianti vineyard. Walk the rows of Sangiovese grapes and taste the wine straight from the barrel.' },
+                    { title: 'The Balloon Ride', text: 'Drift over the Tuscan hills at sunrise in a hot air balloon. The patchwork of fields and villages stretches to the horizon.' },
+                    { title: 'The Medieval Evening', text: 'Explore San Gimignano and Siena by twilight. Dinner in a stone courtyard with a view of the towers.' }
+                ]
+            },
+            seychelles: {
+                hero: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 15 // Indian Ocean',
+                title: 'SEYCHELLES DREAM',
+                desc: 'Granite boulders, powder-white beaches, and water in every shade of blue. The Seychelles is the Indian Ocean at its most untouched and romantic.',
+                price: 6800,
+                steps: [
+                    { title: 'The Island Hop', text: 'A private boat transfer between Praslin and La Digue. Giant tortoises roam free on the shores.' },
+                    { title: 'The Beach Walk', text: 'Anse Source DArgent — a beach of giant granite boulders and the softest sand you will ever feel.' },
+                    { title: 'The Coral Garden', text: 'Snorkel a protected marine park. Turtles, rays, and schools of neon fish in water as clear as glass.' }
+                ]
+            },
+            paris: {
+                hero: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 16 // City of Light',
+                title: 'PARIS ETERNAL',
+                desc: 'Romance at every corner — café terraces, hidden courtyards, and the Seine glittering under streetlights. Paris is the language of love made physical.',
+                price: 3600,
+                steps: [
+                    { title: 'The Louvre Morning', text: 'Skip-the-line access with a private guide. See the Mona Lisa in quiet, before the crowds arrive.' },
+                    { title: 'The Seine Cruise', text: 'A champagne boat ride past the Eiffel Tower as the city lights begin to glow.' },
+                    { title: 'The Montmartre Dinner', text: 'A candlelit bistro in the artists quarter. Watch the sunset from Sacré-Cœur afterwards.' }
+                ]
+            },
+            venice: {
+                hero: 'https://images.unsplash.com/photo-1440588527744-c5b3d2ed0c7a?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 17 // Serenissima',
+                title: 'VENICE TIMELESS',
+                desc: 'Canals instead of streets, masks and mystery, and the quiet lap of water against ancient stone. Venice is a dream that refuses to fade.',
+                price: 4100,
+                steps: [
+                    { title: 'The Grand Canal Ride', text: 'A private gondola at sunset, gliding past palazzos that have stood for centuries.' },
+                    { title: 'The Basilica Tour', text: 'See the golden mosaics of St. Mark\'s Basilica with a guide who knows every tessera.' },
+                    { title: 'The Burano Excursion', text: 'Photograph the rainbow-colored fisherman houses of Burano. Lunch of fresh squid ink pasta.' }
+                ]
+            },
+            // Adventure additions
+            'costa-rica': {
+                hero: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 18 // Pura Vida',
+                title: 'COSTA RICA WILD',
+                desc: 'Rainforest canopy, smoking volcanoes, and waves that roll in from the Pacific. Costa Rica is nature at its most generous and thrilling.',
+                price: 3600,
+                steps: [
+                    { title: 'The Cloud Forest', text: 'Zip-line above the Monteverde canopy. Fly through the mist among toucans and howler monkeys.' },
+                    { title: 'The Volcano Soak', text: 'Hike to Arenal Volcano, then soak in hot springs heated by the earth itself.' },
+                    { title: 'The Pacific Wave', text: 'Surf lessons on the beaches of Tamarindo. Beginners welcome — the ocean is warm and forgiving.' }
+                ]
+            },
+            nepal: {
+                hero: 'https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 19 // Himalayan Dawn',
+                title: 'NEPAL ASCENT',
+                desc: 'Temples, tea houses, and the tallest mountains on earth. Nepal is the trek of a lifetime wrapped in ancient spirituality.',
+                price: 3400,
+                steps: [
+                    { title: 'The Mountain Flight', text: 'A scenic flight along the Himalayas. See Everest, Lhotse, and Makatu from the window seat.' },
+                    { title: 'The Annapurna Trek', text: 'A three-day trek through rhododendron forests to a mountain lodge at 3,500 metres.' },
+                    { title: 'The Durbar Square', text: 'Explore the ancient courtyards of Kathmandu. Temples, shrines, and the rhythm of daily life.' }
+                ]
+            },
+            mozambique: {
+                hero: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 20 // Coastal Wild',
+                title: 'MOZAMBIQUE SHORE',
+                desc: 'Dhow-sailed shores, untouched coral reefs, and the warm waters of the Indian Ocean. Mozambique is Africa hidden coast waiting to be discovered.',
+                price: 4800,
+                steps: [
+                    { title: 'The Archipelago Sail', text: 'A traditional dhow trip through the Bazaruto Archipelago. Remote islands of pure white sand.' },
+                    { title: 'The Reef Dive', text: 'Explore some of the most untouched coral gardens in the world. Manta rays and whale sharks seasonally.' },
+                    { title: 'The Safari Finale', text: 'A wildlife drive in Gorongosa National Park. Lions, elephants, and the story of a park reborn.' }
+                ]
+            },
+            // Solo additions
+            'big-sur': {
+                hero: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 21 // Pacific Coast',
+                title: 'BIG SUR SOLITUDE',
+                desc: 'Where the Santa Lucia Mountains plunge into the Pacific. Big Sur is America most dramatic coastline — raw, misty, and utterly still.',
+                price: 3200,
+                steps: [
+                    { title: 'The Highway Drive', text: 'Take the Pacific Coast Highway as it hugs cliffs that drop hundreds of feet to the ocean below.' },
+                    { title: 'The Waterfall Beach', text: 'Hike to McWay Falls — a tidefall that drops 80 feet straight onto a sandy cove.' },
+                    { title: 'The Redwood Walk', text: 'Wander among ancient redwoods in Pfeiffer Big Sur State Park. Silence so deep you can hear your heartbeat.' }
+                ]
+            },
+            sedona: {
+                hero: 'https://images.unsplash.com/photo-1505533542167-8c89838bb19f?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 22 // Red Rock',
+                title: 'SEDONA VORTEX',
+                desc: 'Crimson canyons, towering buttes, and a spiritual energy that draws seekers from around the world. Sedona is where the earth meets the sky.',
+                price: 2900,
+                steps: [
+                    { title: 'The Vortex Sunrise', text: 'Morning meditation at Cathedral Rock. The red rocks glow as the sun crests the canyon.' },
+                    { title: 'The Canyon Trek', text: 'Hike through Boynton Canyon — a vortex site believed to amplify healing and clarity.' },
+                    { title: 'The Star Watch', text: 'Dark sky stargazing at Oak Creek. The Milky Way is so bright it casts shadows.' }
+                ]
+            },
+            norway: {
+                hero: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 23 // Fjord Peace',
+                title: 'NORWAY FJORDS',
+                desc: 'Deep blue fjords slicing through ancient mountains, waterfalls cascading down sheer cliffs. Norway is silence on a monumental scale.',
+                price: 5600,
+                steps: [
+                    { title: 'The Fjord Cruise', text: 'A silent ferry through Geirangerfjord. Waterfalls plunge from a thousand metres on both sides.' },
+                    { title: 'The Pulpit Rock', text: 'Hike to Preikestolen — a cliff ledge 604 metres above Lysefjord. The view stops time.' },
+                    { title: 'The Aurora Vigil', text: 'Northern lights viewing above the Arctic Circle. Green curtains dance across the polar sky.' }
+                ]
+            },
+            'sri-lanka': {
+                hero: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 24 // Serendipity',
+                title: 'SRI LANKA SPICE',
+                desc: 'Tea plantations draped over misty hills, ancient rock fortresses, and the warm smile of a culture that has welcomed travellers for millennia.',
+                price: 2600,
+                steps: [
+                    { title: 'The Rock Fortress', text: 'Climb Sigiriya at dawn — an ancient fortress perched on a monolithic rock. Frescoes and views that defy belief.' },
+                    { title: 'The Tea Train', text: 'A scenic train ride through Nuwara Eliya. Tea pickers in bright saris work the slopes below.' },
+                    { title: 'The Leopard Safari', text: 'Track leopards in Yala National Park. The density of leopards here is the highest on earth.' }
+                ]
+            },
+            azores: {
+                hero: 'https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 25 // Atlantic Garden',
+                title: 'AZORES MYSTIC',
+                desc: 'Volcanic craters filled with emerald water, blue hydrangea hedgerows, and the wild Atlantic crashing against black cliffs.',
+                price: 3100,
+                steps: [
+                    { title: 'The Twin Lakes', text: 'Stand at the rim of Sete Cidades — two crater lakes, one blue and one green, side by side.' },
+                    { title: 'The Whale Watch', text: 'A boat trip into the Atlantic. Sperm whales, dolphins, and seabirds in every direction.' },
+                    { title: 'The Thermal Soak', text: 'Bathe in geothermal pools at Furnas. Let the volcanic earth warm you from below.' }
+                ]
+            },
+            // Family additions
+            orlando: {
+                hero: 'https://images.unsplash.com/photo-1508737804141-4c3b688e2548?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 26 // Family Magic',
+                title: 'ORLANDO WONDER',
+                desc: 'Theme parks, rocket ships, and magical kingdoms where every family memory is made. Orlando is the happiest place on earth for a reason.',
+                price: 4800,
+                steps: [
+                    { title: 'The Magic Kingdom', text: 'A full day in the most magical place on Earth. Meet princesses, ride Space Mountain, watch the fireworks.' },
+                    { title: 'The Universal Day', text: 'Wizarding World of Harry Potter and thrilling rides at Universal Studios.' },
+                    { title: 'The Space Center', text: 'Visit Kennedy Space Center. Meet an astronaut and see a real rocket launch.' }
+                ]
+            },
+            tokyo: {
+                hero: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 27 // Future Tokyo',
+                title: 'TOKYO BOUNDLESS',
+                desc: 'Neon-lit streets, serene temples, and a city that delights at every turn. Tokyo is a family adventure where the future meets ancient tradition.',
+                price: 5200,
+                steps: [
+                    { title: 'The Digital Art Lab', text: 'Immerse yourselves in TeamLab Borderless — a digital art wonderland that feels like another dimension.' },
+                    { title: 'The Temple Visit', text: 'Explore Senso-ji, Tokyo oldest temple. The bustling market street leading to it is a feast for the senses.' },
+                    { title: 'The Ghibli Museum', text: 'Step into the world of Studio Ghibli. A magical experience for children and adults alike.' }
+                ]
+            },
+            dubai: {
+                hero: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 28 // Desert Oasis',
+                title: 'DUBAI SPECTACLE',
+                desc: 'Sky-piercing towers, desert safaris, and a city that dreams on an impossible scale. Dubai is a family playground in the sand.',
+                price: 5500,
+                steps: [
+                    { title: 'The Burj View', text: 'Ascend to the observation deck of the world tallest building. The city sprawls beneath you like a circuit board.' },
+                    { title: 'The Desert Safari', text: 'Dune bashing, camel rides, and a Bedouin dinner under the stars.' },
+                    { title: 'The Water Park', text: 'Aquaventure Waterpark — slides, lagoons, and dolphin encounters for all ages.' }
+                ]
+            },
+            barcelona: {
+                hero: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 29 // Catalan Soul',
+                title: 'BARCELONA VIBE',
+                desc: 'Gaudí whimsical architecture, tapas bars on every corner, and the Mediterranean breeze. Barcelona is a city that knows how to live well.',
+                price: 3800,
+                steps: [
+                    { title: 'The Gaudí Masterpiece', text: 'Guided tour of the Sagrada Familia. Every spire tells a story in stone.' },
+                    { title: 'The Park Tour', text: 'Explore Park Güell — a colourful mosaic wonderland with sweeping views of the city.' },
+                    { title: 'The Beach Afternoon', text: 'A family afternoon at Barceloneta Beach. Paella, sandcastles, and the warm Mediterranean.' }
+                ]
+            },
+            cancun: {
+                hero: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 30 // Mayan Coast',
+                title: 'CANCUN PARADISE',
+                desc: 'Mayan ruins rising from the jungle, turquoise Caribbean waters, and cenotes that lead to another world. Cancun is a family treasure chest.',
+                price: 3400,
+                steps: [
+                    { title: 'The Pyramid Tour', text: 'Sunrise at Chichén Itzá. See the Mayan pyramid before the crowds, when the site still belongs to the ancients.' },
+                    { title: 'The Cenote Swim', text: 'Swim in a crystalline cenote — a natural sinkhole filled with the clearest water on earth.' },
+                    { title: 'The Reef Snorkel', text: 'Snorkel the Mesoamerican Barrier Reef. Turtles, tropical fish, and coral gardens.' }
+                ]
+            },
+            'greek-islands': {
+                hero: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 31 // Aegean Family',
+                title: 'GREEK ISLANDS SUN',
+                desc: 'Whitewashed villages, turquoise coves, and the warm hospitality of the Greek isles. A family paradise in the heart of the Aegean.',
+                price: 4200,
+                steps: [
+                    { title: 'The Beach Day', text: 'Naxos shallow, sandy beaches are perfect for children. Crystal-clear water and gentle waves.' },
+                    { title: 'The Cooking Class', text: 'A family Greek cooking class. Learn to make moussaka, tzatziki, and baklava together.' },
+                    { title: 'The Ancient Tour', text: 'Explore the Temple of Apollo on Naxos. History comes alive when you can touch the stones.' }
+                ]
+            },
+            mauritius: {
+                hero: 'https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 32 // Family Paradise',
+                title: 'MAURITIUS HAVEN',
+                desc: 'Sugar-white beaches, coral reefs, and a melting pot of cultures. Mauritius is the family sanctuary where every day feels like a celebration.',
+                price: 5100,
+                steps: [
+                    { title: 'The Volcano Crater', text: 'Visit Trou aux Cerfs — a dormant volcano crater with panoramic views of the island.' },
+                    { title: 'The Nature Park', text: 'Casela Nature Park offers lion walks, zip-lines, and encounters with giant tortoises.' },
+                    { title: 'The Glass-Bottom Boat', text: 'A glass-bottom boat ride to Blue Bay Marine Park. Snorkel among rainbow-coloured fish.' }
+                ]
+            }
+,
+            'cape-town': {
+                hero: 'https://images.unsplash.com/photo-1576485290814-1c72a0c5b3a8?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 33 // Table Mountain',
+                title: 'CAPE TOWN',
+                desc: 'Where the Atlantic meets the Indian Ocean at the foot of Table Mountain. Cape Town is a symphony of vineyards, penguins, and dramatic coastlines.',
+                price: 4200,
+                steps: [
+                    { title: 'The Table Ascent', text: 'Take the cable car up Table Mountain at sunrise. The entire Cape Peninsula unfurls beneath you.' },
+                    { title: 'The Cape Winelands', text: 'Drive to Stellenbosch and Franschhoek for a day of wine tasting among Dutch-colonial estates.' },
+                    { title: 'The Peninsula Trail', text: 'Drive Chapman's Peak to Cape Point. See baboons, ostriches, and the lighthouse at Africa's tip.' }
+                ]
+            },
+            zanzibar: {
+                hero: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 34 // Spice Island',
+                title: 'ZANZIBAR',
+                desc: 'Stone Town alleys, spice plantations, and beaches of powdered coral. Zanzibar is the Swahili Coast dream — timeless, aromatic, and impossibly blue.',
+                price: 3800,
+                steps: [
+                    { title: 'The Stone Town Walk', text: 'Get lost in the labyrinth of Stone Town. Carved doors, spice markets, and the house where Freddie Mercury was born.' },
+                    { title: 'The Spice Tour', text: 'Visit a working spice farm. Smell cinnamon, cloves, nutmeg, and vanilla in their natural forms.' },
+                    { title: 'The Sandbank Escape', text: 'A dhow trip to a sandbar off Nungwi. Snorkel coral gardens and feast on freshly caught octopus.' }
+                ]
+            },
+            'nairobi-kenya': {
+                hero: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 35 // Safari Capital',
+                title: 'NAIROBI',
+                desc: 'The only capital city with a national park on its doorstep. Nairobi is the gateway to the Great Migration, Maasai culture, and wild Africa.',
+                price: 4500,
+                steps: [
+                    { title: 'The Maasai Mara', text: 'Witness the Great Migration on the Mara plains. Lions, cheetahs, and wildebeest stretching to the horizon.' },
+                    { title: 'The Giraffe Encounter', text: 'Feed Rothschild giraffes at the Giraffe Centre.' },
+                    { title: 'The Karen Blixen Walk', text: 'Explore the farmhouse from Out of Africa. The Ngong Hills watch over the coffee fields.' }
+                ]
+            },
+            egypt: {
+                hero: 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 36 // Pharaohs Valley',
+                title: 'EGYPT',
+                desc: 'Pyramids that have stood for 4,500 years, temples carved from living rock, and the Nile flowing through the desert. Egypt is civilisation itself.',
+                price: 3400,
+                steps: [
+                    { title: 'The Pyramids Dawn', text: 'Arrive at Giza before sunrise. Watch the sun crest over the Great Pyramid.' },
+                    { title: 'The Nile Felucca', text: 'Sail the Nile on a traditional felucca. Pass temples and villages unchanged for centuries.' },
+                    { title: 'The Valley of Kings', text: 'Descend into the tombs of pharaohs. The colours are as vivid as the day they were painted.' }
+                ]
+            },
+            bangkok: {
+                hero: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 37 // City of Angels',
+                title: 'BANGKOK',
+                desc: 'Golden temples, floating markets, and street food that sets your tastebuds alight. Bangkok is the vibrant gateway to Southeast Asia.',
+                price: 2200,
+                steps: [
+                    { title: 'The Temple Cruise', text: 'A long-tail boat ride along the Chao Phraya. Visit Wat Arun and the Grand Palace from the water.' },
+                    { title: 'The Street Feast', text: 'A guided food tour through Chinatown. Pad Thai and dishes you cannot name but will never forget.' },
+                    { title: 'The Floating Market', text: 'Rise early for Damnoen Saduak. Women in straw hats paddle boats piled with fruit.' }
+                ]
+            },
+            phuket: {
+                hero: 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 39 // Andaman Pearl',
+                title: 'PHUKET',
+                desc: 'Limestone karsts rising from emerald seas, hidden lagoons, and sunsets that paint the Andaman in shades of violet and gold.',
+                price: 2800,
+                steps: [
+                    { title: 'The Phi Phi Sail', text: 'A catamaran cruise to Phi Phi Islands. Maya Bay and snorkelling among clownfish.' },
+                    { title: 'The Big Buddha', text: 'Visit the Big Buddha. Panoramic views of Phuket from the hilltop.' },
+                    { title: 'The Sunset Dinner', text: 'Dinner on a private beach at Laem Singh. Lanterns and fresh seafood.' }
+                ]
+            },
+            jaipur: {
+                hero: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 38 // Pink City',
+                title: 'JAIPUR',
+                desc: 'Rose-pink palaces, elephant rides at Amber Fort, and bazaars that explode with colour. Jaipur is the heart of royal Rajasthan.',
+                price: 2400,
+                steps: [
+                    { title: 'The Amber Fort', text: 'Ascend to Amber Fort on elephant back. The fort rises from the hillside like a mirage.' },
+                    { title: 'The Hawa Mahal', text: 'Photograph the Palace of Winds with its 953 windows for royal ladies.' },
+                    { title: 'The Bazaar Walk', text: 'Explore Johari Bazaar. Blue pottery, block-printed textiles, and gemstones.' }
+                ]
+            },
+            seville: {
+                hero: 'https://images.unsplash.com/photo-1552394313-1e19cf1e49d1?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 40 // Andalusian Soul',
+                title: 'SEVILLE',
+                desc: 'Flamenco echoing through orange-scented alleys, Moorish palaces adorned in gold, and tapas that taste like sunshine.',
+                price: 3200,
+                steps: [
+                    { title: 'The Alcázar Tour', text: 'Explore the royal palace where Game of Thrones was filmed.' },
+                    { title: 'The Flamenco Night', text: 'An intimate flamenco show in Triana. Pure duende.' },
+                    { title: 'The Tapas Trail', text: 'A guided walk through Santa Cruz. Jamón ibérico and ice-cold sherry.' }
+                ]
+            },
+            'new-york': {
+                hero: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 41 // The Big Apple',
+                title: 'NEW YORK',
+                desc: 'The city that never sleeps. Broadway, skyscrapers, world-class museums, and an energy that pulses through every street and subway line.',
+                price: 4800,
+                steps: [
+                    { title: 'The Skyline View', text: 'Top of the Rock at sunset. The Empire State Building glows gold.' },
+                    { title: 'The Central Park', text: 'A carriage ride through Central Park. Bow Bridge and the Alice in Wonderland statue.' },
+                    { title: 'The Broadway Night', text: 'See a Broadway show. Dinner at Sardi's before the curtain rises.' }
+                ]
+            },
+            tulum: {
+                hero: 'https://images.unsplash.com/photo-1504730653502-4f6028a8a3b8?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 42 // Riviera Maya',
+                title: 'TULUM',
+                desc: 'Cliff-top Mayan ruins overlooking the Caribbean, boutique eco-resorts, and a bohemian spirit that draws free souls from around the world.',
+                price: 3200,
+                steps: [
+                    { title: 'The Ruins Morning', text: 'Explore Tulum ruins perched on a cliff above the sea.' },
+                    { title: 'The Cenote Dive', text: 'Snorkel in Gran Cenote. Stalactites and shafts of sunlight.' },
+                    { title: 'The Beach Club', text: 'Afternoon at a Tulum beach club. Coconut water and turquoise waves.' }
+                ]
+            },
+            'rio-de-janeiro': {
+                hero: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 43 // Marvelous City',
+                title: 'RIO DE JANEIRO',
+                desc: 'Christ the Redeemer with arms outstretched over Sugarloaf Mountain, samba drums echoing through the streets, and beaches that define the word iconic.',
+                price: 3600,
+                steps: [
+                    { title: 'The Christ Ascent', text: 'Take the cog train up Corcovado. Stand at the feet of Christ the Redeemer.' },
+                    { title: 'The Sugarloaf Sunset', text: 'Cable car to the top of Sugarloaf Mountain. Watch the sun sink into Guanabara Bay.' },
+                    { title: 'The Copacabana Day', text: 'A day on the most famous beach. Caipirinhas and the rhythm of Rio.' }
+                ]
+            },
+            cusco: {
+                hero: 'https://images.unsplash.com/photo-1587595431973-160d0d94add1?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 44 // Sacred Valley',
+                title: 'CUSCO',
+                desc: 'The navel of the Inca world. Cobblestone streets, colourful textiles, and the lost city of Machu Picchu hidden in the cloud forest above.',
+                price: 3200,
+                steps: [
+                    { title: 'The Inca Trail', text: 'A four-day trek to Machu Picchu. Pass through cloud forests and the Sun Gate at dawn.' },
+                    { title: 'The Sacred Valley', text: 'Explore the markets of Pisac and the fortress of Ollantaytambo.' },
+                    { title: 'The Rainbow Mountain', text: 'An early-start hike to Vinicunca. Stripes of mineral colour on the Andean slopes.' }
+                ]
+            },
+            'buenos-aires': {
+                hero: 'https://images.unsplash.com/photo-1589909202802-8f4aadce65e9?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 45 // Paris of South America',
+                title: 'BUENOS AIRES',
+                desc: 'Tango in the streets, steak on every corner, and bookshops that stay open till dawn. Buenos Aires is Europe in Latin America.',
+                price: 2800,
+                steps: [
+                    { title: 'The Tango Night', text: 'A milonga in San Telmo. Watch couples dance with a rose between their teeth.' },
+                    { title: 'The Recoleta Walk', text: 'Visit Recoleta Cemetery where Evita rests. Then coffee in the square.' },
+                    { title: 'The Parrilla Feast', text: 'Dinner at a traditional parrilla. Bife de chorizo, malbec, and chimichurri.' }
+                ]
+            },
+            amazon: {
+                hero: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 46 // Rainforest Immersion',
+                title: 'AMAZON',
+                desc: 'The lungs of the planet. Pink river dolphins, canopy walks, and the sound of howler monkeys echoing through the world's greatest rainforest.',
+                price: 3800,
+                steps: [
+                    { title: 'The Jungle Lodge', text: 'Arrive by boat at a lodge deep in the rainforest.' },
+                    { title: 'The Canopy Walk', text: 'Walk among the treetops on suspension bridges. See toucans and sloths.' },
+                    { title: 'The Night Safari', text: 'A boat ride after dark. Caimans eyes glow red in the torchlight.' }
+                ]
+            },
+            sydney: {
+                hero: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 47 // Harbour City',
+                title: 'SYDNEY',
+                desc: 'The Opera House, Bondi Beach, and a harbour studded with sailboats. Sydney is Australia at its most iconic — sun-drenched and endlessly beautiful.',
+                price: 4500,
+                steps: [
+                    { title: 'The Opera House Tour', text: 'A guided walk through the sails of the Sydney Opera House.' },
+                    { title: 'The Bondi Walk', text: 'The coastal walk from Bondi to Coogee. Cliffs, ocean pools, and cafes.' },
+                    { title: 'The Harbour Cruise', text: 'A sunset cruise on Sydney Harbour. The bridge and Opera House from the water.' }
+                ]
+            },
+            'bora-bora': {
+                hero: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 48 // Pearl of the Pacific',
+                title: 'BORA BORA',
+                desc: 'The most beautiful lagoon in the world. Overwater bungalows, Mount Otemanu, and water in shades of turquoise you did not know existed.',
+                price: 7200,
+                steps: [
+                    { title: 'The Lagoon Cruise', text: 'A glass-bottom boat tour. Stingrays and blacktip sharks glide beneath.' },
+                    { title: 'The Mountain 4x4', text: 'A safari tour up Mount Otemanu. Panoramic views of the island.' },
+                    { title: 'The Overwater Dinner', text: 'A private dinner delivered by canoe to your overwater bungalow.' }
+                ]
+            },
+            'great-barrier-reef': {
+                hero: 'https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 49 // Underwater Wonder',
+                title: 'GREAT BARRIER REEF',
+                desc: 'The world's largest living structure, visible from space. Dive into a kaleidoscope of coral, clownfish, and sea turtles.',
+                price: 5200,
+                steps: [
+                    { title: 'The Reef Dive', text: 'A liveaboard trip to the outer reef. Dive among giant clams and Maori wrasse.' },
+                    { title: 'The Island Stay', text: 'Stay on Hamilton Island. Sail to Whitehaven Beach.' },
+                    { title: 'The Seaplane View', text: 'A seaplane flight over Heart Reef.' }
+                ]
+            },
+            fiji: {
+                hero: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 50 // Bula Spirit',
+                title: 'FIJI',
+                desc: 'Where the people are as warm as the sun. Coral reefs, coconut palms, and a culture built on community, kava, and smiles.',
+                price: 4800,
+                steps: [
+                    { title: 'The Village Visit', text: 'A traditional kava ceremony in a Fijian village.' },
+                    { title: 'The Island Hop', text: 'A day trip to the Yasawa Islands. Limestone caves and white sand.' },
+                    { title: 'The Coral Garden', text: 'Snorkel the Rainbow Reef. Soft corals in every colour.' }
+                ]
+            },
+            antarctica: {
+                hero: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&q=80&w=1974',
+                edition: 'Edition 51 // The White Continent',
+                title: 'ANTARCTICA',
+                desc: 'The last great wilderness on Earth. Icebergs the size of cathedrals, penguin colonies stretching to the horizon, and silence so absolute you can hear your heart.',
+                price: 12000,
+                steps: [
+                    { title: 'The Drake Passage', text: 'Cross the legendary Drake Passage. Albatrosses follow the ship.' },
+                    { title: 'The Continent Landing', text: 'Step onto the Antarctic Peninsula. Penguins waddle past.' },
+                    { title: 'The Zodiac Cruise', text: 'A Zodiac boat ride through ice-choked channels. Leopard seals hunt on ice floes.' }
+                ]
+            }
+
+        };
+
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id') || 'amalfi';
+        const dest = destinations[id] || destinations.amalfi;
+
+        document.getElementById('dest-hero').src = dest.hero;
+        document.getElementById('dest-hero').alt = dest.title;
+        document.getElementById('dest-edition').textContent = dest.edition;
+        document.getElementById('dest-title').textContent = dest.title;
+        document.getElementById('dest-desc').textContent = dest.desc;
+
+        function updatePrice() {
+            const guests = parseInt(document.getElementById('traveler-count').value) || 1;
+            const total = dest.price * guests;
+            document.getElementById('total-price').textContent = '$' + total.toLocaleString();
+            document.getElementById('checkout-link').href = 'checkout.html?id=' + id + '&guests=' + guests;
+        }
+
+        document.getElementById('traveler-count').addEventListener('input', updatePrice);
+        updatePrice();
+
+        // Wishlist button
+        document.getElementById('wishlist-btn').addEventListener('click', () => {
+            const wishlist = JSON.parse(localStorage.getItem('nextgen_wishlist') || '[]');
+            const existing = wishlist.findIndex(w => w.id === id);
+            if (existing >= 0) {
+                wishlist.splice(existing, 1);
+                document.getElementById('wishlist-btn').querySelector('i').className = 'bi bi-heart';
+                alert('Removed from your wishlist.');
+            } else {
+                wishlist.push({ id, title: dest.title, img: dest.hero });
+                localStorage.setItem('nextgen_wishlist', JSON.stringify(wishlist));
+                document.getElementById('wishlist-btn').querySelector('i').className = 'bi bi-heart-fill';
+                alert('Added to your wishlist!');
+            }
+        });
+
+        // Check if already wishlisted
+        const wishlistCheck = JSON.parse(localStorage.getItem('nextgen_wishlist') || '[]');
+        if (wishlistCheck.find(w => w.id === id)) {
+            document.getElementById('wishlist-btn').querySelector('i').className = 'bi bi-heart-fill';
+        }
+
+        document.title = dest.title + ' | NextGen Travel';
+
+        document.getElementById('dest-hero').addEventListener('load', function() {
+            this.style.opacity = '0.8';
+        });
+
+        const itinerary = document.getElementById('dest-itinerary');
+        dest.steps.forEach((step, i) => {
+            const div = document.createElement('div');
+            div.className = 'mb-5 reveal-up';
+            div.innerHTML = '<h4 class="serif italic mb-3">0' + (i + 1) + ' / ' + escapeHtml(step.title) + '</h4>' +
+                '<p class="text-muted">' + escapeHtml(step.text) + '</p>';
+            itinerary.appendChild(div);
+        });
+
+        // === Reviews ===
+        let selectedRating = 0;
+        const stars = document.querySelectorAll('#star-rating span');
+        stars.forEach(s => {
+            s.addEventListener('click', () => {
+                selectedRating = parseInt(s.dataset.star);
+                stars.forEach((st, i) => st.textContent = i < selectedRating ? '★' : '☆');
+            });
+            s.addEventListener('mouseenter', () => {
+                const v = parseInt(s.dataset.star);
+                stars.forEach((st, i) => st.textContent = i < v ? '★' : '☆');
+            });
+            s.addEventListener('mouseleave', () => {
+                stars.forEach((st, i) => st.textContent = i < selectedRating ? '★' : '☆');
+            });
+        });
+
+        async function loadReviews() {
+            try {
+                const data = await api.getReviews(id);
+                document.getElementById('review-avg').textContent = data.stats.avg || '0.0';
+                document.getElementById('review-count').textContent = data.stats.count + ' review' + (data.stats.count !== 1 ? 's' : '');
+                const display = document.getElementById('review-stars-display');
+                const avg = Math.round(data.stats.avg || 0);
+                display.textContent = '★'.repeat(avg) + '☆'.repeat(5 - avg);
+                const list = document.getElementById('reviews-list');
+                if (data.reviews.length === 0) {
+                    list.innerHTML = '<p class="text-muted small">No reviews yet. Be the first to share!</p>';
+                } else {
+                    list.innerHTML = data.reviews.map(r => `
+                        <div class="border-bottom border-dark pb-3 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong class="small">${escapeHtml(r.user_name || 'Anonymous')}</strong>
+                                <span style="color:#d4a373;">${'★'.repeat(Math.min(5, Math.max(0, r.rating)))}${'☆'.repeat(5 - Math.min(5, Math.max(0, r.rating)))}</span>
+                            </div>
+                            ${r.comment ? '<p class="small mt-1 mb-0">' + escapeHtml(r.comment) + '</p>' : ''}
+                            <span class="extra-small text-muted">${escapeHtml(r.created_at || '')}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (_) {}
+        }
+
+        async function submitReview() {
+            const token = api.getToken();
+            if (!token) { alert('Please login to submit a review.'); return; }
+            if (!selectedRating) { alert('Please select a rating.'); return; }
+            const comment = document.getElementById('review-comment').value;
+            try {
+                await api.submitReview(id, selectedRating, comment);
+                alert('Review submitted!');
+                document.getElementById('review-comment').value = '';
+                selectedRating = 0;
+                stars.forEach(s => s.textContent = '☆');
+                loadReviews();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        // === Availability Calendar ===
+        async function loadAvailability() {
+            try {
+                const data = await api.getAvailability(id);
+                const grid = document.getElementById('calendar-grid');
+                const today = new Date();
+                grid.innerHTML = data.slice(0, 30).map((a, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + i);
+                    const dayName = d.toLocaleDateString('en', { weekday: 'short' });
+                    const dateNum = d.getDate();
+                    let icon = '✓', cls = 'bg-success bg-opacity-10 text-success';
+                    if (!a.available || a.booked >= a.max_guests) { icon = '✕'; cls = 'bg-danger bg-opacity-10 text-danger'; }
+                    else if (a.booked > a.max_guests * 0.7) { icon = '▢'; cls = 'bg-warning bg-opacity-10 text-warning'; }
+                    return `<div class="col-2 col-md-1 text-center p-1 border border-secondary border-opacity-25 ${cls}" style="font-size:0.7rem;">
+                        <div class="fw-bold">${dateNum}</div>
+                        <div class="opacity-50">${dayName}</div>
+                        <div style="font-size:1rem;">${icon}</div>
+                    </div>`;
+                }).join('');
+            } catch (_) {}
+        }
+
+        // === Destination Country Lookup ===
+        var DEST_COUNTRIES = {
+            amalfi:'Italy', alps:'Switzerland', kyoto:'Japan', dolomites:'Italy',
+            santorini:'Greece', iceland:'Iceland', marrakech:'Morocco', banff:'Canada',
+            patagonia:'Argentina', queenstown:'New Zealand', bali:'Indonesia',
+            provence:'France', maldives:'Maldives', tuscany:'Italy', seychelles:'Seychelles',
+            paris:'France', venice:'Italy', 'costa-rica':'Costa Rica', nepal:'Nepal',
+            mozambique:'Mozambique', 'big-sur':'United States', sedona:'United States',
+            norway:'Norway', 'sri-lanka':'Sri Lanka', azores:'Portugal', orlando:'United States',
+            tokyo:'Japan', dubai:'UAE', barcelona:'Spain', cancun:'Mexico',
+            'greek-islands':'Greece', mauritius:'Mauritius', 'cape-town':'South Africa',
+            zanzibar:'Tanzania', 'nairobi-kenya':'Kenya', egypt:'Egypt', bangkok:'Thailand',
+            phuket:'Thailand', jaipur:'India', seville:'Spain', 'new-york':'United States',
+            tulum:'Mexico', 'rio-de-janeiro':'Brazil', cusco:'Peru',
+            'buenos-aires':'Argentina', amazon:'Brazil', sydney:'Australia',
+            'bora-bora':'French Polynesia', 'great-barrier-reef':'Australia', fiji:'Fiji',
+            antarctica:'Antarctica'
+        };
+
+        // === Document Detection ===
+        function updateDestDocBadge() {
+          var user = JSON.parse(localStorage.getItem('nextgen_user'));
+          var badge = document.getElementById('dest-doc-badge');
+          var text = document.getElementById('dest-doc-text');
+          if (!badge || !text) return;
+          if (!user) {
+            badge.textContent = 'SIGN IN';
+            badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;';
+            text.textContent = 'Sign in and set your country in profile to see required documents.';
+            return;
+          }
+          var userCountry = user.country || null;
+          if (!userCountry) {
+            badge.textContent = 'SET PROFILE';
+            badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;';
+            text.textContent = 'Add your country to your profile for automatic document detection.';
+            return;
+          }
+          // Get destination country from lookup map (fallback), then from API data
+          var destCountry = dest.country || DEST_COUNTRIES[id] || null;
+          if (!destCountry) {
+            badge.textContent = 'UNKNOWN';
+            badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;';
+            text.textContent = 'Destination country not specified. Please contact support.';
+            return;
+          }
+          if (userCountry.toLowerCase() === destCountry.toLowerCase()) {
+            badge.textContent = 'ID CARD';
+            badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#dcfce7;color:#16a34a;';
+            text.textContent = 'Domestic travel — Identity Card is required. Passport is optional.';
+          } else {
+            badge.textContent = 'PASSPORT';
+            badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#dbeafe;color:#2563eb;';
+            text.textContent = 'International travel — Passport is required for ' + destCountry + '.';
+          }
+        }
+        updateDestDocBadge();
+
+        loadReviews();
+        loadAvailability();
+
+        // Availability check on Reserve Your Journey
+        const destCheckoutLink = document.getElementById('checkout-link');
+        const destOverlay = document.getElementById('avail-overlay');
+        const destLoading = document.getElementById('avail-loading');
+        const destSuccess = document.getElementById('avail-success');
+        const destFail = document.getElementById('avail-fail');
+
+        let cachedAvailability = null;
+
+        destCheckoutLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const destName = dest.title || '';
+            const destHref = destCheckoutLink.getAttribute('href');
+
+            // Reset
+            destLoading.style.display = 'flex';
+            destSuccess.style.display = 'none';
+            destFail.style.display = 'none';
+            destOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('avail-checking-dest').textContent = destName;
+
+            // Fetch real availability from API
+            try {
+                cachedAvailability = await api.getAvailability(id);
+            } catch (_) {
+                cachedAvailability = null;
+            }
+
+            // Check if any slots available in the next 30 days
+            const hasAvailability = cachedAvailability
+                ? cachedAvailability.some(a => a.available && a.booked < a.max_guests)
+                : Math.random() > 0.35; // fallback if server is offline
+
+            setTimeout(() => {
+                if (hasAvailability) {
+                    destLoading.style.display = 'none';
+                    destSuccess.style.display = 'flex';
+                    setTimeout(() => {
+                        window.location.href = destHref;
+                    }, 900);
+                } else {
+                    destLoading.style.display = 'none';
+                    destFail.style.display = 'flex';
+
+                    const today = new Date();
+                    document.getElementById('avail-date').textContent =
+                        today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+                    const altContainer = document.getElementById('avail-alternatives');
+                    altContainer.innerHTML = '';
+                    if (cachedAvailability) {
+                        // Show actually available dates
+                        const availDates = cachedAvailability.filter(a => a.available && a.booked < a.max_guests);
+                        availDates.slice(0, 5).forEach(a => {
+                            const d = new Date(a.date);
+                            const btn = document.createElement('button');
+                            btn.className = 'btn-alt-date';
+                            btn.textContent = d.toLocaleDateString('en-US', {
+                                weekday: 'short', month: 'short', day: 'numeric'
+                            });
+                            btn.addEventListener('click', () => {
+                                window.location.href = destHref + '&date=' + a.date;
+                            });
+                            altContainer.appendChild(btn);
+                        });
+                    }
+                    if (altContainer.children.length === 0) {
+                        // Fallback random dates when server is offline
+                        if (!cachedAvailability) {
+                            const usedDates = new Set();
+                            for (let i = 0; i < 3; i++) {
+                                let d, dateStr;
+                                do {
+                                    d = new Date();
+                                    d.setDate(d.getDate() + 3 + Math.floor(Math.random() * 55));
+                                    dateStr = d.toISOString().split('T')[0];
+                                } while (usedDates.has(dateStr));
+                                usedDates.add(dateStr);
+                                const btn = document.createElement('button');
+                                btn.className = 'btn-alt-date';
+                                btn.textContent = d.toLocaleDateString('en-US', {
+                                    weekday: 'short', month: 'short', day: 'numeric'
+                                });
+                                btn.addEventListener('click', () => {
+                                    window.location.href = destHref + '&date=' + dateStr;
+                                });
+                                altContainer.appendChild(btn);
+                            }
+                        } else {
+                            altContainer.innerHTML = '<p class="small text-muted">No available dates found. Please check back later.</p>';
+                        }
+                    }
+
+                    document.getElementById('avail-continue').onclick = () => {
+                        window.location.href = destHref;
+                    };
+                    document.getElementById('avail-close').onclick = () => {
+                        destOverlay.style.display = 'none';
+                        document.body.style.overflow = '';
+                    };
+                }
+            }, 1000);
+        });
+
+        document.getElementById('page-loading').classList.add('hidden');
+        } catch (_) {
+            document.getElementById('page-loading').classList.add('hidden');
+            document.getElementById('page-error').classList.add('show');
+        }
+        })();
+    </script>
+</body>
+</html>

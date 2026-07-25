@@ -1,0 +1,2012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen Travel | Curated Journeys Beyond the Ordinary</title>
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Leaflet.js map library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Availability checker overlay styles -->
+    <style>
+        .avail-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .avail-modal { background: #fff; padding: 3rem 2.5rem; max-width: 460px; width: 92%; text-align: center; }
+        .avail-content { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .avail-spinner { width: 40px; height: 40px; border: 3px solid #eee; border-top-color: #000; border-radius: 50%; animation: avail-spin 0.8s linear infinite; }
+        @keyframes avail-spin { to { transform: rotate(360deg); } }
+        .avail-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; }
+        .avail-icon-success { background: #d4edda; color: #155724; }
+        .avail-icon-fail { background: #f8d7da; color: #721c24; }
+        .avail-status { font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.05em; }
+        .avail-suggestion { font-size: 0.8rem; color: #888; }
+        .avail-dates { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 0.5rem 0; }
+        .btn-alt-date { background: #f8f8f8; border: 1px solid #ddd; padding: 0.5rem 1rem; font-size: 0.8rem; cursor: pointer; border-radius: 0; transition: 0.2s; }
+        .btn-alt-date:hover { background: #000; color: #fff; border-color: #000; }
+        .avail-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+        .avail-actions .btn { font-size: 0.75rem; letter-spacing: 0.05em; }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== NAVBAR ==================== -->
+    <nav class="navbar navbar-expand-lg fixed-top px-4 py-3">
+        <div class="container-fluid">
+            <a class="navbar-brand serif fw-bold text-white fs-3" href="index.html">NextGen</a>
+            <div class="ms-auto d-flex align-items-center gap-4">
+                <a href="#destinations" class="text-white text-decoration-none small tracking-widest d-none d-md-block">Destinations</a>
+                <a href="#inspirations" class="text-white text-decoration-none small tracking-widest d-none d-md-block">Inspirations</a>
+                <!-- Auth button — replaced with user avatar when logged in -->
+                <button class="btn btn-outline-light rounded-0 px-4 py-2 small tracking-widest" data-bs-toggle="modal" data-bs-target="#auth-modal">Signup / Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==================== HERO SECTION (Search Widget) ==================== -->
+    <header class="search-hero">
+        <div class="search-hero-bg"></div>
+        <div class="search-hero-overlay"></div>
+
+        <div class="search-hero-content">
+            <h1 class="search-hero-headline">Adventure awaits you.</h1>
+
+            <datalist id="airport-list">
+                <!-- AFRICA -->
+                <option value="Lagos (LOS) - Nigeria">
+                <option value="Abuja (ABV) - Nigeria">
+                <option value="Port Harcourt (PHC) - Nigeria">
+                <option value="Cape Town (CPT) - South Africa">
+                <option value="Johannesburg (JNB) - South Africa">
+                <option value="Durban (DUR) - South Africa">
+                <option value="Nairobi (NBO) - Kenya">
+                <option value="Mombasa (MBA) - Kenya">
+                <option value="Kisumu (KIS) - Kenya">
+                <!-- ASIA -->
+                <option value="Tokyo (NRT) - Japan">
+                <option value="Osaka (KIX) - Japan">
+                <option value="Kyoto (UKY) - Japan">
+                <option value="Mumbai (BOM) - India">
+                <option value="Delhi (DEL) - India">
+                <option value="Jaipur (JAI) - India">
+                <option value="Bangkok (BKK) - Thailand">
+                <option value="Phuket (HKT) - Thailand">
+                <option value="Chiang Mai (CNX) - Thailand">
+                <!-- EUROPE -->
+                <option value="Paris (CDG) - France">
+                <option value="Nice (NCE) - France">
+                <option value="Lyon (LYS) - France">
+                <option value="Rome (FCO) - Italy">
+                <option value="Venice (VCE) - Italy">
+                <option value="Florence (FLR) - Italy">
+                <option value="Barcelona (BCN) - Spain">
+                <option value="Madrid (MAD) - Spain">
+                <option value="Seville (SVQ) - Spain">
+                <!-- NORTH AMERICA -->
+                <option value="New York (JFK) - USA">
+                <option value="Los Angeles (LAX) - USA">
+                <option value="Miami (MIA) - USA">
+                <option value="Toronto (YYZ) - Canada">
+                <option value="Vancouver (YVR) - Canada">
+                <option value="Montreal (YUL) - Canada">
+                <option value="Mexico City (MEX) - Mexico">
+                <option value="Cancun (CUN) - Mexico">
+                <option value="Tulum (TUY) - Mexico">
+                <!-- SOUTH AMERICA -->
+                <option value="Rio de Janeiro (GIG) - Brazil">
+                <option value="São Paulo (GRU) - Brazil">
+                <option value="Salvador (SSA) - Brazil">
+                <option value="Buenos Aires (EZE) - Argentina">
+                <option value="Mendoza (MDZ) - Argentina">
+                <option value="Bariloche (BRC) - Argentina">
+                <option value="Lima (LIM) - Peru">
+                <option value="Cusco (CUZ) - Peru">
+                <option value="Arequipa (AQP) - Peru">
+                <!-- OCEANIA -->
+                <option value="Sydney (SYD) - Australia">
+                <option value="Melbourne (MEL) - Australia">
+                <option value="Cairns (CNS) - Australia">
+                <option value="Auckland (AKL) - New Zealand">
+                <option value="Queenstown (ZQN) - New Zealand">
+                <option value="Wellington (WLG) - New Zealand">
+                <option value="Nadi (NAN) - Fiji">
+                <option value="Suva (SUV) - Fiji">
+                <option value="Lautoka (LTK) - Fiji">
+                <!-- ANTARCTICA -->
+                <option value="McMurdo Station - Antarctica">
+                <option value="Palmer Station - Antarctica">
+                <option value="South Pole Station - Antarctica">
+            </datalist>
+
+            <datalist id="global-countries"></datalist>
+
+            <!-- Pill Tabs -->
+            <div class="search-tabs">
+                <button class="search-tab active" data-tab="flights">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8l-8.2-1.8a1 1 0 0 0-.8.2l-.7.7a1 1 0 0 0 .2 1.4l5.9 4.2-2.3 2.3a.5.5 0 0 0 .4.8h2.5l1.3 2.5a1 1 0 0 0 1.5.3l.7-.7a1 1 0 0 0 .2-.8z"/></svg>
+                    Flights
+                </button>
+                <button class="search-tab" data-tab="hotels">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M3 7v14M21 7v14M6 11h4v4H6zM14 11h4v4h-4zM9 3h6l3 4H6l3-4zM3 21h18"/><path d="M8 21V17h8v4"/></svg>
+                    Hotels
+                </button>
+                <button class="search-tab" data-tab="holidays">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5c0 3 2 7 5 10 3-3 5-7 5-10a5 5 0 0 0-5-5z"/><path d="M10 7h4"/><path d="M9 10h6"/><path d="M2 22c2-2 4-3 6-3s4 1 6 3 4 1 6-3"/></svg>
+                    Holidays
+                </button>
+            </div>
+
+            <!-- ===== FLIGHTS TAB PANEL ===== -->
+            <div class="search-panel active" id="panel-flights">
+                <!-- Sub-navigation: Return / One-way / Multi-city -->
+                <div class="flight-subnav">
+                    <button class="flight-subnav-btn active" data-trip="return">Return</button>
+                    <button class="flight-subnav-btn" data-trip="oneway">One-way</button>
+                    <button class="flight-subnav-btn" data-trip="multicity">Multi-city</button>
+                </div>
+
+                <!-- Capsule Booking Bar -->
+                <div class="booking-capsule" id="capsule-flights">
+                    <!-- Leaving from -->
+                    <div class="capsule-field">
+                        <label class="capsule-label">Leaving from</label>
+                        <input type="text" class="capsule-input" placeholder="Where from?" list="airport-list">
+                    </div>
+
+                    <!-- Swap button -->
+                    <button class="capsule-swap" aria-label="Swap destinations">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </button>
+
+                    <!-- Vertical divider -->
+                    <div class="capsule-divider"></div>
+
+                    <!-- Going to -->
+                    <div class="capsule-field">
+                        <label class="capsule-label">Going to</label>
+                        <input type="text" class="capsule-input" placeholder="Where to?" list="airport-list">
+                    </div>
+
+                    <div class="capsule-divider"></div>
+
+                    <!-- When? (dual date, switches to single for one-way) -->
+                    <div class="capsule-field capsule-date-field" id="date-field-return">
+                        <label class="capsule-label">When?</label>
+                        <div class="capsule-date-group">
+                            <input type="date" class="capsule-input capsule-date-input" id="date-depart" value="2026-06-17">
+                            <span class="capsule-date-sep">—</span>
+                            <input type="date" class="capsule-input capsule-date-input" id="date-return" value="2026-06-24">
+                        </div>
+                    </div>
+                    <!-- Single date for one-way (hidden initially) -->
+                    <div class="capsule-field capsule-date-field" id="date-field-oneway" style="display:none;">
+                        <label class="capsule-label">When?</label>
+                        <input type="date" class="capsule-input" id="date-depart-oneway" value="2026-06-17">
+                    </div>
+
+                    <div class="capsule-divider"></div>
+
+                    <!-- Passengers & class -->
+                    <div class="capsule-field capsule-passenger-field">
+                        <label class="capsule-label">Passengers &amp; class</label>
+                        <div class="capsule-pseudo-select" id="passenger-select">
+                            <span id="passenger-summary">1 passenger, Economy</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <!-- Dropdown -->
+                        <div class="passenger-dropdown" id="passenger-dropdown">
+                            <div class="passenger-section">
+                                <h6 class="passenger-dropdown-title">Passengers</h6>
+                                <div class="passenger-row">
+                                    <span>Adults (12+)</span>
+                                    <div class="passenger-stepper">
+                                        <button class="stepper-btn" data-type="adults" data-dir="-1">−</button>
+                                        <span id="adults-count">1</span>
+                                        <button class="stepper-btn" data-type="adults" data-dir="1">+</button>
+                                    </div>
+                                </div>
+                                <div class="passenger-row">
+                                    <span>Children (2-11yrs)</span>
+                                    <div class="passenger-stepper">
+                                        <button class="stepper-btn" data-type="children" data-dir="-1">−</button>
+                                        <span id="children-count">0</span>
+                                        <button class="stepper-btn" data-type="children" data-dir="1">+</button>
+                                    </div>
+                                </div>
+                                <div class="passenger-row">
+                                    <span>Infants (below 2yrs)</span>
+                                    <div class="passenger-stepper">
+                                        <button class="stepper-btn" data-type="infants" data-dir="-1">−</button>
+                                        <span id="infants-count">0</span>
+                                        <button class="stepper-btn" data-type="infants" data-dir="1">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="passenger-section">
+                                <h6 class="passenger-dropdown-title">Class</h6>
+                                <div class="passenger-class-options">
+                                    <label class="class-option">
+                                        <input type="radio" name="flight-class" value="Economy" checked>
+                                        <span>Economy</span>
+                                    </label>
+                                    <label class="class-option">
+                                        <input type="radio" name="flight-class" value="Premium Economy">
+                                        <span>Premium Economy</span>
+                                    </label>
+                                    <label class="class-option">
+                                        <input type="radio" name="flight-class" value="Business">
+                                        <span>Business</span>
+                                    </label>
+                                    <label class="class-option">
+                                        <input type="radio" name="flight-class" value="First Class">
+                                        <span>First Class</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <button class="capsule-search-btn explore-btn" aria-label="Explore flights">Explore</button>
+                </div>
+
+                <!-- Multi-city rows (hidden) -->
+                <div class="multicity-container" id="multicity-container" style="display:none;">
+                    <div class="multicity-rows" id="multicity-rows">
+                        <!-- Rows injected by JS -->
+                    </div>
+                    <div class="multicity-actions">
+                        <button class="multicity-add-btn" id="multicity-add">+ Add another flight</button>
+                        <button class="capsule-search-btn explore-btn" id="multicity-explore" aria-label="Explore multi-city">Explore</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== HOTELS TAB PANEL ===== -->
+            <div class="search-panel" id="panel-hotels">
+                <div class="booking-capsule">
+                    <!-- Where to stay -->
+                    <div class="capsule-field" style="flex:1.5;">
+                        <label class="capsule-label">Where would you like to stay?</label>
+                        <input type="text" class="capsule-input" placeholder="City or hotel name" value="Cape Town">
+                    </div>
+
+                    <div class="capsule-divider"></div>
+
+                    <!-- When? -->
+                    <div class="capsule-field capsule-date-field">
+                        <label class="capsule-label">When?</label>
+                        <div class="capsule-date-group">
+                            <input type="date" class="capsule-input capsule-date-input" value="2026-06-17">
+                            <span class="capsule-date-sep">—</span>
+                            <input type="date" class="capsule-input capsule-date-input" value="2026-06-24">
+                        </div>
+                    </div>
+
+                    <div class="capsule-divider"></div>
+
+                    <!-- Who's going -->
+                    <div class="capsule-field capsule-passenger-field">
+                        <label class="capsule-label">Who's going?</label>
+                        <div class="capsule-pseudo-select" id="hotel-guest-select">
+                            <span id="hotel-guest-summary">2 adults, 1 room</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <!-- Hotel guest dropdown -->
+                        <div class="passenger-dropdown" id="hotel-guest-dropdown">
+                            <div class="passenger-section">
+                                <div class="passenger-row">
+                                    <span>Adults (18+)</span>
+                                    <div class="passenger-stepper">
+                                        <button class="stepper-btn hotel-stepper" data-type="hotel-adults" data-dir="-1">−</button>
+                                        <span id="hotel-adults-count">2</span>
+                                        <button class="stepper-btn hotel-stepper" data-type="hotel-adults" data-dir="1">+</button>
+                                    </div>
+                                </div>
+                                <div class="passenger-row">
+                                    <span>Children (0-17 yrs)</span>
+                                    <div class="passenger-stepper">
+                                        <button class="stepper-btn hotel-stepper" data-type="hotel-children" data-dir="-1">−</button>
+                                        <span id="hotel-children-count">0</span>
+                                        <button class="stepper-btn hotel-stepper" data-type="hotel-children" data-dir="1">+</button>
+                                    </div>
+                                </div>
+                                <div class="passenger-row">
+                                    <span>Rooms</span>
+                                    <div class="passenger-stepper">
+                                        <button class="stepper-btn hotel-stepper" data-type="hotel-rooms" data-dir="-1">−</button>
+                                        <span id="hotel-rooms-count">1</span>
+                                        <button class="stepper-btn hotel-stepper" data-type="hotel-rooms" data-dir="1">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <button class="capsule-search-btn explore-btn" aria-label="Explore hotels">Explore</button>
+                </div>
+            </div>
+
+            <!-- ===== HOLIDAYS TAB PANEL ===== -->
+            <div class="search-panel" id="panel-holidays">
+                <div class="booking-capsule">
+                    <!-- All holiday types -->
+                    <div class="capsule-field capsule-select-field">
+                        <label class="capsule-label">All holiday types</label>
+                        <div class="capsule-pseudo-select">
+                            <span>All holiday types</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="capsule-divider"></div>
+
+                    <!-- Any destination -->
+                    <div class="capsule-field capsule-select-field">
+                        <label class="capsule-label">Any destination</label>
+                        <div class="capsule-pseudo-select">
+                            <span>Any destination</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="capsule-divider"></div>
+
+                    <!-- Any duration -->
+                    <div class="capsule-field capsule-select-field">
+                        <label class="capsule-label">Any duration</label>
+                        <div class="capsule-pseudo-select">
+                            <span>Any duration</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <button class="capsule-search-btn explore-btn" aria-label="Explore holidays">Explore</button>
+                </div>
+            </div>
+
+            <!-- Footer links -->
+            <div class="search-footer-links">
+                <a href="destination.html" class="search-footer-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Change or cancel your trip
+                </a>
+                <a href="mailto:curated@nextgentravel.com" class="search-footer-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                    Track your refund
+                </a>
+                <a href="mailto:curated@nextgentravel.com" class="search-footer-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    Need help? We're here 24/7
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== Booking Confirmation Banner ===== -->
+    <div id="booking-confirmation" class="booking-confirm" style="display:none;">
+        <div class="container">
+            <div class="booking-confirm-card">
+                <div class="booking-confirm-icon">✓</div>
+                <div class="booking-confirm-text">
+                    <h4>Booking Confirmed!</h4>
+                    <p>Thank you, <strong id="confirm-first"></strong> <strong id="confirm-last"></strong>. Your journey to <strong id="confirm-dest"></strong> has been reserved.</p>
+                    <p id="confirm-details" class="small mt-2" style="display:none; opacity: 0.8;">
+                        Hotel Reservation: <strong id="confirm-hotel"></strong> | Food Preference: <strong id="confirm-food"></strong>
+                    </p>
+                    <small>A confirmation email has been sent to <span id="confirm-email"></span>. We'll see you soon.</small>
+                </div>
+                <button class="booking-confirm-close" onclick="this.closest('#booking-confirmation').style.display='none'">×</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================
+         GALLERY 1: Destination Cards (Evaneos-style)
+         ============================================= -->
+    <section id="destinations" class="dest-gallery">
+        <div class="container">
+            <div class="dest-gallery-header reveal-snap">
+                <h6 class="tracking-widest mb-3">Curated Collection // 2026</h6>
+                <h2 class="dest-gallery-title">DESTINATIONS</h2>
+            </div>
+
+            <!-- Vibe Filters -->
+            <div class="vibe-filters justify-content-center reveal-snap">
+                <button class="vibe-btn active" data-vibe="all">All Sanctuaries</button>
+                <button class="vibe-btn" data-vibe="romantic">Romantic</button>
+                <button class="vibe-btn" data-vibe="adventure">Adventure</button>
+                <button class="vibe-btn" data-vibe="solo">Solo Silence</button>
+                <button class="vibe-btn" data-vibe="family">Family Heritage</button>
+            </div>
+
+            <div class="dest-gallery-scroll-wrapper">
+                <div class="dest-scroll-arrow-glass"><span class="scroll-arrow">→</span></div>
+                <div class="dest-scroll-wrap reveal-snap">
+                <div class="dest-scroll-track" id="dest-track">
+                    <a href="destination.html?id=amalfi" class="dest-card" data-vibe="romantic" data-continent="europe" aria-label="Explore Amalfi, Italy">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=600&h=800" alt="Amalfi Coast" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">AMALFI</h3>
+                                <span class="dest-card-location">Italy</span>
+                                <span class="dest-card-desc">Cliffside calm on the Mediterranean</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=alps" class="dest-card" data-vibe="solo" data-continent="europe" aria-label="Explore Swiss Alps, Switzerland">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=600&h=800" alt="Swiss Alps" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">ALPS</h3>
+                                <span class="dest-card-location">Switzerland</span>
+                                <span class="dest-card-desc">Peak silence above the clouds</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=kyoto" class="dest-card" data-vibe="solo" data-continent="asia" aria-label="Explore Kyoto, Japan">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=600&h=800" alt="Kyoto Temple" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">KYOTO</h3>
+                                <span class="dest-card-location">Japan</span>
+                                <span class="dest-card-desc">Ancient ritual in moss and gold</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=dolomites" class="dest-card" data-vibe="adventure" data-continent="europe" aria-label="Explore Dolomites, Italy">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=600&h=800" alt="Dolomites" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">DOLOMITES</h3>
+                                <span class="dest-card-location">Italy</span>
+                                <span class="dest-card-desc">Rose-tipped peaks at dawn</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=santorini" class="dest-card" data-vibe="romantic" data-continent="europe" aria-label="Explore Santorini, Greece">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&q=80&w=600&h=800" alt="Santorini" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">SANTORINI</h3>
+                                <span class="dest-card-location">Greece</span>
+                                <span class="dest-card-desc">Blue domes and endless sunsets</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=iceland" class="dest-card" data-vibe="adventure" data-continent="europe" aria-label="Explore Iceland">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=600&h=800" alt="Iceland" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">ICELAND</h3>
+                                <span class="dest-card-location">Iceland</span>
+                                <span class="dest-card-desc">Fire and ice under the aurora</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=marrakech" class="dest-card" data-vibe="family" data-continent="africa" aria-label="Explore Marrakech, Morocco">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&q=80&w=600&h=800" alt="Marrakech" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">MARRAKECH</h3>
+                                <span class="dest-card-location">Morocco</span>
+                                <span class="dest-card-desc">Medina mysteries in terracotta</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=banff" class="dest-card" data-vibe="adventure" data-continent="north-america" aria-label="Explore Banff, Canada">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1508737804141-4c3b688e2548?auto=format&fit=crop&q=80&w=600&h=800" alt="Banff" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">BANFF</h3>
+                                <span class="dest-card-location">Canada</span>
+                                <span class="dest-card-desc">Turquoise lakes and pine silence</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=patagonia" class="dest-card" data-vibe="adventure" data-continent="south-america" aria-label="Explore Patagonia, Argentina">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&q=80&w=600&h=800" alt="Patagonia" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">PATAGONIA</h3>
+                                <span class="dest-card-location">Argentina</span>
+                                <span class="dest-card-desc">Wind-carved frontiers of granite</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=queenstown" class="dest-card" data-vibe="adventure" data-continent="oceania" aria-label="Explore Queenstown, New Zealand">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&q=80&w=600&h=800" alt="Queenstown" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">QUEENSTOWN</h3>
+                                <span class="dest-card-location">New Zealand</span>
+                                <span class="dest-card-desc">Thrill meets alpine stillness</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=bali" class="dest-card" data-vibe="solo" data-continent="asia" aria-label="Explore Bali, Indonesia">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600&h=800" alt="Bali" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">BALI</h3>
+                                <span class="dest-card-location">Indonesia</span>
+                                <span class="dest-card-desc">Temples at dawn, rice at dusk</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=provence" class="dest-card" data-vibe="romantic" data-continent="europe" aria-label="Explore Provence, France">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=600&h=800" alt="Provence" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">PROVENCE</h3>
+                                <span class="dest-card-location">France</span>
+                                <span class="dest-card-desc">Lavender fields and golden light</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="destination.html?id=maldives" class="dest-card" data-vibe="romantic" data-continent="asia" aria-label="Explore Maldives">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&q=80&w=600&h=800" alt="Maldives" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">MALDIVES</h3>
+                                <span class="dest-card-location">Maldives</span>
+                                <span class="dest-card-desc">Overwater solitude in endless blue</span>
+                            </div>
+                        </div>
+                    </a>
+                    <!-- Romantic +4 -->
+                    <a href="destination.html?id=tuscany" class="dest-card" data-vibe="romantic" data-continent="europe" aria-label="Explore Tuscany, Italy">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=600&h=800" alt="Tuscany" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">TUSCANY</h3>
+                                <span class="dest-card-location">Italy</span>
+                                <span class="dest-card-desc">Rolling vineyards and golden hills</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=seychelles" class="dest-card" data-vibe="romantic" data-continent="africa" aria-label="Explore Seychelles">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=600&h=800" alt="Seychelles" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">SEYCHELLES</h3>
+                                <span class="dest-card-location">Seychelles</span>
+                                <span class="dest-card-desc">Granite boulders and turquoise waters</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=paris" class="dest-card" data-vibe="romantic" data-continent="europe" aria-label="Explore Paris, France">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600&h=800" alt="Paris" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">PARIS</h3>
+                                <span class="dest-card-location">France</span>
+                                <span class="dest-card-desc">Romance at every corner</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=venice" class="dest-card" data-vibe="romantic" data-continent="europe" aria-label="Explore Venice, Italy">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1440588527744-c5b3d2ed0c7a?auto=format&fit=crop&q=80&w=600&h=800" alt="Venice" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">VENICE</h3>
+                                <span class="dest-card-location">Italy</span>
+                                <span class="dest-card-desc">Canals and timeless elegance</span>
+                            </div>
+                        </div>
+                    </a>
+                    <!-- Adventure +3 -->
+                    <a href="destination.html?id=costa-rica" class="dest-card" data-vibe="adventure" data-continent="north-america" aria-label="Explore Costa Rica">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=600&h=800" alt="Costa Rica" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">COSTA RICA</h3>
+                                <span class="dest-card-location">Costa Rica</span>
+                                <span class="dest-card-desc">Rainforest meets volcano and surf</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=nepal" class="dest-card" data-vibe="adventure" data-continent="asia" aria-label="Explore Nepal">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&q=80&w=600&h=800" alt="Nepal" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">NEPAL</h3>
+                                <span class="dest-card-location">Nepal</span>
+                                <span class="dest-card-desc">Himalayan majesty and ancient temples</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=mozambique" class="dest-card" data-vibe="adventure" data-continent="africa" aria-label="Explore Mozambique">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=600&h=800" alt="Mozambique" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">MOZAMBIQUE</h3>
+                                <span class="dest-card-location">Mozambique</span>
+                                <span class="dest-card-desc">Indian Ocean reefs and dhow sails</span>
+                            </div>
+                        </div>
+                    </a>
+                    <!-- Solo +5 -->
+                    <a href="destination.html?id=big-sur" class="dest-card" data-vibe="solo" data-continent="north-america" aria-label="Explore Big Sur, USA">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=600&h=800" alt="Big Sur" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">BIG SUR</h3>
+                                <span class="dest-card-location">USA</span>
+                                <span class="dest-card-desc">Where mountains meet the Pacific</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=sedona" class="dest-card" data-vibe="solo" data-continent="north-america" aria-label="Explore Sedona, USA">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1505533542167-8c89838bb19f?auto=format&fit=crop&q=80&w=600&h=800" alt="Sedona" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">SEDONA</h3>
+                                <span class="dest-card-location">USA</span>
+                                <span class="dest-card-desc">Red rock vortex sanctuary</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=norway" class="dest-card" data-vibe="solo" data-continent="europe" aria-label="Explore Norwegian Fjords, Norway">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=600&h=800" alt="Norwegian Fjords" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">FJORDS</h3>
+                                <span class="dest-card-location">Norway</span>
+                                <span class="dest-card-desc">Deep blue fjords and aurora skies</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=sri-lanka" class="dest-card" data-vibe="solo" data-continent="asia" aria-label="Explore Sri Lanka">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&q=80&w=600&h=800" alt="Sri Lanka" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">SRI LANKA</h3>
+                                <span class="dest-card-location">Sri Lanka</span>
+                                <span class="dest-card-desc">Tea plantations and ancient fortresses</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=azores" class="dest-card" data-vibe="solo" data-continent="europe" aria-label="Explore Azores, Portugal">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&q=80&w=600&h=800" alt="Azores" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">AZORES</h3>
+                                <span class="dest-card-location">Portugal</span>
+                                <span class="dest-card-desc">Volcanic craters and blue hydrangeas</span>
+                            </div>
+                        </div>
+                    </a>
+                    <!-- Family +7 -->
+                    <a href="destination.html?id=orlando" class="dest-card" data-vibe="family" data-continent="north-america" aria-label="Explore Orlando, USA">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1508737804141-4c3b688e2548?auto=format&fit=crop&q=80&w=600&h=800" alt="Orlando" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">ORLANDO</h3>
+                                <span class="dest-card-location">USA</span>
+                                <span class="dest-card-desc">Theme parks and family magic</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=tokyo" class="dest-card" data-vibe="family" data-continent="asia" aria-label="Explore Tokyo, Japan">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=600&h=800" alt="Tokyo" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">TOKYO</h3>
+                                <span class="dest-card-location">Japan</span>
+                                <span class="dest-card-desc">Neon lights and ancient temples</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=dubai" class="dest-card" data-vibe="family" data-continent="asia" aria-label="Explore Dubai, UAE">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600&h=800" alt="Dubai" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">DUBAI</h3>
+                                <span class="dest-card-location">UAE</span>
+                                <span class="dest-card-desc">Desert safaris and sky-high adventures</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=barcelona" class="dest-card" data-vibe="family" data-continent="europe" aria-label="Explore Barcelona, Spain">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=600&h=800" alt="Barcelona" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">BARCELONA</h3>
+                                <span class="dest-card-location">Spain</span>
+                                <span class="dest-card-desc">Gaudi and Mediterranean joy</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=cancun" class="dest-card" data-vibe="family" data-continent="north-america" aria-label="Explore Cancun, Mexico">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&q=80&w=600&h=800" alt="Cancun" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">CANCUN</h3>
+                                <span class="dest-card-location">Mexico</span>
+                                <span class="dest-card-desc">Mayan ruins and Caribbean waters</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=greek-islands" class="dest-card" data-vibe="family" data-continent="europe" aria-label="Explore Greek Islands, Greece">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=600&h=800" alt="Greek Islands" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">GREEK ISLANDS</h3>
+                                <span class="dest-card-location">Greece</span>
+                                <span class="dest-card-desc">Whitewashed villages and family shores</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=mauritius" class="dest-card" data-vibe="family" data-continent="africa" aria-label="Explore Mauritius">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&q=80&w=600&h=800" alt="Mauritius" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">MAURITIUS</h3>
+                                <span class="dest-card-location">Mauritius</span>
+                                <span class="dest-card-desc">Coral reefs and sugar-sand beaches</span>
+                            </div>
+                        </div>
+                    </a>
+                    <!-- ===== NEW GLOBAL DESTINATIONS ===== -->
+                    <a href="destination.html?id=cape-town" class="dest-card" data-vibe="adventure" data-continent="africa" aria-label="Explore Cape Town, South Africa">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1576485290814-1c72a0c5b3a8?auto=format&fit=crop&q=80&w=600&h=800" alt="Cape Town" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">CAPE TOWN</h3>
+                                <span class="dest-card-location">South Africa</span>
+                                <span class="dest-card-desc">Table Mountain and Atlantic shores</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=zanzibar" class="dest-card" data-vibe="romantic" data-continent="africa" aria-label="Explore Zanzibar, Tanzania">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=600&h=800" alt="Zanzibar" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">ZANZIBAR</h3>
+                                <span class="dest-card-location">Tanzania</span>
+                                <span class="dest-card-desc">Spice Island dreams and turquoise tides</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=nairobi-kenya" class="dest-card" data-vibe="adventure" data-continent="africa" aria-label="Explore Nairobi, Kenya">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&q=80&w=600&h=800" alt="Nairobi" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">NAIROBI</h3>
+                                <span class="dest-card-location">Kenya</span>
+                                <span class="dest-card-desc">Safari capital beneath the African sun</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=egypt" class="dest-card" data-vibe="family" data-continent="africa" aria-label="Explore Egypt">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&q=80&w=600&h=800" alt="Egypt" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">EGYPT</h3>
+                                <span class="dest-card-location">Egypt</span>
+                                <span class="dest-card-desc">Pyramids and pharaohs by the Nile</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=bangkok" class="dest-card" data-vibe="family" data-continent="asia" aria-label="Explore Bangkok, Thailand">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&q=80&w=600&h=800" alt="Bangkok" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">BANGKOK</h3>
+                                <span class="dest-card-location">Thailand</span>
+                                <span class="dest-card-desc">Golden temples and street food dreams</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=phuket" class="dest-card" data-vibe="romantic" data-continent="asia" aria-label="Explore Phuket, Thailand">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?auto=format&fit=crop&q=80&w=600&h=800" alt="Phuket" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">PHUKET</h3>
+                                <span class="dest-card-location">Thailand</span>
+                                <span class="dest-card-desc">Limestone karves and Andaman sunsets</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=jaipur" class="dest-card" data-vibe="family" data-continent="asia" aria-label="Explore Jaipur, India">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&q=80&w=600&h=800" alt="Jaipur" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">JAIPUR</h3>
+                                <span class="dest-card-location">India</span>
+                                <span class="dest-card-desc">Pink city of maharajas and bazaars</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=seville" class="dest-card" data-vibe="romantic" data-continent="europe" aria-label="Explore Seville, Spain">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1552394313-1e19cf1e49d1?auto=format&fit=crop&q=80&w=600&h=800" alt="Seville" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">SEVILLE</h3>
+                                <span class="dest-card-location">Spain</span>
+                                <span class="dest-card-desc">Flamenco and orange-blossom nights</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=new-york" class="dest-card" data-vibe="family" data-continent="north-america" aria-label="Explore New York, USA">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=600&h=800" alt="New York" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">NEW YORK</h3>
+                                <span class="dest-card-location">USA</span>
+                                <span class="dest-card-desc">Big Apple energy and skyline dreams</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=tulum" class="dest-card" data-vibe="romantic" data-continent="north-america" aria-label="Explore Tulum, Mexico">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1504730653502-4f6028a8a3b8?auto=format&fit=crop&q=80&w=600&h=800" alt="Tulum" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">TULUM</h3>
+                                <span class="dest-card-location">Mexico</span>
+                                <span class="dest-card-desc">Mayan ruins and turquoise cenotes</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=rio-de-janeiro" class="dest-card" data-vibe="family" data-continent="south-america" aria-label="Explore Rio de Janeiro, Brazil">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&q=80&w=600&h=800" alt="Rio de Janeiro" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">RIO</h3>
+                                <span class="dest-card-location">Brazil</span>
+                                <span class="dest-card-desc">Christ the Redeemer and samba soul</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=cusco" class="dest-card" data-vibe="adventure" data-continent="south-america" aria-label="Explore Cusco, Peru">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1587595431973-160d0d94add1?auto=format&fit=crop&q=80&w=600&h=800" alt="Cusco" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">CUSCO</h3>
+                                <span class="dest-card-location">Peru</span>
+                                <span class="dest-card-desc">Inca trails and Machu Picchu mists</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=buenos-aires" class="dest-card" data-vibe="romantic" data-continent="south-america" aria-label="Explore Buenos Aires, Argentina">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1589909202802-8f4aadce65e9?auto=format&fit=crop&q=80&w=600&h=800" alt="Buenos Aires" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">BUENOS AIRES</h3>
+                                <span class="dest-card-location">Argentina</span>
+                                <span class="dest-card-desc">Tango and steak in the Paris of South America</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=amazon" class="dest-card" data-vibe="adventure" data-continent="south-america" aria-label="Explore Amazon, Brazil">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&q=80&w=600&h=800" alt="Amazon" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">AMAZON</h3>
+                                <span class="dest-card-location">Brazil</span>
+                                <span class="dest-card-desc">Rainforest immersion in the lungs of the planet</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=sydney" class="dest-card" data-vibe="family" data-continent="oceania" aria-label="Explore Sydney, Australia">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=600&h=800" alt="Sydney" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">SYDNEY</h3>
+                                <span class="dest-card-location">Australia</span>
+                                <span class="dest-card-desc">Opera House and Bondi sun-kissed shores</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=bora-bora" class="dest-card" data-vibe="romantic" data-continent="oceania" aria-label="Explore Bora Bora, French Polynesia">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=600&h=800" alt="Bora Bora" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">BORA BORA</h3>
+                                <span class="dest-card-location">French Polynesia</span>
+                                <span class="dest-card-desc">Pearlescent lagoons and overwater bliss</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=fiji" class="dest-card" data-vibe="family" data-continent="oceania" aria-label="Explore Fiji">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=600&h=800" alt="Fiji" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">FIJI</h3>
+                                <span class="dest-card-location">Fiji</span>
+                                <span class="dest-card-desc">Bula spirit and coral garden wonders</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="destination.html?id=antarctica" class="dest-card" data-vibe="adventure" data-continent="antarctica" aria-label="Explore Antarctica">
+                        <div class="dest-card-media">
+                            <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&q=80&w=600&h=800" alt="Antarctica" loading="lazy">
+                            <div class="dest-card-overlay"></div>
+                            <div class="dest-card-label">
+                                <h3 class="dest-card-name">ANTARCTICA</h3>
+                                <span class="dest-card-location">Antarctica</span>
+                                <span class="dest-card-desc">The last great wilderness on Earth</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+
+    
+            <!-- Continent Filters -->
+            <div class="continent-filters justify-content-center reveal-snap" style="margin-top: 0.5rem;">
+                <button class="vibe-btn active" data-continent="all">All Continents</button>
+                <button class="vibe-btn" data-continent="africa">Africa</button>
+                <button class="vibe-btn" data-continent="asia">Asia</button>
+                <button class="vibe-btn" data-continent="europe">Europe</button>
+                <button class="vibe-btn" data-continent="north-america">N. America</button>
+                <button class="vibe-btn" data-continent="south-america">S. America</button>
+                <button class="vibe-btn" data-continent="oceania">Oceania</button>
+                <button class="vibe-btn" data-continent="antarctica">Antarctica</button>
+            </div>
+
+<!-- Floating Concierge -->
+    <div class="concierge-float" id="concierge-btn">
+        <i class="bi bi-chat-dots-fill fs-4"></i>
+        <span class="concierge-badge">Live</span>
+    </div>
+
+    <!-- =============================================
+         INSPIRATIONS: Breathtaking Wide-Angle Gallery
+         ============================================= -->
+    <section id="inspirations" class="inspire-section">
+        <div class="container-fluid px-0">
+            <div class="inspire-header text-center reveal-snap">
+                <h6 class="tracking-widest mb-3">Stop. Look. Breathe.</h6>
+                <h2 class="inspire-title">OUR INSPIRATIONS</h2>
+            </div>
+            <div class="inspire-scroll-wrapper">
+                <div class="dest-scroll-arrow-glass"><span class="scroll-arrow">→</span></div>
+                <div class="inspire-track-wrap reveal-snap">
+                <div class="inspire-track">
+                    <a href="inspiration.html?id=serenity" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Lone hammock over turquoise water" loading="lazy">
+                        <div class="inspire-label">SERENITY</div>
+                    </a>
+                    <a href="inspiration.html?id=majesty" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Misty sunrise over mountain peaks" loading="lazy">
+                        <div class="inspire-label">MAJESTY</div>
+                    </a>
+                    <a href="inspiration.html?id=adventure" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Winding road through dramatic canyon" loading="lazy">
+                        <div class="inspire-label">ADVENTURE</div>
+                    </a>
+                    <a href="inspiration.html?id=heritage" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Glowing historic European alleyway at dusk" loading="lazy">
+                        <div class="inspire-label">HERITAGE</div>
+                    </a>
+                    <a href="inspiration.html?id=wild" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Aurora borealis over a quiet lake" loading="lazy">
+                        <div class="inspire-label">WILD</div>
+                    </a>
+                    <a href="inspiration.html?id=escape" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Overwater bungalow at sunset" loading="lazy">
+                        <div class="inspire-label">ESCAPE</div>
+                    </a>
+                    <a href="inspiration.html?id=solitude" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Starry night over mountain cabin" loading="lazy">
+                        <div class="inspire-label">SOLITUDE</div>
+                    </a>
+                    <a href="inspiration.html?id=mystery" class="inspire-card">
+                        <img src="https://images.unsplash.com/photo-1505533542167-8c89838bb19f?auto=format&fit=crop&q=80&w=1600&h=1000" alt="Misty forest path" loading="lazy">
+                        <div class="inspire-label">MYSTERY</div>
+                    </a>
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =============================================
+         ABOUT (full-bleed blurred backdrop)
+         ============================================= -->
+    <section id="about" class="about-section reveal-snap">
+        <div class="about-bg">
+            <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=2070" alt="" aria-hidden="true">
+        </div>
+        <div class="about-overlay"></div>
+
+        <div class="about-content">
+            <div class="about-header reveal-snap">
+                <h6 class="tracking-widest mb-3">Our Story // 2026</h6>
+                <h3 class="about-title">ABOUT</h3>
+            </div>
+
+            <div class="about-cards">
+                <div class="about-card reveal-snap">
+                    <span class="about-number">01</span>
+                    <h3 class="about-card-title">Our Philosophy</h3>
+                    <p class="about-text">We believe travel should be intentional. Every journey is an act of curation — stripping away the noise to reveal what truly matters: raw nature, quiet luxury, and moments that belong only to you.</p>
+                </div>
+
+                <div class="about-card reveal-snap">
+                    <span class="about-number">02</span>
+                    <h3 class="about-card-title">Our Purpose</h3>
+                    <p class="about-text">We exist to connect you with the world's most serene sanctuaries — hand-picked, fully transparent, and stripped of everything unnecessary. Adventure awaits, not chaos.</p>
+                </div>
+
+                <div class="about-card reveal-snap">
+                    <span class="about-number">03</span>
+                    <h3 class="about-card-title">Our Promise</h3>
+                    <p class="about-text">From arrival to departure, every detail is handled with care. No hidden fees, no crowded tours — just seamless, intentional travel that lets you focus on what matters: the experience.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="container py-5 reveal-snap">
+        <div class="text-center mb-5">
+            <h6 class="tracking-widest mb-3">Global Coordinates</h6>
+            <h1 class="display-3 mb-0">OUR SANCTUARIES</h1>
+        </div>
+        <div id="world-map" class="w-100" style="border: 1px solid var(--primary-black, #080808);"></div>
+    </section>
+
+    <!-- Sanctuary Reviews -->
+    <section class="py-5 bg-white">
+        <div class="container py-5">
+            <div class="text-center mb-5 reveal-snap">
+                <h6 class="tracking-widest mb-3">Voice of the Elite</h6>
+                <h2 class="serif italic">SANCTUARY REVIEWS</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-4 reveal-snap">
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"NextGen doesn't just book a trip; they curate an emotion. My stay in the Kyoto sanctuary was the most profound silence I've ever experienced."</p>
+                        <h6 class="review-author">— Julian V., Elite Member</h6>
+                    </div>
+                </div>
+                <div class="col-lg-4 reveal-snap">
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"The peace of mind knowing my meal preferences were handled before I even landed in Marrakech was priceless. Every detail was intentional."</p>
+                        <h6 class="review-author">— Elena R., Global Explorer</h6>
+                    </div>
+                </div>
+                <div class="col-lg-4 reveal-snap">
+                    <div class="review-card">
+                        <div class="review-stars">★★★★★</div>
+                        <p class="review-text">"Authentic, transparent, and breathtaking. The Amalfi retreat was exactly as described—stripping away the noise of the modern world."</p>
+                        <h6 class="review-author">— Marcus T., Elite Member</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partner Trust Bar -->
+    <div class="partner-bar reveal-snap">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-5">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5d/IATA_logo.svg" alt="IATA" class="partner-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/en/9/91/WTTC_Official_Logo.png" alt="WTTC" class="partner-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/61/Cond%C3%A9_Nast_logo.svg" alt="Condé Nast" class="partner-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Forbes_logo.svg" alt="Forbes" class="partner-logo">
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <h3 class="serif fw-bold mb-2">NextGen</h3>
+                    <p class="small opacity-50" style="max-width: 260px;">Curated journeys beyond the ordinary. Every destination is a story waiting to be lived.</p>
+                </div>
+                <div class="footer-links">
+                    <h6>Discover</h6>
+                    <a href="destination.html">Destinations</a>
+                    <a href="index.html#inspirations">Inspirations</a>
+                    <a href="index.html#about">About</a>
+                    <a href="blog.html">Blog</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="footer-links">
+                    <h6>Support</h6>
+                    <a href="help.html">FAQ</a>
+                    <a href="legal.html">Cancellation Policy</a>
+                    <a href="#">Track Booking</a>
+                    <a href="mailto:curated@nextgentravel.com">24/7 Support</a>
+                </div>
+                <div class="footer-links">
+                    <h6>Newsletter</h6>
+                    <p class="small opacity-50 mb-3">Join our inner circle for curated sanctuary updates.</p>
+                    <form id="newsletter-form" class="d-flex gap-2">
+                        <input type="email" class="form-control bg-transparent border-secondary text-white rounded-0 form-control-sm" placeholder="Email address" required>
+                        <button type="submit" class="btn btn-outline-light btn-sm rounded-0">Join</button>
+                    </form>
+                </div>
+                <div class="footer-links">
+                    <h6>Connect</h6>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                        <a href="#" aria-label="Twitter">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="#" aria-label="Instagram">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                        </a>
+                        <a href="#" aria-label="YouTube">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                    <h6 class="mt-4">Preferences</h6>
+                    <div class="d-flex gap-2">
+                        <div class="footer-country">Global <span style="opacity:0.4;">▼</span></div>
+                        <div class="footer-currency">USD <span style="opacity:0.4;">▼</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-links">
+                    <a href="legal.html">Privacy Policy</a>
+                    <a href="legal.html">Terms of Use</a>
+                    <a href="legal.html">Site Map</a>
+                    <a href="admin.html" class="opacity-50">Admin</a>
+                </div>
+                <p class="small opacity-50">&copy; 2026 NextGen Travel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal fade" id="auth-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content text-white" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+                <div class="modal-body p-5">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal"></button>
+
+                    <!-- Tabs -->
+                    <div class="d-flex gap-3 mb-4">
+                        <button class="auth-tab active" data-auth="login">Login</button>
+                        <button class="auth-tab" data-auth="signup">Sign Up</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="auth-login" class="auth-form">
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Email</label>
+                            <input type="email" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small tracking-widest mb-2">Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-light w-100 rounded-0 py-2">Login</button>
+                        <p class="text-center mt-3 mb-0"><a href="forgot-password.html" class="text-white-50 small">Forgot password?</a></p>
+                    </form>
+
+                    <!-- Signup Form -->
+                    <form id="auth-signup" class="auth-form" style="display:none;">
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Full Name</label>
+                            <input type="text" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Email</label>
+                            <input type="email" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small tracking-widest mb-2">Confirm Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-light w-100 rounded-0 py-2">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profile-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-black border border-white border-opacity-25 rounded-0 text-white">
+                <div class="modal-body p-5">
+                    <div class="d-flex justify-content-between align-items-center mb-5">
+                        <div>
+                            <h2 class="serif italic mb-0">Profile Center</h2>
+                            <span class="badge bg-white text-black rounded-0 tracking-widest extra-small py-2 px-3 mt-2">ELITE SANCTUARY MEMBER</span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="row g-5">
+                        <!-- Left Column: Settings & Identity -->
+                        <div class="col-lg-5 border-end border-white border-opacity-10">
+                            
+                            <!-- Identity -->
+                            <h6 class="tracking-widest mb-4 opacity-50 uppercase">Identity & Documents</h6>
+                            <div class="text-center mb-4">
+                                <div class="position-relative d-inline-block">
+                                    <div class="user-avatar-circle mx-auto" style="width: 100px; height: 100px;">
+                                        <img id="profile-settings-img" src="" alt="Profile">
+                                    </div>
+                                    <label for="avatar-upload" class="position-absolute bottom-0 end-0 bg-white text-black rounded-circle p-2 cursor-pointer shadow-sm" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-camera-fill small"></i>
+                                        <input type="file" id="avatar-upload" hidden accept="image/*">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <form id="profile-settings-form">
+                                <div class="mb-3">
+                                    <label class="extra-small tracking-widest mb-2 opacity-50">Full Name</label>
+                                    <input type="text" id="profile-name" class="form-control border-white border-opacity-25 bg-transparent text-white rounded-0">
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50">Passport No.</label>
+                                        <input type="text" id="profile-passport" class="form-control border-white border-opacity-25 bg-transparent text-white rounded-0" placeholder="A0000000">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50">Identity Card No.</label>
+                                        <input type="text" id="profile-identity-card" class="form-control border-white border-opacity-25 bg-transparent text-white rounded-0" placeholder="ID card / National ID">
+                                    </div>
+                                </div>
+                                <p class="extra-small text-white-50 mt-1 mb-0 italic opacity-75" style="font-size: 0.65rem; line-height: 1.4;">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Domestic trips</strong> require your Identity Card. <strong>International trips</strong> require your Passport.
+                                    Save both so the checkout form auto-selects the right one.
+                                </p>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50">Emergency Contact</label>
+                                        <input type="tel" id="profile-emergency" class="form-control border-white border-opacity-25 bg-transparent text-white rounded-0" placeholder="+00...">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50">Emergency Contact Name</label>
+                                        <input type="text" id="profile-emergency-name" class="form-control border-white border-opacity-25 bg-transparent text-white rounded-0" placeholder="Contact person">
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-12">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50">Your Country</label>
+                                        <input type="text" id="profile-country" class="form-control border-white border-opacity-25 bg-transparent text-white rounded-0" list="global-countries" placeholder="e.g. United States, Nigeria, Japan">
+                                    </div>
+                                </div>
+
+                                <!-- Global Preferences -->
+                                <h6 class="tracking-widest mt-5 mb-4 opacity-50 uppercase">Global Preferences</h6>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input bg-dark border-secondary" type="checkbox" id="pref-always-hotel">
+                                    <label class="form-check-label small opacity-75" for="pref-always-hotel">Always Reserve Hotel Sanctuary</label>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="extra-small tracking-widest mb-2 opacity-50">Preferred Arrival Meal</label>
+                                    <select id="pref-food" class="form-select border-white border-opacity-25 bg-transparent text-white rounded-0 small">
+                                        <option value="none" class="bg-black">I'll decide later</option>
+                                        <option value="local" class="bg-black">Local Delicacies</option>
+                                        <option value="continental" class="bg-black">Continental</option>
+                                        <option value="vegetarian" class="bg-black">Vegetarian / Vegan</option>
+                                    </select>
+                                </div>
+
+                                <div id="profile-alert" class="small text-success mt-2 mb-0 text-center" style="display:none;"></div>
+                                <button type="submit" class="btn btn-outline-light w-100 rounded-0 tracking-widest small py-2">Save Profile & Preferences</button>
+                            </form>
+
+                            <button id="profile-logout" class="btn btn-link text-danger text-decoration-none w-100 mt-4 small tracking-widest">Logout Sanctuary</button>
+                        </div>
+
+                        <!-- Right Column: Activity & Wishlist -->
+                        <div class="col-lg-7">
+                            
+                            <!-- Activity Tabs -->
+                            <div class="d-flex gap-4 mb-4 border-bottom border-white border-opacity-10 pb-2">
+                                <button class="profile-tab active small tracking-widest uppercase" data-section="activities" style="background:none; border:none; color:inherit;">Journeys</button>
+                                <button class="profile-tab small tracking-widest uppercase" data-section="wishlist" style="background:none; border:none; color:inherit; opacity:0.5;">My Sanctuaries</button>
+                            </div>
+
+                            <div id="profile-section-activities" class="profile-content-section">
+                                <h6 class="extra-small tracking-widest mb-3 opacity-25 uppercase">Upcoming</h6>
+                                <div id="upcoming-list" class="mb-5"></div>
+                                
+                                <h6 class="extra-small tracking-widest mb-3 opacity-25 uppercase">Past Memories</h6>
+                                <div id="past-list" class="overflow-auto" style="max-height: 250px;"></div>
+                            </div>
+
+                            <div id="profile-section-wishlist" class="profile-content-section" style="display: none;">
+                                <div id="wishlist-list" class="row g-3">
+                                    <!-- Wishlist items -->
+                                    <p class="text-muted small italic">No sanctuaries saved yet.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+<script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var dl = document.getElementById("global-countries");
+      if (dl) {
+        fetch("https://restcountries.com/v3.1/all?fields=name,cca2")
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var names = data.map(function(c) { return c.name.common; });
+            names.sort();
+            names.forEach(function(n) {
+              var opt = document.createElement("option");
+              opt.value = n;
+              dl.appendChild(opt);
+            });
+          })
+          .catch(function() { /* silently ignore */ });
+      }
+    });
+    </script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var dl = document.getElementById("global-countries");
+      if (dl) {
+        fetch("https://restcountries.com/v3.1/all?fields=name,cca2")
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var names = data.map(function(c) { return c.name.common; });
+            names.sort();
+            names.forEach(function(n) {
+              var opt = document.createElement("option");
+              opt.value = n;
+              dl.appendChild(opt);
+            });
+          })
+          .catch(function() { /* silently ignore */ });
+      }
+    });
+    </script>
+    <script>document.addEventListener('DOMContentLoaded', () => {
+
+            // Booking confirmation from checkout redirect
+            const params = new URLSearchParams(window.location.search);
+            const firstName = params.get('first');
+            const lastName = params.get('last');
+            const email = params.get('email');
+            const destName = params.get('dest');
+            const hotel = params.get('hotel');
+            const food = params.get('food');
+
+            if (firstName && destName) {
+                document.getElementById('confirm-first').textContent = firstName;
+                if (lastName) document.getElementById('confirm-last').textContent = lastName;
+                if (email) document.getElementById('confirm-email').textContent = email;
+                document.getElementById('confirm-dest').textContent = destName;
+                
+                if (hotel === 'Yes') {
+                    document.getElementById('confirm-hotel').textContent = 'Reserved';
+                    document.getElementById('confirm-food').textContent = food.charAt(0).toUpperCase() + food.slice(1);
+                    document.getElementById('confirm-details').style.display = 'block';
+                }
+
+                document.getElementById('booking-confirmation').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Clean URL without reload
+                if (window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+
+            const tabs = document.querySelectorAll('.search-tab');
+            const panels = {
+                flights: document.getElementById('panel-flights'),
+                hotels: document.getElementById('panel-hotels'),
+                holidays: document.getElementById('panel-holidays'),
+            };
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    Object.values(panels).forEach(p => p.classList.remove('active'));
+                    panels[target].classList.add('active');
+                });
+            });
+
+            const subnavBtns = document.querySelectorAll('.flight-subnav-btn');
+            const dateFieldReturn = document.getElementById('date-field-return');
+            const dateFieldOneway = document.getElementById('date-field-oneway');
+            const multicityContainer = document.getElementById('multicity-container');
+            const capsuleFlights = document.getElementById('capsule-flights');
+
+            subnavBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    subnavBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const trip = btn.dataset.trip;
+                    dateFieldReturn.style.display = 'none';
+                    dateFieldOneway.style.display = 'none';
+                    multicityContainer.style.display = 'none';
+                    capsuleFlights.style.display = 'flex';
+                    if (trip === 'return') {
+                        dateFieldReturn.style.display = 'flex';
+                    } else if (trip === 'oneway') {
+                        dateFieldOneway.style.display = 'flex';
+                    } else if (trip === 'multicity') {
+                        capsuleFlights.style.display = 'none';
+                        multicityContainer.style.display = 'block';
+                    }
+                });
+            });
+
+            const multicityRows = document.getElementById('multicity-rows');
+            const multicityAddBtn = document.getElementById('multicity-add');
+            let multiCityCount = 1;
+
+            function createMultiCityRow(index) {
+                const row = document.createElement('div');
+                row.className = 'multicity-row';
+                row.innerHTML = `
+                    <div class="multicity-row-fields">
+                        <div class="multicity-field-badge">${index + 1}</div>
+                        <div class="multicity-field">
+                            <label>Leaving from</label>
+                            <input type="text" placeholder="Where from?">
+                        </div>
+                        <div class="multicity-field">
+                            <label>Going to</label>
+                            <input type="text" placeholder="Where to?">
+                        </div>
+                        <div class="multicity-field">
+                            <label>Departure</label>
+                            <input type="date" class="multicity-date">
+                        </div>
+                        ${index > 0 ? `<button class="multicity-remove-btn" data-index="${index}">✕</button>` : ''}
+                    </div>
+                `;
+                return row;
+            }
+
+            multicityRows.innerHTML = '';
+            multicityRows.appendChild(createMultiCityRow(0));
+
+            multicityRows.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('.multicity-remove-btn');
+                if (!removeBtn) return;
+                const row = removeBtn.closest('.multicity-row');
+                if (row) {
+                    row.remove();
+                    renumberMultiCityRows();
+                }
+            });
+
+            function renumberMultiCityRows() {
+                document.querySelectorAll('.multicity-field-badge').forEach((el, i) => {
+                    el.textContent = i + 1;
+                });
+            }
+
+            multicityAddBtn.addEventListener('click', () => {
+                const row = createMultiCityRow(multiCityCount);
+                multicityRows.appendChild(row);
+                multiCityCount++;
+            });
+
+            const passengerSelect = document.getElementById('passenger-select');
+            const passengerDropdown = document.getElementById('passenger-dropdown');
+
+            function togglePassengerDropdown(forceOpen) {
+                const isOpen = forceOpen !== undefined ? forceOpen : !passengerDropdown.classList.contains('open');
+                passengerDropdown.classList.toggle('open', isOpen);
+                passengerSelect.classList.toggle('dropdown-open', isOpen);
+                document.getElementById('hotel-guest-dropdown')?.classList.remove('open');
+                document.getElementById('hotel-guest-select')?.classList.remove('dropdown-open');
+            }
+
+            passengerSelect.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePassengerDropdown();
+            });
+
+            document.querySelectorAll('.stepper-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const type = btn.dataset.type;
+                    const dir = parseInt(btn.dataset.dir);
+                    const countEl = document.getElementById(type + '-count');
+                    let val = parseInt(countEl.textContent);
+                    val = Math.max(0, val + dir);
+                    if (type === 'adults' && val < 1) val = 1;
+                    countEl.textContent = val;
+                    updatePassengerSummary();
+                });
+            });
+
+            document.querySelectorAll('input[name="flight-class"]').forEach(radio => {
+                radio.addEventListener('change', updatePassengerSummary);
+            });
+
+            function updatePassengerSummary() {
+                const adults = parseInt(document.getElementById('adults-count').textContent);
+                const children = parseInt(document.getElementById('children-count').textContent);
+                const infants = parseInt(document.getElementById('infants-count').textContent);
+                const total = adults + children + infants;
+                const cls = document.querySelector('input[name="flight-class"]:checked')?.value || 'Economy';
+                const label = total === 1 ? 'passenger' : 'passengers';
+                document.getElementById('passenger-summary').textContent = `${total} ${label}, ${cls}`;
+            }
+
+            const hotelGuestSelect = document.getElementById('hotel-guest-select');
+            const hotelGuestDropdown = document.getElementById('hotel-guest-dropdown');
+
+            function toggleHotelDropdown(forceOpen) {
+                const isOpen = forceOpen !== undefined ? forceOpen : !hotelGuestDropdown.classList.contains('open');
+                hotelGuestDropdown.classList.toggle('open', isOpen);
+                hotelGuestSelect.classList.toggle('dropdown-open', isOpen);
+                passengerDropdown.classList.remove('open');
+                passengerSelect.classList.remove('dropdown-open');
+            }
+
+            hotelGuestSelect.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleHotelDropdown();
+            });
+
+            document.querySelectorAll('.hotel-stepper').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const type = btn.dataset.type;
+                    const dir = parseInt(btn.dataset.dir);
+                    const countEl = document.getElementById(type + '-count');
+                    let val = parseInt(countEl.textContent);
+                    val = Math.max(1, val + dir);
+                    if (type === 'hotel-adults' && val < 1) val = 1;
+                    if (type === 'hotel-rooms' && val < 1) val = 1;
+                    countEl.textContent = val;
+                    updateHotelGuestSummary();
+                });
+            });
+
+            function updateHotelGuestSummary() {
+                const adults = parseInt(document.getElementById('hotel-adults-count').textContent);
+                const rooms = parseInt(document.getElementById('hotel-rooms-count').textContent);
+                const roomLabel = rooms === 1 ? 'room' : 'rooms';
+                document.getElementById('hotel-guest-summary').textContent = `${adults} adults, ${rooms} ${roomLabel}`;
+            }
+
+            document.addEventListener('click', () => {
+                togglePassengerDropdown(false);
+                toggleHotelDropdown(false);
+            });
+
+            [passengerDropdown, hotelGuestDropdown].forEach(dd => {
+                dd.addEventListener('click', (e) => e.stopPropagation());
+            });
+
+            document.querySelectorAll('.capsule-swap').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const fields = btn.closest('.booking-capsule').querySelectorAll('.capsule-field');
+                    const fromInput = fields[0]?.querySelector('.capsule-input');
+                    const toInput = fields[1]?.querySelector('.capsule-input');
+                    if (fromInput && toInput) {
+                        const temp = fromInput.value;
+                        fromInput.value = toInput.value;
+                        toInput.value = temp;
+                    }
+                });
+            });
+
+            
+
+            document.querySelectorAll('.capsule-input').forEach(input => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        const btn = input.closest('.search-panel')?.querySelector('.capsule-search-btn');
+                        btn?.click();
+                    }
+                });
+            });
+
+            // Scroll arrows for galleries
+            document.querySelectorAll('.scroll-arrow').forEach(arrow => {
+                arrow.addEventListener('click', () => {
+                    const wrap = arrow.closest('section')?.querySelector('.dest-scroll-wrap, .inspire-track-wrap');
+                    if (wrap) {
+                        const card = wrap.querySelector('.dest-card, .inspire-card');
+                        if (card) {
+                            wrap.scrollBy({ left: card.offsetWidth + 4, behavior: 'smooth' });
+                        }
+                    }
+                });
+            });
+
+            // Search buttons — use cached destinations if available
+            const allDests = window._allDests || [];
+            document.querySelectorAll('.capsule-search-btn').forEach(btn => {
+                // Remove old listener and rebind
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const tab = newBtn.closest('.search-panel');
+                    let params = new URLSearchParams();
+
+                    if (tab.id === 'panel-flights') {
+                        const from = tab.querySelector('input[placeholder="Where from?"]').value;
+                        const to = tab.querySelector('input[placeholder="Where to?"]').value;
+                        const guests = document.getElementById('adults-count').textContent;
+                        const depart = document.getElementById('date-depart').value;
+                        const ret = document.getElementById('date-return').value;
+                        const match = allDests.find(d => to.toLowerCase().includes((d.title || d.id).toLowerCase()));
+                        params.append('id', match ? match.id : 'amalfi');
+                        params.append('guests', guests);
+                        params.append('search_type', 'flight');
+                        params.append('from', from);
+                        params.append('to', to);
+                        params.append('start', depart);
+                        params.append('end', ret);
+                    } else if (tab.id === 'panel-hotels') {
+                        const where = tab.querySelector('input[placeholder="City or hotel name"]').value;
+                        const guests = document.getElementById('hotel-adults-count').textContent;
+                        const start = tab.querySelector('input[type="date"]:first-of-type').value;
+                        const end = tab.querySelector('input[type="date"]:last-of-type').value;
+                        const match = allDests.find(d => where.toLowerCase().includes((d.title || d.id).toLowerCase()));
+                        params.append('id', match ? match.id : 'amalfi');
+                        params.append('guests', guests);
+                        params.append('search_type', 'hotel');
+                        params.append('to', where);
+                        params.append('start', start);
+                        params.append('end', end);
+                    } else if (tab.id === 'panel-holidays') {
+                        params.append('id', allDests[0]?.id || 'amalfi');
+                        params.append('guests', '1');
+                        params.append('search_type', 'holiday');
+                    }
+
+                    const checkoutUrl = 'checkout.html?' + params.toString();
+                    let routeText = '';
+                    if (tab.id === 'panel-flights') {
+                        const from = tab.querySelector('input[placeholder="Where from?"]').value;
+                        const to = tab.querySelector('input[placeholder="Where to?"]').value;
+                        routeText = (from || 'Anywhere') + ' \u2192 ' + (to || 'Anywhere');
+                    } else if (tab.id === 'panel-hotels') {
+                        const where = tab.querySelector('input[placeholder="City or hotel name"]').value;
+                        routeText = 'Stay in ' + (where || 'Anywhere');
+                    } else if (tab.id === 'panel-holidays') {
+                        routeText = 'Holiday Packages';
+                    }
+
+                    // Show availability check overlay
+                    const overlay = document.getElementById('avail-overlay');
+                    const loading = document.getElementById('avail-loading');
+                    const success = document.getElementById('avail-success');
+                    const fail = document.getElementById('avail-fail');
+                    const checkDest = document.getElementById('avail-checking-dest');
+                    const failDate = document.getElementById('avail-date');
+                    const altContainer = document.getElementById('avail-alternatives');
+                    const continueBtn = document.getElementById('avail-continue');
+                    const closeBtn = document.getElementById('avail-close');
+
+                    loading.style.display = 'flex';
+                    success.style.display = 'none';
+                    fail.style.display = 'none';
+                    overlay.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                    if (checkDest) checkDest.textContent = routeText || 'Checking routes...';
+
+                    // Check availability via API
+                    (async () => {
+                        try {
+                            const fromVal = params.get('from') || '';
+                            const toVal = params.get('to') || '';
+                            const dateVal = params.get('start') || '';
+
+                            const timeoutPromise = new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Check timed out')), 12000)
+                            );
+                            const trips = await Promise.race([
+                                api.checkTripAvailability(fromVal, toVal, dateVal),
+                                timeoutPromise
+                            ]);
+                            const hasAvailability = Array.isArray(trips) && trips.some(t => t.available_spots > 0);
+
+                            if (hasAvailability) {
+                                loading.style.display = 'none';
+                                success.style.display = 'flex';
+                                setTimeout(() => {
+                                    window.location.href = checkoutUrl;
+                                }, 1200);
+                            } else {
+                                loading.style.display = 'none';
+                                fail.style.display = 'flex';
+                                if (failDate) failDate.textContent = dateVal || 'your selected date';
+
+                                if (altContainer) {
+                                    altContainer.innerHTML = '';
+                                    if (Array.isArray(trips) && trips.length > 0) {
+                                        const availTrips = trips.filter(t => t.available_spots > 0);
+                                        if (availTrips.length > 0) {
+                                            availTrips.slice(0, 5).forEach(t => {
+                                                const btn = document.createElement('button');
+                                                btn.className = 'btn-alt-date';
+                                                btn.textContent = t.departure_date + ' (' + t.available_spots + ' spots)';
+                                                btn.addEventListener('click', () => {
+                                                    const u = new URL(checkoutUrl, window.location.origin);
+                                                    u.searchParams.set('start', t.departure_date);
+                                                    window.location.href = u.pathname + u.search;
+                                                });
+                                                altContainer.appendChild(btn);
+                                            });
+                                        } else {
+                                            altContainer.innerHTML = '<p class="small text-muted">No available trips found for this route on selected dates.</p>';
+                                        }
+                                    } else {
+                                        altContainer.innerHTML = '<p class="small text-muted">No trips found for this route. Try different destinations.</p>';
+                                    }
+                                }
+
+                                if (continueBtn) {
+                                    continueBtn.onclick = () => {
+                                        window.location.href = checkoutUrl;
+                                    };
+                                }
+                                if (closeBtn) {
+                                    closeBtn.onclick = () => {
+                                        overlay.style.display = 'none';
+                                        document.body.style.overflow = '';
+                                    };
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('[NextGen] Availability check failed, proceeding:', err.message);
+                            loading.style.display = 'none';
+                            success.style.display = 'flex';
+                            setTimeout(() => {
+                                window.location.href = checkoutUrl;
+                            }, 800);
+                        }
+                    })();
+                });
+            });
+        });
+    </script>
+
+    <!-- Dynamic dest-track + inspire-track renderer -->
+    <script>
+    (async () => {
+        let dests;
+        try {
+            dests = await api.getDestinations();
+            window._allDests = dests;
+        } catch (_) { return; }
+        if (!dests || dests.length === 0) return;
+
+        // Build VIBE_MAP from destination vibe field
+        const vibeList = ['romantic', 'adventure', 'solo', 'family', 'cultural', 'wellness'];
+
+        // Rebuild dest-track
+        const track = document.getElementById('dest-track');
+        if (track) {
+            track.innerHTML = dests.map(d => {
+                const vibe = vibeList.includes(d.vibe) ? d.vibe : vibeList[Math.abs(d.id.length) % vibeList.length];
+                const img = d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600&h=800';
+                return `<a href="destination.html?id=${encodeURIComponent(escapeHtml(d.id))}" class="dest-card" data-vibe="${escapeHtml(vibe)}" aria-label="Explore ${escapeHtml(d.title || d.id)}">
+                    <div class="dest-card-media">
+                        <img src="${escapeHtml(img)}" alt="${escapeHtml(d.title || d.id)}" loading="lazy">
+                        <div class="dest-card-overlay"></div>
+                        <div class="dest-card-label">
+                            <h3 class="dest-card-name">${escapeHtml(d.title || d.id).toUpperCase()}</h3>
+                            <span class="dest-card-location">${escapeHtml(d.country || '')}</span>
+                            <span class="dest-card-desc">${escapeHtml(d.description || d.edition || '').substring(0, 40)}</span>
+                        </div>
+                    </div>
+                </a>`;
+            }).join('');
+        }
+
+        // Rebuild inspire-track (use first 8 destinations)
+        const inspireTrack = document.querySelector('.inspire-track');
+        if (inspireTrack) {
+            const themes = ['serenity', 'majesty', 'adventure', 'heritage', 'wild', 'escape', 'solitude', 'mystery'];
+            inspireTrack.innerHTML = dests.slice(0, 8).map((d, i) => {
+                const img = d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1600&h=1000';
+                return `<a href="inspiration.html?id=${escapeHtml(themes[i])}" class="inspire-card">
+                    <img src="${escapeHtml(img)}" alt="${escapeHtml(d.title || d.id)}" loading="lazy">
+                    <div class="inspire-label">${escapeHtml(themes[i]).toUpperCase()}</div>
+                </a>`;
+            }).join('');
+        }
+    })();
+    </script>
+
+    <!-- Availability Check Overlay -->
+    <div id="avail-overlay" class="avail-overlay" style="display:none;">
+        <div class="avail-modal">
+            <div id="avail-loading" class="avail-content">
+                <div class="avail-spinner"></div>
+                <p class="avail-status">Checking Availability</p>
+                <p class="avail-suggestion" id="avail-checking-dest"></p>
+            </div>
+            <div id="avail-success" class="avail-content" style="display:none;">
+                <div class="avail-icon avail-icon-success">✓</div>
+                <p class="avail-status">Sanctuary Available</p>
+                <p class="avail-suggestion">Redirecting you now...</p>
+            </div>
+            <div id="avail-fail" class="avail-content" style="display:none;">
+                <div class="avail-icon avail-icon-fail">✕</div>
+                <p class="avail-status">Fully Booked for <span id="avail-date"></span></p>
+                <p class="avail-suggestion">We suggest these alternative dates:</p>
+                <div id="avail-alternatives" class="avail-dates"></div>
+                <div class="avail-actions">
+                    <button id="avail-continue" class="btn btn-dark rounded-0 py-2">Continue to Reserve Anyway</button>
+                    <button id="avail-close" class="btn btn-outline-dark rounded-0 py-2">Browse Other Destinations</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Availability check on destination card clicks
+        const overlay = document.getElementById('avail-overlay');
+        const loading = document.getElementById('avail-loading');
+        const success = document.getElementById('avail-success');
+        const fail = document.getElementById('avail-fail');
+
+        function checkAvailability(redirectUrl, destName) {
+            loading.style.display = 'flex';
+            success.style.display = 'none';
+            fail.style.display = 'none';
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('avail-checking-dest').textContent = destName || '';
+
+            setTimeout(() => {
+                const available = Math.random() > 0.35;
+                if (available) {
+                    loading.style.display = 'none';
+                    success.style.display = 'flex';
+                    setTimeout(() => { window.location.href = redirectUrl; }, 900);
+                } else {
+                    loading.style.display = 'none';
+                    fail.style.display = 'flex';
+                    const today = new Date();
+                    document.getElementById('avail-date').textContent =
+                        today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                    const altContainer = document.getElementById('avail-alternatives');
+                    altContainer.innerHTML = '';
+                    const usedDates = new Set();
+                    for (let i = 0; i < 3; i++) {
+                        let d, dateStr;
+                        do {
+                            d = new Date(); d.setDate(d.getDate() + 3 + Math.floor(Math.random() * 55));
+                            dateStr = d.toISOString().split('T')[0];
+                        } while (usedDates.has(dateStr));
+                        usedDates.add(dateStr);
+                        const btn = document.createElement('button');
+                        btn.className = 'btn-alt-date';
+                        btn.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        btn.addEventListener('click', () => { window.location.href = redirectUrl + '&date=' + dateStr; });
+                        altContainer.appendChild(btn);
+                    }
+                    document.getElementById('avail-continue').onclick = () => { window.location.href = redirectUrl; };
+                    document.getElementById('avail-close').onclick = () => {
+                        overlay.style.display = 'none';
+                        document.body.style.overflow = '';
+                    };
+                }
+            }, 1800);
+        }
+
+        // Intercept destination card clicks
+        document.getElementById('dest-track').addEventListener('click', (e) => {
+            const card = e.target.closest('.dest-card');
+            if (!card) return;
+            e.preventDefault();
+            const href = card.getAttribute('href');
+            const title = card.querySelector('.dest-card-name')?.textContent || '';
+            checkAvailability(href, title);
+        });
+    });
+    </script>
+</body>
+</html>
