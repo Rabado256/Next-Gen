@@ -270,8 +270,6 @@
           } catch (_) {}
         }
 
-        let dayCounter = 1;
-
         function checkAuth() {
             const token = api.getToken();
             if (token) {
@@ -523,5 +521,50 @@
             });
         });
     </script>
+
+    <div class="modal fade" id="auth-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content text-white" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+                <div class="modal-body p-5">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal"></button>
+                    <div class="d-flex gap-3 mb-4">
+                        <button class="auth-tab active" data-auth="login">Login</button>
+                        <button class="auth-tab" data-auth="signup">Sign Up</button>
+                    </div>
+                    <form id="auth-login" class="auth-form">
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Email</label>
+                            <input type="email" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small tracking-widest mb-2">Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-light w-100 rounded-0 py-2">Login</button>
+                        <p class="text-center mt-3 mb-0"><a href="forgot-password.html" class="text-white-50 small">Forgot password?</a></p>
+                    </form>
+                    <form id="auth-signup" class="auth-form" style="display:none;">
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Full Name</label>
+                            <input type="text" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Email</label>
+                            <input type="email" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small tracking-widest mb-2">Confirm Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-light w-100 rounded-0 py-2">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

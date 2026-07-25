@@ -660,11 +660,14 @@
             // Run document detection after auto-fill
             setTimeout(updateDocumentRequirements, 100);
 
+            // Pre-fill hotel if coming from hotel search
+            const hotelSelectContainer = document.getElementById('hotel-selection-container');
+
             // Apply Global Preferences
             if (user.pref_hotel) {
                 const reserveHotel = document.getElementById('reserve-hotel');
                 reserveHotel.checked = true;
-                hotelSelectContainer.style.display = 'block';
+                if (hotelSelectContainer) hotelSelectContainer.style.display = 'block';
                 updateSummary(true);
             }
             if (user.pref_food && user.pref_food !== 'none') {
@@ -731,14 +734,25 @@
         }
 
         document.getElementById('confirm-payment').addEventListener('click', async function() {
+            const first = document.getElementById('first-name').value.trim();
+            const last = document.getElementById('last-name').value.trim();
+            const email = document.getElementById('email')?.value?.trim() || '';
+            const phone = document.getElementById('phone')?.value?.trim() || '';
+            const travelDate = document.getElementById('travel-date').value;
+
+            // Validate required fields before processing
+            if (!first || !last || !email || !travelDate) {
+                const missing = [];
+                if (!first) missing.push('First Name');
+                if (!last) missing.push('Last Name');
+                if (!email) missing.push('Email');
+                if (!travelDate) missing.push('Travel Date');
+                alert('Please fill in: ' + missing.join(', '));
+                return;
+            }
+
             this.disabled = true;
             this.textContent = 'Processing...';
-
-            const first = document.getElementById('first-name').value;
-            const last = document.getElementById('last-name').value;
-            const email = document.getElementById('email')?.value || '';
-            const phone = document.getElementById('phone')?.value || '';
-            const travelDate = document.getElementById('travel-date').value;
 
             // Try backend payment first
             try {

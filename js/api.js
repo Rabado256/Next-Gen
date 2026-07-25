@@ -60,8 +60,8 @@ const api = {
     const { data: { session } } = await SB.auth.getSession();
     if (session) {
       this.setToken(session.access_token);
-      const { data: { user } } = await SB.auth.getUser();
-      if (user) {
+      const { data: { user }, error: getUserErr } = await SB.auth.getUser();
+      if (user && !getUserErr) {
         let userData;
         try {
           // Fetch user profile from the profiles table
@@ -78,6 +78,10 @@ const api = {
         }
         localStorage.setItem('nextgen_user', JSON.stringify(userData));
         return { user: userData, token: session.access_token };
+      } else {
+        // getUser failed — clear stale cached session data
+        this.clearToken();
+        localStorage.removeItem('nextgen_user');
       }
     }
     return null;
@@ -556,7 +560,7 @@ const api = {
       const { count: total_bookings } = await SB.from('bookings').select('*', { count: 'exact', head: true });
       let total_users = 0;
       try {
-        const result = await SB.from('profiles').select('*', { count: 'exact', head: true });
+        const result = await SB.from('profiles').select('id', { count: 'exact', head: true });
         total_users = result.count || 0;
       } catch (_) {
         total_users = 1;

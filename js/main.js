@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // VIBE & CONTINENT FILTERING
     //    Filter destination cards by mood/region
     // ==========================================
-    const vibeBtns = document.querySelectorAll('.vibe-btn');
+    const vibeBtns = document.querySelectorAll('.vibe-filters .vibe-btn');
     const destCards = document.querySelectorAll('.dest-card');
     const destTrack = document.getElementById('dest-track');
 
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const vibe = d.vibe || 'general';
                     const country = d.country || '';
                     L.marker(coords).addTo(map)
-                        .bindPopup(`<b>${name}</b><br>${country} // ${vibe}`);
+                        .bindPopup(`<b>${escapeHtml(name)}</b><br>${escapeHtml(country)} // ${escapeHtml(vibe)}`);
                 });
             } else {
                 // Fallback hardcoded list when API is unavailable
@@ -284,11 +284,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             authButton.style.background = 'transparent';
             
             // Click opens the Profile Center modal
-            authButton.addEventListener('click', () => {
-                const profileModal = new bootstrap.Modal(document.getElementById('profile-modal'));
-                renderProfileCenter();
-                profileModal.show();
-            });
+            if (!authButton._hasProfileListener) {
+                authButton._hasProfileListener = true;
+                authButton.addEventListener('click', () => {
+                    const profileModal = new bootstrap.Modal(document.getElementById('profile-modal'));
+                    renderProfileCenter();
+                    profileModal.show();
+                });
+            }
 
             // Remove old logout button from navbar (now inside profile center)
             const oldLogout = document.getElementById('logout-btn');
@@ -594,6 +597,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const email = emailInput.value.trim();
             if (!email) return;
             const btn = newsletterForm.querySelector('button[type="submit"]');
+            const origText = btn.textContent;
             btn.disabled = true;
             btn.textContent = 'Sending...';
             try {
@@ -606,10 +610,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     localStorage.setItem('nextgen_newsletter', JSON.stringify(subs));
                 }
             }
-            alert(`Thank you for joining our inner circle! A curated welcome has been sent to ${email}.`);
+            btn.textContent = 'Subscribed!';
             emailInput.value = '';
-            btn.disabled = false;
-            btn.textContent = 'Join';
+            setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 3000);
         });
     }
 
@@ -633,10 +636,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 contacts.push({ name, email, subject, message, date: new Date().toLocaleDateString(), read: false });
                 localStorage.setItem('nextgen_contacts', JSON.stringify(contacts));
             }
-            alert('Your message has been sent to our curators. Expect a response within 24 hours.');
+            const origText = btn.textContent;
+            btn.textContent = 'Message Sent!';
+            btn.style.background = 'var(--comptoir-ochre)';
             contactForm.reset();
-            btn.disabled = false;
-            btn.textContent = 'Send Message';
+            setTimeout(() => { btn.disabled = false; btn.textContent = origText; btn.style.background = ''; }, 3000);
         });
     }
 
@@ -667,11 +671,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             });
 
-            // Walk all text nodes in common containers as fallback
-            const containers = ['main', 'header', '.container', '.site-footer'];
-            containers.forEach(container => {
-                const parent = document.querySelector(container);
-                if (!parent) return;
+            // Walk price-specific containers only (avoid corrupting non-price text)
+            const priceContainers = document.querySelectorAll('.result-price, .dest-card-desc, .booking-confirm-text, .total-price, #checkout-total, #checkout-price, #hotel-price, .result-card-footer, .dest-price');
+            priceContainers.forEach(parent => {
                 const walker = document.createTreeWalker(parent, NodeFilter.SHOW_TEXT, null, false);
                 let node = walker.nextNode();
                 while (node) {
