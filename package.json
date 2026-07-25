@@ -4,10 +4,11 @@
   "private": true,
   "description": "NextGen Travel Agency - Curated journeys beyond the ordinary",
   "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve .",
     "vercel-build": "echo 'Static build complete'"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.108.2",
     "dotenv": "^17.4.2"
   }
 }
