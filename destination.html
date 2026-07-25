@@ -1033,17 +1033,19 @@
 
         async function loadReviews() {
             try {
-                const data = await api.getReviews(id);
-                document.getElementById('review-avg').textContent = data.stats.avg || '0.0';
-                document.getElementById('review-count').textContent = data.stats.count + ' review' + (data.stats.count !== 1 ? 's' : '');
+                const reviews = await api.getReviews(id);
+                const count = reviews.length;
+                const avg = count > 0 ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / count) : 0;
+                document.getElementById('review-avg').textContent = avg.toFixed(1);
+                document.getElementById('review-count').textContent = count + ' review' + (count !== 1 ? 's' : '');
                 const display = document.getElementById('review-stars-display');
-                const avg = Math.round(data.stats.avg || 0);
-                display.textContent = '★'.repeat(avg) + '☆'.repeat(5 - avg);
+                const roundedAvg = Math.round(avg);
+                display.textContent = '★'.repeat(roundedAvg) + '☆'.repeat(5 - roundedAvg);
                 const list = document.getElementById('reviews-list');
-                if (data.reviews.length === 0) {
+                if (reviews.length === 0) {
                     list.innerHTML = '<p class="text-muted small">No reviews yet. Be the first to share!</p>';
                 } else {
-                    list.innerHTML = data.reviews.map(r => `
+                    list.innerHTML = reviews.map(r => `
                         <div class="border-bottom border-dark pb-3 mb-3">
                             <div class="d-flex justify-content-between">
                                 <strong class="small">${escapeHtml(r.user_name || 'Anonymous')}</strong>
@@ -1078,9 +1080,10 @@
         async function loadAvailability() {
             try {
                 const data = await api.getAvailability(id);
+                const dates = data.dates || [];
                 const grid = document.getElementById('calendar-grid');
                 const today = new Date();
-                grid.innerHTML = data.slice(0, 30).map((a, i) => {
+                grid.innerHTML = dates.slice(0, 30).map((a, i) => {
                     const d = new Date();
                     d.setDate(d.getDate() + i);
                     const dayName = d.toLocaleDateString('en', { weekday: 'short' });
@@ -1188,8 +1191,9 @@
             }
 
             // Check if any slots available in the next 30 days
-            const hasAvailability = cachedAvailability
-                ? cachedAvailability.some(a => a.available && a.booked < a.max_guests)
+            const availDates = cachedAvailability ? (cachedAvailability.dates || []) : [];
+            const hasAvailability = availDates.length > 0
+                ? availDates.some(a => a.available && a.booked < a.max_guests)
                 : Math.random() > 0.35; // fallback if server is offline
 
             setTimeout(() => {

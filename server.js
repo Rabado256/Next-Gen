@@ -18,7 +18,18 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  let filePath = path.join(ROOT, req.url === '/' ? 'index.html' : req.url);
+  // Strip query strings and decode URI
+  const cleanUrl = decodeURIComponent(req.url.split('?')[0]);
+  let filePath = path.join(ROOT, cleanUrl === '/' ? 'index.html' : cleanUrl);
+  
+  // Prevent path traversal
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(ROOT)) {
+    res.writeHead(403);
+    res.end('403 Forbidden');
+    return;
+  }
+  
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
