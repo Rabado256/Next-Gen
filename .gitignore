@@ -5,3 +5,4 @@ NUL
 *.log
 .DS_Store
 .vercel
+.gstack/
