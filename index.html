@@ -1418,12 +1418,57 @@
         </div>
     </div>
 
+    <!-- API Settings Modal -->
+    <div class="modal fade" id="api-settings-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); background: #fff;">
+                <div class="modal-body p-5">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal"></button>
+                    
+                    <h4 class="serif mb-2">API Configuration</h4>
+                    <p class="text-muted small mb-4">Configure your Duffel API credentials to enable real flight search.</p>
+                    
+                    <div class="alert alert-info small mb-4">
+                        <strong>How to get your API key:</strong>
+                        <ol class="mb-0 mt-2">
+                            <li>Visit <a href="https://app.duffel.com/join" target="_blank">app.duffel.com</a> and create an account</li>
+                            <li>Go to Developers → Access Tokens</li>
+                            <li>Create a test token (free, uses test data)</li>
+                            <li>Paste the token below</li>
+                        </ol>
+                    </div>
+                    
+                    <form id="api-settings-form">
+                        <div class="mb-4">
+                            <label class="form-label small tracking-widest">Duffel API Token</label>
+                            <input type="password" id="duffel-token-input" class="form-control rounded-0" placeholder="duffel_test_..." required>
+                            <div class="form-text">Your token is stored locally and never sent to our servers.</div>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-dark rounded-0 px-4 py-2 flex-grow-1">Save Token</button>
+                            <button type="button" class="btn btn-outline-secondary rounded-0 px-4 py-2" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                    
+                    <div id="api-status" class="mt-4 p-3 rounded-0" style="display: none;">
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="api-status-icon"></span>
+                            <span id="api-status-text"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
+    <script src="js/duffel.js"></script>
     <script src="js/main.js"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -1799,61 +1844,143 @@
                             const fromVal = params.get('from') || '';
                             const toVal = params.get('to') || '';
                             const dateVal = params.get('start') || '';
+                            const returnVal = params.get('end') || '';
+                            const guestsVal = params.get('guests') || '1';
+                            const classVal = document.querySelector('input[name="flight-class"]:checked')?.value || 'economy';
 
-                            const timeoutPromise = new Promise((_, reject) => 
-                                setTimeout(() => reject(new Error('Check timed out')), 12000)
-                            );
-                            const trips = await Promise.race([
-                                api.checkTripAvailability(fromVal, toVal, dateVal),
-                                timeoutPromise
-                            ]);
-                            const hasAvailability = Array.isArray(trips) && trips.some(t => t.available_spots > 0);
-
-                            if (hasAvailability) {
-                                loading.style.display = 'none';
-                                success.style.display = 'flex';
-                                setTimeout(() => {
-                                    window.location.href = checkoutUrl;
-                                }, 1200);
-                            } else {
-                                loading.style.display = 'none';
-                                fail.style.display = 'flex';
-                                if (failDate) failDate.textContent = dateVal || 'your selected date';
-
-                                if (altContainer) {
-                                    altContainer.innerHTML = '';
-                                    if (Array.isArray(trips) && trips.length > 0) {
-                                        const availTrips = trips.filter(t => t.available_spots > 0);
-                                        if (availTrips.length > 0) {
-                                            availTrips.slice(0, 5).forEach(t => {
-                                                const btn = document.createElement('button');
-                                                btn.className = 'btn-alt-date';
-                                                btn.textContent = t.departure_date + ' (' + t.available_spots + ' spots)';
-                                                btn.addEventListener('click', () => {
-                                                    const u = new URL(checkoutUrl, window.location.origin);
-                                                    u.searchParams.set('start', t.departure_date);
-                                                    window.location.href = u.pathname + u.search;
-                                                });
-                                                altContainer.appendChild(btn);
-                                            });
-                                        } else {
-                                            altContainer.innerHTML = '<p class="small text-muted">No available trips found for this route on selected dates.</p>';
-                                        }
-                                    } else {
-                                        altContainer.innerHTML = '<p class="small text-muted">No trips found for this route. Try different destinations.</p>';
+                            // If Duffel API is configured, search real flights
+                            if (typeof DuffelAPI !== 'undefined' && DuffelAPI.isConfigured()) {
+                                loading.querySelector('.avail-content').querySelector('p').textContent = 'Searching real flights...';
+                                
+                                // Map cabin class to Duffel format
+                                const cabinMap = {
+                                    'Economy': 'economy',
+                                    'Premium Economy': 'premium_economy',
+                                    'Business': 'business',
+                                    'First Class': 'first'
+                                };
+                                
+                                // Build slices for Duffel API
+                                const slices = [{
+                                    origin: fromVal || 'DEL',
+                                    destination: toVal || 'BOM',
+                                    departureDate: dateVal || new Date().toISOString().split('T')[0]
+                                }];
+                                
+                                if (returnVal) {
+                                    slices.push({
+                                        origin: toVal || 'BOM',
+                                        destination: fromVal || 'DEL',
+                                        departureDate: returnVal
+                                    });
+                                }
+                                
+                                // Build passengers
+                                const passengers = [];
+                                for (let i = 0; i < parseInt(guestsVal); i++) {
+                                    passengers.push({ type: 'adult' });
+                                }
+                                
+                                try {
+                                    const result = await DuffelAPI.searchFlights({
+                                        slices,
+                                        passengers,
+                                        cabinClass: cabinMap[classVal] || 'economy'
+                                    });
+                                    
+                                    // Store results in sessionStorage for search-results.html
+                                    sessionStorage.setItem('duffel_results', JSON.stringify(result));
+                                    sessionStorage.setItem('duffel_search_params', JSON.stringify({
+                                        from: fromVal,
+                                        to: toVal,
+                                        depart: dateVal,
+                                        return: returnVal,
+                                        guests: guestsVal,
+                                        class: classVal
+                                    }));
+                                    
+                                    loading.style.display = 'none';
+                                    success.style.display = 'flex';
+                                    setTimeout(() => {
+                                        window.location.href = 'search-results.html?search_type=flight&from=' + encodeURIComponent(fromVal) + '&to=' + encodeURIComponent(toVal) + '&start=' + dateVal + '&end=' + returnVal + '&guests=' + guestsVal;
+                                    }, 1200);
+                                    
+                                } catch (apiError) {
+                                    console.error('[NextGen] Duffel API search failed:', apiError);
+                                    loading.style.display = 'none';
+                                    fail.style.display = 'flex';
+                                    if (checkDest) checkDest.textContent = 'Search Failed';
+                                    if (failDate) failDate.textContent = apiError.message || 'API error';
+                                    
+                                    if (altContainer) {
+                                        altContainer.innerHTML = '<p class="small text-muted">Failed to search flights. Please check your API token and try again.</p>';
+                                    }
+                                    
+                                    if (closeBtn) {
+                                        closeBtn.onclick = () => {
+                                            overlay.style.display = 'none';
+                                            document.body.style.overflow = '';
+                                        };
                                     }
                                 }
+                                
+                            } else {
+                                // Fallback: Use existing mock data flow
+                                const timeoutPromise = new Promise((_, reject) => 
+                                    setTimeout(() => reject(new Error('Check timed out')), 12000)
+                                );
+                                const trips = await Promise.race([
+                                    api.checkTripAvailability(fromVal, toVal, dateVal),
+                                    timeoutPromise
+                                ]);
+                                const hasAvailability = Array.isArray(trips) && trips.some(t => t.available_spots > 0);
 
-                                if (continueBtn) {
-                                    continueBtn.onclick = () => {
+                                if (hasAvailability) {
+                                    loading.style.display = 'none';
+                                    success.style.display = 'flex';
+                                    setTimeout(() => {
                                         window.location.href = checkoutUrl;
-                                    };
-                                }
-                                if (closeBtn) {
-                                    closeBtn.onclick = () => {
-                                        overlay.style.display = 'none';
-                                        document.body.style.overflow = '';
-                                    };
+                                    }, 1200);
+                                } else {
+                                    loading.style.display = 'none';
+                                    fail.style.display = 'flex';
+                                    if (failDate) failDate.textContent = dateVal || 'your selected date';
+
+                                    if (altContainer) {
+                                        altContainer.innerHTML = '';
+                                        if (Array.isArray(trips) && trips.length > 0) {
+                                            const availTrips = trips.filter(t => t.available_spots > 0);
+                                            if (availTrips.length > 0) {
+                                                availTrips.slice(0, 5).forEach(t => {
+                                                    const btn = document.createElement('button');
+                                                    btn.className = 'btn-alt-date';
+                                                    btn.textContent = t.departure_date + ' (' + t.available_spots + ' spots)';
+                                                    btn.addEventListener('click', () => {
+                                                        const u = new URL(checkoutUrl, window.location.origin);
+                                                        u.searchParams.set('start', t.departure_date);
+                                                        window.location.href = u.pathname + u.search;
+                                                    });
+                                                    altContainer.appendChild(btn);
+                                                });
+                                            } else {
+                                                altContainer.innerHTML = '<p class="small text-muted">No available trips found for this route on selected dates.</p>';
+                                            }
+                                        } else {
+                                            altContainer.innerHTML = '<p class="small text-muted">No trips found for this route. Try different destinations.</p>';
+                                        }
+                                    }
+
+                                    if (continueBtn) {
+                                        continueBtn.onclick = () => {
+                                            window.location.href = checkoutUrl;
+                                        };
+                                    }
+                                    if (closeBtn) {
+                                        closeBtn.onclick = () => {
+                                            overlay.style.display = 'none';
+                                            document.body.style.overflow = '';
+                                        };
+                                    }
                                 }
                             }
                         } catch (err) {
@@ -2006,6 +2133,58 @@
             const title = card.querySelector('.dest-card-name')?.textContent || '';
             checkAvailability(href, title);
         });
+    });
+    </script>
+    
+    <!-- API Settings Handler -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const apiForm = document.getElementById('api-settings-form');
+        const tokenInput = document.getElementById('duffel-token-input');
+        const statusDiv = document.getElementById('api-status');
+        const statusIcon = document.getElementById('api-status-icon');
+        const statusText = document.getElementById('api-status-text');
+        
+        // Load saved token
+        if (DuffelAPI.isConfigured()) {
+            tokenInput.value = DuffelAPI.getAccessToken();
+            showStatus('success', 'API token configured. Flight search is ready.');
+        }
+        
+        // Handle form submit
+        apiForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const token = tokenInput.value.trim();
+            
+            if (token) {
+                DuffelAPI.setAccessToken(token);
+                showStatus('success', 'API token saved successfully! You can now search for real flights.');
+                
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('api-settings-modal'));
+                    if (modal) modal.hide();
+                }, 2000);
+            }
+        });
+        
+        function showStatus(type, message) {
+            statusDiv.style.display = 'block';
+            statusDiv.className = `mt-4 p-3 rounded-0 alert alert-${type === 'success' ? 'success' : 'danger'}`;
+            statusIcon.textContent = type === 'success' ? '✓' : '✗';
+            statusText.textContent = message;
+        }
+        
+        // Add API settings button to navbar
+        const nav = document.querySelector('.navbar .ms-auto');
+        if (nav) {
+            const settingsBtn = document.createElement('button');
+            settingsBtn.className = 'btn btn-outline-light rounded-0 px-3 py-2 small tracking-widest';
+            settingsBtn.innerHTML = '<i class="bi bi-gear"></i> API';
+            settingsBtn.setAttribute('data-bs-toggle', 'modal');
+            settingsBtn.setAttribute('data-bs-target', '#api-settings-modal');
+            nav.insertBefore(settingsBtn, nav.firstChild);
+        }
     });
     </script>
 </body>

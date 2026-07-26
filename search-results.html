@@ -765,6 +765,7 @@
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
+    <script src="js/duffel.js"></script>
     <script src="js/main.js"></script>
     <script>
         // ===== SMART DOCUMENT DETECTION =====
@@ -1037,36 +1038,154 @@
         });
     }
 
-    (async () => {
-        let dests;
-        try {
-            dests = await api.getDestinations();
-        } catch (_) { return; }
-        if (!dests || dests.length === 0) return;
+    // Check for Duffel API results first
+    const duffelResults = sessionStorage.getItem('duffel_results');
+    const duffelParams = sessionStorage.getItem('duffel_search_params');
+    
+    if (duffelResults && typeof DuffelAPI !== 'undefined') {
+        // Render real flight results from Duffel API
+        (async () => {
+            const resultsGrid = document.querySelector('#search-results-page .row.g-4');
+            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            if (!resultsGrid) return;
+            
+            try {
+                const data = JSON.parse(duffelResults);
+                const searchParams = JSON.parse(duffelParams || '{}');
+                const offers = data.data?.offers || [];
+                
+                if (offers.length === 0) {
+                    heading.textContent = 'No flights found for this route';
+                    resultsGrid.innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <h4 class="serif mb-3">No flights available</h4>
+                            <p class="text-muted">Try different dates or destinations.</p>
+                            <a href="index.html" class="btn btn-dark rounded-0 px-4 py-2">Search Again</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                heading.textContent = `Showing ${offers.length} flight${offers.length === 1 ? '' : 's'} from Duffel`;
+                
+                // Render flight cards
+                resultsGrid.innerHTML = offers.map(offer => {
+                    const formatted = DuffelAPI.formatOfferForDisplay(offer);
+                    return `
+                        <div class="col-md-6">
+                            <div class="result-card flight-card" data-offer-id="${formatted.id}" style="cursor: pointer;">
+                                <div class="result-card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <span class="result-card-tag">${formatted.airline}</span>
+                                            <h3 class="result-card-title mt-2">${formatted.departureAirport} → ${formatted.arrivalAirport}</h3>
+                                            <p class="result-card-meta mb-0">${formatted.flightNumber}</p>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="result-price" style="font-size: 1.25rem; font-weight: 700;">
+                                                ${formatted.currency === 'USD' ? '$' : '₹'}${formatted.price.toLocaleString()}
+                                            </div>
+                                            <small class="text-muted">per person</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 0.85rem;">
+                                        <div>
+                                            <strong>${formatted.departure}</strong>
+                                            <span class="text-muted mx-2">${formatted.departureAirport}</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-muted">${formatted.duration}</div>
+                                            <small>${formatted.stopsText}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <strong>${formatted.arrival}</strong>
+                                            <span class="text-muted mx-2">${formatted.arrivalAirport}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">${formatted.cabinClass} class</small>
+                                        <span class="btn-explore-sm">Select & Book</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Add click handlers for flight cards
+                resultsGrid.querySelectorAll('.flight-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const offerId = card.dataset.offerId;
+                        const offer = offers.find(o => o.id === offerId);
+                        if (offer) {
+                            // Store selected offer for checkout
+                            sessionStorage.setItem('selected_flight_offer', JSON.stringify(offer));
+                            // Redirect to checkout with flight details
+                            const params = new URLSearchParams(window.location.search);
+                            const checkoutParams = new URLSearchParams({
+                                search_type: 'flight',
+                                from: searchParams.from || '',
+                                to: searchParams.to || '',
+                                start: searchParams.depart || '',
+                                end: searchParams.return || '',
+                                guests: searchParams.guests || '1',
+                                offer_id: offerId,
+                                price: offer.total_amount,
+                                currency: offer.total_currency
+                            });
+                            window.location.href = 'checkout.html?' + checkoutParams.toString();
+                        }
+                    });
+                });
+                
+            } catch (error) {
+                console.error('[NextGen] Failed to render Duffel results:', error);
+                heading.textContent = 'Error loading flight results';
+                resultsGrid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <h4 class="serif mb-3">Error loading results</h4>
+                        <p class="text-muted">${error.message || 'Unknown error'}</p>
+                        <a href="index.html" class="btn btn-dark rounded-0 px-4 py-2">Search Again</a>
+                    </div>
+                `;
+            }
+        })();
+        
+    } else {
+        // Fallback: Render destination cards from Supabase
+        (async () => {
+            let dests;
+            try {
+                dests = await api.getDestinations();
+            } catch (_) { return; }
+            if (!dests || dests.length === 0) return;
 
-        const resultsGrid = document.querySelector('#search-results-page .row.g-4');
-        const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
-        if (!resultsGrid) return;
+            const resultsGrid = document.querySelector('#search-results-page .row.g-4');
+            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            if (!resultsGrid) return;
 
-        // Filter by search query if present
-        const params = new URLSearchParams(window.location.search);
-        const query = (params.get('q') || '').toLowerCase();
-        let filtered = dests;
-        if (query) {
-            filtered = dests.filter(d =>
-                (d.title || '').toLowerCase().includes(query) ||
-                (d.country || '').toLowerCase().includes(query) ||
-                (d.edition || '').toLowerCase().includes(query) ||
-                (d.id || '').toLowerCase().includes(query)
-            );
-        }
+            // Filter by search query if present
+            const params = new URLSearchParams(window.location.search);
+            const query = (params.get('q') || '').toLowerCase();
+            let filtered = dests;
+            if (query) {
+                filtered = dests.filter(d =>
+                    (d.title || '').toLowerCase().includes(query) ||
+                    (d.country || '').toLowerCase().includes(query) ||
+                    (d.edition || '').toLowerCase().includes(query) ||
+                    (d.id || '').toLowerCase().includes(query)
+                );
+            }
 
-        if (heading) {
-            heading.textContent = `Showing ${filtered.length} curated ${filtered.length === 1 ? 'sanctuary' : 'sanctuaries'}`;
-        }
+            if (heading) {
+                heading.textContent = `Showing ${filtered.length} curated ${filtered.length === 1 ? 'sanctuary' : 'sanctuaries'}`;
+            }
 
-        renderPage(1, filtered, resultsGrid, heading);
-    })();
+            renderPage(1, filtered, resultsGrid, heading);
+        })();
+    }
     </script>
 
     <div class="modal fade" id="auth-modal" tabindex="-1" aria-hidden="true">
