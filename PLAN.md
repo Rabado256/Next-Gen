@@ -100,10 +100,10 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 - [ ] Get client sign-off
 
 ### Phase 2: Flight Search (Week 3-4)
-- [ ] Sign up for Duffel API (app.duffel.com)
-- [ ] Create `js/duffel.js` — API client with OAuth2 auth
-- [ ] Wire search form to Duffel `/air/shopping` endpoint
-- [ ] Display real flight results on search-results.html
+- [x] Sign up for Duffel API (app.duffel.com)
+- [x] Create `js/duffel.js` — API client with OAuth2 auth
+- [x] Wire search form to Duffel `/air/offer_requests` endpoint
+- [x] Display real flight results on search-results.html
 - [ ] Add Supabase cache for search results (reduce API calls)
 - [ ] Add loading states and error handling
 
@@ -157,6 +157,7 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 | 2026-07-26 | Direct booking via Stripe | Client requirement |
 | 2026-07-26 | **Duffel API (NOT Amadeus)** | Amadeus Self-Service deprecated July 17, 2026 |
 | 2026-07-26 | No build system | Keep existing stack simple |
+| 2026-07-26 | Duffel API integrated | Phase 2 flight search complete |
 
 ---
 
