@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | NextGen Travel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .profile-section {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #f8f9fa;
+        }
+        .avatar-upload {
+            position: relative;
+            display: inline-block;
+        }
+        .avatar-upload input {
+            display: none;
+        }
+        .avatar-upload label {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #000;
+            color: #fff;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            background: #fff;
+        }
+        .stat-card h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+        .stat-card p {
+            color: #888;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 0;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 1rem;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast for success/error messages -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+        <div class="container">
+            <a class="navbar-brand serif fw-bold" href="index.html">NextGen</a>
+            <div class="d-flex gap-3 align-items-center">
+                <a href="bookings.html" class="text-decoration-none text-dark small">My Bookings</a>
+                <a href="index.html" class="text-decoration-none text-dark small">Destinations</a>
+                <button id="auth-button" class="btn btn-outline-dark btn-sm rounded-0 px-3" data-bs-toggle="modal" data-bs-target="#auth-modal">Sign In</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="py-4" style="background: linear-gradient(135deg, #0d2137, #1a3a4a);">
+        <div class="container text-white py-4">
+            <div class="d-flex align-items-center gap-4">
+                <div class="avatar-upload">
+                    <img id="avatar-img" src="https://ui-avatars.com/api/?name=Guest&background=000&color=fff&size=120" alt="Avatar" class="profile-avatar">
+                    <label for="avatar-input"><i class="bi bi-camera"></i></label>
+                    <input type="file" id="avatar-input" accept="image/*">
+                </div>
+                <div>
+                    <p class="tracking-widest mb-1" style="font-size:0.65rem;">YOUR PROFILE</p>
+                    <h1 class="display-5 serif italic mb-0" id="profile-name-display">My Profile</h1>
+                    <p class="small opacity-75 mb-0" id="profile-email-display"></p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container py-5">
+        <!-- Stats -->
+        <div id="stats-row" class="row g-3 mb-5">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h3 id="stat-bookings">0</h3>
+                    <p>Total Bookings</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h3 id="stat-countries">0</h3>
+                    <p>Countries Visited</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h3 id="stat-wishlist">0</h3>
+                    <p>Wishlist Items</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Required -->
+        <div id="login-required" class="empty-state" style="display:none;">
+            <i class="bi bi-person-circle"></i>
+            <h3 class="serif mb-3">Sign In Required</h3>
+            <p class="text-muted mb-4">Please sign in to view and edit your profile.</p>
+            <button class="btn btn-dark rounded-0 px-4 py-2" data-bs-toggle="modal" data-bs-target="#auth-modal">Sign In</button>
+        </div>
+
+        <!-- Profile Content -->
+        <div id="profile-content" style="display:none;">
+            <!-- Personal Information -->
+            <div class="profile-section">
+                <h5 class="serif mb-4"><i class="bi bi-person me-2"></i>Personal Information</h5>
+                <form id="profile-form">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Full Name</label>
+                            <input type="text" id="prof-name" class="form-control border-dark border-opacity-25 rounded-0" placeholder="Your full name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Email</label>
+                            <input type="email" id="prof-email" class="form-control border-dark border-opacity-25 rounded-0" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Country</label>
+                            <input type="text" id="prof-country" class="form-control border-dark border-opacity-25 rounded-0" list="global-countries" placeholder="e.g. United States, Nigeria, Japan">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Phone</label>
+                            <input type="tel" id="prof-phone" class="form-control border-dark border-opacity-25 rounded-0" placeholder="+00...">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark rounded-0 px-4 py-2 mt-4">Save Changes</button>
+                </form>
+            </div>
+
+            <!-- Travel Documents -->
+            <div class="profile-section">
+                <h5 class="serif mb-4"><i class="bi bi-passport me-2"></i>Travel Documents</h5>
+                <p class="small text-muted mb-4">Save your documents so checkout forms auto-fill for you.</p>
+                <form id="docs-form">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Passport Number</label>
+                            <input type="text" id="prof-passport" class="form-control border-dark border-opacity-25 rounded-0" placeholder="International travel">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Identity Card</label>
+                            <input type="text" id="prof-idcard" class="form-control border-dark border-opacity-25 rounded-0" placeholder="Domestic travel">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Emergency Contact</label>
+                            <input type="tel" id="prof-emergency" class="form-control border-dark border-opacity-25 rounded-0" placeholder="+00...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="extra-small tracking-widest mb-2 opacity-50">Emergency Contact Name</label>
+                            <input type="text" id="prof-emergency-name" class="form-control border-dark border-opacity-25 rounded-0" placeholder="Contact person">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark rounded-0 px-4 py-2 mt-4">Save Documents</button>
+                </form>
+            </div>
+
+            <!-- Preferences -->
+            <div class="profile-section">
+                <h5 class="serif mb-4"><i class="bi bi-sliders me-2"></i>Preferences</h5>
+                <form id="prefs-form">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="pref-hotel">
+                        <label class="form-check-label small" for="pref-hotel">Always Reserve Hotel Sanctuary</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="extra-small tracking-widest mb-2 opacity-50">Preferred Arrival Meal</label>
+                        <select id="pref-food" class="form-select border-dark border-opacity-25 rounded-0">
+                            <option value="">No preference</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="vegan">Vegan</option>
+                            <option value="halal">Halal</option>
+                            <option value="kosher">Kosher</option>
+                            <option value="gluten-free">Gluten-free</option>
+                            <option value="seafood">Seafood</option>
+                            <option value="local">Local specialties</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-dark rounded-0 px-4 py-2 mt-2">Save Preferences</button>
+                </form>
+            </div>
+
+            <!-- Account Actions -->
+            <div class="profile-section">
+                <h5 class="serif mb-4"><i class="bi bi-shield-lock me-2"></i>Account</h5>
+                <div class="d-flex gap-3">
+                    <button id="btn-change-password" class="btn btn-outline-dark rounded-0 px-4 py-2">Change Password</button>
+                    <button id="btn-logout" class="btn btn-outline-danger rounded-0 px-4 py-2">Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-bottom text-center py-4">
+                <p class="small opacity-50 mb-0">&copy; 2026 NextGen Travel. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal fade" id="auth-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content text-white" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.75); backdrop-filter: blur(20px);">
+                <div class="modal-body p-5">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal"></button>
+                    <div class="d-flex gap-3 mb-4">
+                        <button class="auth-tab active" data-auth="login">Login</button>
+                        <button class="auth-tab" data-auth="signup">Sign Up</button>
+                    </div>
+                    <form id="auth-login" class="auth-form">
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Email</label>
+                            <input type="email" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small tracking-widest mb-2">Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-light w-100 rounded-0 py-2">Login</button>
+                        <div class="text-center mt-3">
+                            <a href="forgot-password.html" class="small text-white-50 text-decoration-none">Forgot password?</a>
+                        </div>
+                    </form>
+                    <form id="auth-signup" class="auth-form" style="display:none;">
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Full Name</label>
+                            <input type="text" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Email</label>
+                            <input type="email" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small tracking-widest mb-2">Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="small tracking-widest mb-2">Confirm Password</label>
+                            <input type="password" class="form-control bg-transparent text-white border-secondary rounded-0" required>
+                        </div>
+                        <button type="submit" class="btn btn-outline-light w-100 rounded-0 py-2">Create Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="password-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-body p-4">
+                    <h5 class="serif mb-3">Change Password</h5>
+                    <form id="password-form">
+                        <div class="mb-3">
+                            <label class="small text-muted">Current Password</label>
+                            <input type="password" id="current-password" class="form-control rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted">New Password</label>
+                            <input type="password" id="new-password" class="form-control rounded-0" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted">Confirm New Password</label>
+                            <input type="password" id="confirm-new-password" class="form-control rounded-0" required>
+                        </div>
+                        <div id="password-error" class="text-danger small mb-3" style="display:none;"></div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-dark rounded-0 px-3 py-2 flex-fill">Update</button>
+                            <button type="button" class="btn btn-outline-secondary rounded-0 px-3 py-2" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-dismissible fade show`;
+        toast.style.cssText = 'min-width: 280px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);';
+        toast.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    function updateAvatar(name) {
+        const img = document.getElementById('avatar-img');
+        const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+        if (user.avatar_url) {
+            img.src = user.avatar_url;
+        } else {
+            img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Guest')}&background=000&color=fff&size=120`;
+        }
+    }
+
+    async function loadProfile() {
+        const token = api.getToken();
+        if (!token) {
+            document.getElementById('login-required').style.display = 'block';
+            return;
+        }
+        document.getElementById('profile-content').style.display = 'block';
+        try {
+            const profile = await api.getProfile();
+            if (profile) {
+                document.getElementById('prof-name').value = profile.name || '';
+                document.getElementById('prof-email').value = profile.email || '';
+                document.getElementById('prof-country').value = profile.country || '';
+                document.getElementById('prof-phone').value = profile.phone || '';
+                document.getElementById('prof-passport').value = profile.passport || '';
+                document.getElementById('prof-idcard').value = profile.identity_card || '';
+                document.getElementById('prof-emergency').value = profile.emergency || '';
+                document.getElementById('prof-emergency-name').value = profile.emergency_name || '';
+                document.getElementById('pref-hotel').checked = profile.pref_hotel || false;
+                document.getElementById('pref-food').value = profile.pref_food || '';
+                document.getElementById('profile-name-display').textContent = profile.name || 'My Profile';
+                document.getElementById('profile-email-display').textContent = profile.email || '';
+                updateAvatar(profile.name);
+            }
+        } catch (err) {
+            console.error('Failed to load profile:', err);
+        }
+        // Load stats
+        try {
+            const bookings = await api.getUserBookings();
+            document.getElementById('stat-bookings').textContent = bookings.length;
+            const countries = new Set(bookings.map(b => b.to_location).filter(Boolean));
+            document.getElementById('stat-countries').textContent = countries.size;
+            const wishlist = JSON.parse(localStorage.getItem('nextgen_wishlist') || '[]');
+            document.getElementById('stat-wishlist').textContent = wishlist.length;
+        } catch (_) {}
+    }
+
+    // Personal info form
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await api.updateProfile({
+                name: document.getElementById('prof-name').value,
+                country: document.getElementById('prof-country').value,
+                phone: document.getElementById('prof-phone').value
+            });
+            const name = document.getElementById('prof-name').value;
+            document.getElementById('profile-name-display').textContent = name || 'My Profile';
+            updateAvatar(name);
+            showToast('Profile updated successfully');
+        } catch (err) {
+            showToast('Failed to update profile: ' + err.message, 'danger');
+        }
+    });
+
+    // Documents form
+    document.getElementById('docs-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await api.updateProfile({
+                passport: document.getElementById('prof-passport').value,
+                identity_card: document.getElementById('prof-idcard').value,
+                emergency: document.getElementById('prof-emergency').value,
+                emergency_name: document.getElementById('prof-emergency-name').value
+            });
+            showToast('Documents saved successfully');
+        } catch (err) {
+            showToast('Failed to save documents: ' + err.message, 'danger');
+        }
+    });
+
+    // Preferences form
+    document.getElementById('prefs-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await api.updateProfile({
+                pref_hotel: document.getElementById('pref-hotel').checked,
+                pref_food: document.getElementById('pref-food').value
+            });
+            showToast('Preferences saved');
+        } catch (err) {
+            showToast('Failed to save preferences: ' + err.message, 'danger');
+        }
+    });
+
+    // Avatar upload
+    document.getElementById('avatar-input').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const dataUrl = ev.target.result;
+            document.getElementById('avatar-img').src = dataUrl;
+            try {
+                await api.updateProfile({ avatar: dataUrl });
+                showToast('Avatar updated');
+            } catch (err) {
+                showToast('Failed to update avatar: ' + err.message, 'danger');
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Change password
+    document.getElementById('btn-change-password').addEventListener('click', () => {
+        new bootstrap.Modal(document.getElementById('password-modal')).show();
+    });
+
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errEl = document.getElementById('password-error');
+        errEl.style.display = 'none';
+        const newPass = document.getElementById('new-password').value;
+        const confirmPass = document.getElementById('confirm-new-password').value;
+        if (newPass !== confirmPass) {
+            errEl.textContent = 'Passwords do not match';
+            errEl.style.display = 'block';
+            return;
+        }
+        try {
+            const { data: { user }, error: authErr } = await SB.auth.getUser();
+            if (authErr) throw authErr;
+            // Reauthenticate with current password
+            const currentPass = document.getElementById('current-password').value;
+            const { error: loginErr } = await SB.auth.signInWithPassword({ email: user.email, password: currentPass });
+            if (loginErr) {
+                errEl.textContent = 'Current password is incorrect';
+                errEl.style.display = 'block';
+                return;
+            }
+            const { error: updateErr } = await SB.auth.updateUser({ password: newPass });
+            if (updateErr) throw updateErr;
+            bootstrap.Modal.getInstance(document.getElementById('password-modal')).hide();
+            document.getElementById('password-form').reset();
+            showToast('Password updated successfully');
+        } catch (err) {
+            errEl.textContent = err.message;
+            errEl.style.display = 'block';
+        }
+    });
+
+    // Logout
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+        await api.logout();
+        window.location.href = 'index.html';
+    });
+
+    // Auth state listener
+    SB.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_IN') {
+            document.getElementById('login-required').style.display = 'none';
+            document.getElementById('profile-content').style.display = 'block';
+            loadProfile();
+        } else if (event === 'SIGNED_OUT') {
+            document.getElementById('login-required').style.display = 'block';
+            document.getElementById('profile-content').style.display = 'none';
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+</body>
+</html>

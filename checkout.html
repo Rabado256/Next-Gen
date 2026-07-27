@@ -227,10 +227,10 @@
                                         <div id="arrival-meal-selection" style="display: none;">
                                             <label class="extra-small tracking-widest mb-2 opacity-50">KIND OF FOOD YOU WISH TO EAT</label>
                                             <select id="food-preference" class="form-select border-dark rounded-0">
-                                                <option value="local">Local Delicacies</option>
-                                                <option value="continental">Continental</option>
-                                                <option value="vegetarian">Vegetarian / Vegan</option>
-                                                <option value="none">I'll decide upon arrival</option>
+                                                <option value="local" data-price="75">Local Delicacies — $75</option>
+                                                <option value="continental" data-price="95">Continental — $95</option>
+                                                <option value="vegetarian" data-price="85">Vegetarian / Vegan — $85</option>
+                                                <option value="none" data-price="0">I'll decide upon arrival — Free</option>
                                             </select>
                                             <p class="text-muted extra-small mt-2 italic opacity-75">Your selected meal will be ready when you arrive.</p>
                                         </div>
@@ -321,6 +321,10 @@
                     <div id="hotel-fee-row" class="d-flex justify-content-between mb-2" style="display: none !important;">
                         <span class="small tracking-widest">Hotel Reservation</span>
                         <span id="hotel-price" class="small">+$500.00</span>
+                    </div>
+                    <div id="meal-fee-row" class="d-flex justify-content-between mb-2" style="display: none !important;">
+                        <span class="small tracking-widest">Arrival Meal</span>
+                        <span id="meal-price" class="small">+$75.00</span>
                     </div>
                     <div class="d-flex justify-content-between mb-4 pb-4 border-bottom border-dark">
                         <span class="small tracking-widest">Service Fee</span>
@@ -521,9 +525,15 @@
         const dest = destData[id] || destData.amalfi;
         let basePrice = dest.price * guests;
         let hotelPrice = 500 * guests;
+        let mealPrice = 0;
 
         function updateSummary(withHotel = false) {
-            const totalPrice = withHotel ? basePrice + hotelPrice : basePrice;
+            const withMeal = document.getElementById('add-meal')?.checked;
+            const mealSelect = document.getElementById('food-preference');
+            const selectedMealOption = mealSelect?.options[mealSelect.selectedIndex];
+            mealPrice = withMeal ? parseInt(selectedMealOption?.dataset?.price || 0) * guests : 0;
+
+            const totalPrice = basePrice + (withHotel ? hotelPrice : 0) + mealPrice;
             document.getElementById('checkout-total').textContent = '$' + totalPrice.toLocaleString() + '.00';
             
             const hotelRow = document.getElementById('hotel-fee-row');
@@ -532,6 +542,14 @@
                 document.getElementById('hotel-price').textContent = '+$' + hotelPrice.toLocaleString() + '.00';
             } else {
                 hotelRow.style.setProperty('display', 'none', 'important');
+            }
+
+            const mealRow = document.getElementById('meal-fee-row');
+            if (withMeal && mealPrice > 0) {
+                mealRow.style.setProperty('display', 'flex', 'important');
+                document.getElementById('meal-price').textContent = '+$' + mealPrice.toLocaleString() + '.00';
+            } else {
+                mealRow.style.setProperty('display', 'none', 'important');
             }
         }
 
@@ -708,6 +726,12 @@
 
         addMeal.addEventListener('change', function() {
             mealSelection.style.display = this.checked ? 'block' : 'none';
+            updateSummary(reserveHotel.checked);
+        });
+
+        // Update summary when meal selection changes
+        document.getElementById('food-preference').addEventListener('change', function() {
+            updateSummary(reserveHotel.checked);
         });
 
         // Stripe state

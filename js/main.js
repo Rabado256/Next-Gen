@@ -15,6 +15,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     await api.syncSession();
 
     // ==========================================
+    // LIQUID GLASS — Click-point ripple tracker
+    // Sets --ripple-x / --ripple-y so the ::before
+    // pseudo-element expands from exact touch point
+    // ==========================================
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('.glass, .btn-discovery, .btn-noir, .vibe-btn, .dest-card, .inspire-card, .about-card, .footer-social a, .booking-confirm, .auth-form .btn-outline-light, .capsule-search-btn, .btn-explore-sm, .search-btn, .btn-contact, .whatsapp-btn, .btn-accent, .btn-submit, .admin-login-btn');
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        el.style.setProperty('--ripple-x', x + 'px');
+        el.style.setProperty('--ripple-y', y + 'px');
+    });
+
+    // ==========================================
     // 0. NAVBAR — Hide/Show on Scroll Direction
     // ==========================================
     const navbar = document.querySelector('.navbar');
@@ -76,14 +91,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const destCards = document.querySelectorAll('.dest-card');
     const destTrack = document.getElementById('dest-track');
 
-    // Filter cards based on active vibe + continent selections
+    // Filter cards based on active vibe selection
     function filterCards() {
       const activeVibe = document.querySelector('.vibe-filters .vibe-btn.active')?.dataset.vibe || 'all';
-      const activeContinent = document.querySelector('.continent-filters .vibe-btn.active')?.dataset.continent || 'all';
       destCards.forEach(card => {
         const matchesVibe = activeVibe === 'all' || card.dataset.vibe === activeVibe;
-        const matchesContinent = activeContinent === 'all' || card.dataset.continent === activeContinent;
-        if (matchesVibe && matchesContinent) {
+        if (matchesVibe) {
           card.style.display = 'block';
           setTimeout(() => { card.style.opacity = '1'; card.style.transform = 'scale(1)'; }, 10);
         } else {
@@ -103,18 +116,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 filterCards();
             });
         });
-
-        // Set up continent filter button click handlers
-        const continentBtns = document.querySelectorAll('.continent-filters .vibe-btn');
-        if (continentBtns.length) {
-          continentBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-              continentBtns.forEach(b => b.classList.remove('active'));
-              btn.classList.add('active');
-              filterCards();
-            });
-          });
-        }
     }
 
     // ==========================================
@@ -287,7 +288,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!authButton._hasProfileListener) {
                 authButton._hasProfileListener = true;
                 authButton.addEventListener('click', () => {
-                    const profileModal = new bootstrap.Modal(document.getElementById('profile-modal'));
+                    const el = document.getElementById('profile-modal');
+                    if (!el) return;
+                    const profileModal = new bootstrap.Modal(el);
                     renderProfileCenter();
                     profileModal.show();
                 });
@@ -544,7 +547,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const btn = authSignup.querySelector('button[type="submit"]');
             const name = authSignup.querySelector('input[placeholder="Full Name"]')?.value || authSignup.querySelector('input[type="text"]').value;
             const email = authSignup.querySelector('input[type="email"]').value;
-            const password = authSignup.querySelector('input[type="password"]').value;
+            const passwords = authSignup.querySelectorAll('input[type="password"]');
+            const password = passwords[0]?.value;
+            const confirmPassword = passwords[1]?.value;
+            if (password !== confirmPassword) {
+                showAuthError(authSignup, 'Passwords do not match');
+                return;
+            }
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Creating...';
             showAuthError(authSignup, '');
@@ -552,6 +561,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await api.signup(name, email, password);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('auth-modal'));
                 modal.hide();
+                authSignup.reset();
                 updateAuthUI();
             } catch (err) {
                 showAuthError(authSignup, err.message);
@@ -575,6 +585,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await api.login(email, password);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('auth-modal'));
                 modal.hide();
+                authLogin.reset();
                 updateAuthUI();
             } catch (err) {
                 showAuthError(authLogin, err.message);

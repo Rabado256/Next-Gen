@@ -1018,23 +1018,11 @@
         </div>
     </section>
 
-    
-            <!-- Continent Filters -->
-            <div class="continent-filters justify-content-center reveal-snap" style="margin-top: 0.5rem;">
-                <button class="vibe-btn active" data-continent="all">All Continents</button>
-                <button class="vibe-btn" data-continent="africa">Africa</button>
-                <button class="vibe-btn" data-continent="asia">Asia</button>
-                <button class="vibe-btn" data-continent="europe">Europe</button>
-                <button class="vibe-btn" data-continent="north-america">N. America</button>
-                <button class="vibe-btn" data-continent="south-america">S. America</button>
-                <button class="vibe-btn" data-continent="oceania">Oceania</button>
-                <button class="vibe-btn" data-continent="antarctica">Antarctica</button>
-            </div>
+
 
 <!-- Floating Concierge -->
     <div class="concierge-float" id="concierge-btn">
         <i class="bi bi-chat-dots-fill fs-4"></i>
-        <span class="concierge-badge">Live</span>
     </div>
 
     <!-- =============================================
@@ -1356,6 +1344,7 @@
                                     <div class="col-md-6">
                                         <label class="extra-small tracking-widest mb-2 opacity-50">Emergency Contact Name</label>
                                         <input type="text" id="profile-emergency-name" class="form-control border-white border-opacity-25 bg-transparent text-white rounded-0" placeholder="Contact person">
+                                    </div>
                                 </div>
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-12">
@@ -2160,7 +2149,8 @@
             statusText.textContent = message;
         }
         
-        // Add API settings button to navbar
+        // Add API settings button to navbar (hidden — use browser console to configure)
+        /*
         const nav = document.querySelector('.navbar .ms-auto');
         if (nav) {
             const settingsBtn = document.createElement('button');
@@ -2170,6 +2160,7 @@
             settingsBtn.setAttribute('data-bs-target', '#api-settings-modal');
             nav.insertBefore(settingsBtn, nav.firstChild);
         }
+        */
     });
     </script>
 </body>

@@ -159,10 +159,12 @@ const api = {
   },
 
   // Sign out — clears Supabase session and local data
-  logout() {
-    SB.auth.signOut().catch(() => {});
+  async logout() {
+    await SB.auth.signOut().catch(() => {});
     this.clearToken();
     localStorage.removeItem('nextgen_user');
+    localStorage.removeItem('nextgen_activities');
+    localStorage.removeItem('nextgen_wishlist');
   },
 
   // Fetch full profile from database and update local cache
@@ -493,6 +495,18 @@ const api = {
   },
 
   // ==================== AVAILABILITY ====================
+
+  // Get bookings for the current user
+  async getUserBookings() {
+    const user = JSON.parse(localStorage.getItem('nextgen_user'));
+    if (!user) return [];
+    const { data, error } = await SB.from('bookings')
+      .select('*')
+      .or(`guest_email.eq.${user.email},user_id.eq.${user.id}`)
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return data || [];
+  },
 
   // Get booked dates for a destination (aggregated guest counts)
   async getAvailability(destId) {
