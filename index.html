@@ -1485,26 +1485,11 @@
               dl.appendChild(opt);
             });
           })
-          .catch(function() { /* silently ignore */ });
-      }
-    });
-    </script>
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      var dl = document.getElementById("global-countries");
-      if (dl) {
-        fetch("https://restcountries.com/v3.1/all?fields=name,cca2")
-          .then(function(r) { return r.json(); })
-          .then(function(data) {
-            var names = data.map(function(c) { return c.name.common; });
-            names.sort();
-            names.forEach(function(n) {
-              var opt = document.createElement("option");
-              opt.value = n;
-              dl.appendChild(opt);
+          .catch(function() {
+            ['United States','United Kingdom','France','Japan','Italy','Spain','Germany','Australia','India','Canada','Brazil','Mexico','Thailand','Greece','Portugal','Morocco','Indonesia','Egypt','Turkey','South Africa'].forEach(function(n) {
+              var opt = document.createElement("option"); opt.value = n; dl.appendChild(opt);
             });
-          })
-          .catch(function() { /* silently ignore */ });
+          });
       }
     });
     </script>

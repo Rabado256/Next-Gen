@@ -573,10 +573,13 @@
             let available = false;
             let availMessage = '';
             try {
-                const trips = await api.getTrips();
+                const trips = await Promise.race([
+                    api.getTrips(),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000))
+                ]);
                 const matchingTrips = trips.filter(t => {
                     const toMatch = toLoc.toLowerCase();
-                    return t.to_location.toLowerCase().includes(toMatch) || toMatch.includes(t.to_location.toLowerCase());
+                    return (t.to_location || '').toLowerCase().includes(toMatch) || toMatch.includes((t.to_location || '').toLowerCase());
                 });
                 if (matchingTrips.length > 0) {
                     const hasSpace = matchingTrips.some(t => t.available_spots > 0);
