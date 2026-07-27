@@ -438,14 +438,58 @@ const api = {
 
   // ==================== PAYMENTS (stub) ====================
 
-  // Stub: create a payment intent
+  // Create a Stripe PaymentIntent via our server
   async createPaymentIntent(data) {
-    return { client_secret: 'placeholder_supabase_payment_' + Date.now() };
+    const res = await fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: Math.round((data.total_amount || 0) * 100),
+        currency: data.currency || 'usd',
+        metadata: {
+          dest_id: data.destination_id,
+          guest_name: data.guest_name,
+          guest_email: data.guest_email,
+          guests: String(data.guests || 1)
+        }
+      })
+    });
+    if (!res.ok) throw new Error('Payment intent creation failed');
+    return res.json();
   },
 
-  // Stub: confirm a payment
+  // Confirm booking in Supabase after Stripe payment succeeds
   async confirmPayment(data) {
-    return { status: 'succeeded', payment_id: 'pay_' + Date.now() };
+    const ref = 'NG' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    const res = await fetch('/api/confirm-booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dest_id: data.dest_id,
+        guest_name: data.guest_name,
+        guest_email: data.guest_email || '',
+        guest_phone: data.guest_phone || '',
+        guests: data.guests,
+        total_amount: data.total,
+        currency: 'usd',
+        payment_id: data.payment_intent || '',
+        travel_date: data.travel_date,
+        passport: data.passport || '',
+        identity_card: data.identity_card || '',
+        special_requests: data.special_requests || '',
+        hotel_reservation: data.hotel || false,
+        from_location: data.from_location || '',
+        to_location: data.to_location || '',
+        travelers: data.travelers || null,
+        reference: ref
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Booking confirmation failed');
+    }
+    const result = await res.json();
+    return { ref: result.booking?.reference || ref, ...result };
   },
 
   // ==================== AVAILABILITY ====================
