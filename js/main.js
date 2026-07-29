@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = JSON.parse(localStorage.getItem('nextgen_user'));
         if (token && user && authButton) {
             // Show user avatar + name when logged in
-            const avatarSrc = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
+            const avatarSrc = user.avatar_url || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
             
             authButton.innerHTML = `
                 <div class="d-flex align-items-center gap-2">
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('profile-emergency').value = user.emergency || '';
         document.getElementById('profile-emergency-name').value = user.emergency_name || '';
         document.getElementById('profile-country').value = user.country || '';
-        document.getElementById('profile-settings-img').src = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
+        document.getElementById('profile-settings-img').src = user.avatar_url || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
 
         // Fill in global travel preferences
         document.getElementById('pref-always-hotel').checked = user.pref_hotel == 1 || user.pref_hotel === true;
@@ -442,7 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 emergency_name: document.getElementById('profile-emergency-name').value,
                 pref_hotel: document.getElementById('pref-always-hotel').checked,
                 pref_food: document.getElementById('pref-food').value,
-                avatar: user.avatar || '',
+                avatar: user.avatar_url || user.avatar || '',
             };
             // Update local cache immediately
             user.name = profileData.name;
@@ -497,6 +497,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reader.onload = async (event) => {
                     const user = JSON.parse(localStorage.getItem('nextgen_user'));
                     user.avatar = event.target.result;
+                    user.avatar_url = event.target.result;
                     localStorage.setItem('nextgen_user', JSON.stringify(user));
                     document.getElementById('profile-settings-img').src = user.avatar;
                     updateAuthUI();
