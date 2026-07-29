@@ -311,13 +311,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Populate the Profile Center modal with user data
-    const renderProfileCenter = () => {
-        const token = api.getToken();
+    const renderProfileCenter = async () => {
+        // Fetch fresh profile from Supabase for cross-device sync
+        try {
+            const fresh = await api.getProfile();
+            if (fresh) {
+                const current = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+                localStorage.setItem('nextgen_user', JSON.stringify({ ...current, ...fresh }));
+            }
+        } catch (_) {}
+
         const user = JSON.parse(localStorage.getItem('nextgen_user'));
         const activities = JSON.parse(localStorage.getItem('nextgen_activities') || '[]');
         const wishlist = JSON.parse(localStorage.getItem('nextgen_wishlist') || '[]');
         
-        if (!user || !token) return;
+        if (!user) return;
 
         // Fill in identity & document fields
         document.getElementById('profile-name').value = user.name || '';
