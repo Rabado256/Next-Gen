@@ -529,7 +529,7 @@ async function viewUserProfile(userId) {
     if (!user) throw new Error('Not authenticated');
     const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
     if (!profile) { showToast('User not found', 'error'); return; }
-    showOverlay('Client Profile', `
+    openOverlay('Client Profile', `
       <div style="text-align:center;margin-bottom:2rem">
         <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#d4a373,#b8860b);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.5rem;font-weight:700;color:#fff">${(profile.name || '?')[0]}</div>
         <h3 style="color:#fff;margin:0;font-family:'Playfair Display',serif">${escapeHtml(profile.name || 'Unknown')}</h3>
