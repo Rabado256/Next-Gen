@@ -1,6 +1,5 @@
 node_modules/
 .env
-js/config.js
 NUL
 *.log
 .DS_Store
