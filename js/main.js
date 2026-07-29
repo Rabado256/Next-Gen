@@ -262,8 +262,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authButton = document.querySelector('[data-bs-target="#auth-modal"]');
     const navbarNav = document.querySelector('.ms-auto.d-flex');
 
-    // Track greeting span so we can remove on logout
-    let greetingSpan = null;
+    // Track wrapper so we can remove on logout
+    let profileWrapper = null;
 
     // Update navbar auth button based on login state
     const updateAuthUI = () => {
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (token && user && authButton) {
             const avatarSrc = user.avatar_url || user.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23d4a373%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2215%22 fill=%22%23fff%22/%3E%3Cpath d=%22M20 80 Q50 55 80 80%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3C/svg%3E';
 
-            // Avatar only — inside the button
+            // Build wrapper: avatar on top, greeting below
             authButton.innerHTML = '<div class="user-avatar-circle"><img src="' + escapeHtml(avatarSrc) + '" alt="Profile"></div>';
             authButton.removeAttribute('data-bs-toggle');
             authButton.removeAttribute('data-bs-target');
@@ -280,13 +280,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             authButton.style.border = 'none';
             authButton.style.background = 'transparent';
 
-            // Greeting text — outside the button
-            if (!greetingSpan || !greetingSpan.parentNode) {
-                greetingSpan = document.createElement('span');
-                greetingSpan.className = 'text-white small fw-medium';
-                authButton.parentNode.insertBefore(greetingSpan, authButton.nextSibling);
+            if (!profileWrapper || !profileWrapper.parentNode) {
+                profileWrapper = document.createElement('div');
+                profileWrapper.className = 'd-flex flex-column align-items-center';
+                authButton.parentNode.replaceChild(profileWrapper, authButton);
+                profileWrapper.appendChild(authButton);
+                const greet = document.createElement('span');
+                greet.className = 'text-white fw-medium';
+                greet.style.fontSize = '0.6rem';
+                greet.style.lineHeight = '1.1';
+                greet.id = 'nav-greeting';
+                profileWrapper.appendChild(greet);
             }
-            greetingSpan.textContent = 'Howdy, ' + escapeHtml(user.name.split(' ')[0]);
+            document.getElementById('nav-greeting').textContent = 'Howdy, ' + escapeHtml(user.name.split(' ')[0]);
 
             // Click opens the Profile Center modal
             if (!authButton._hasProfileListener) {
@@ -311,9 +317,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             authButton.classList.remove('user-profile-btn');
             authButton.style.border = '';
             authButton.style.background = '';
-            // Remove greeting span
-            if (greetingSpan && greetingSpan.parentNode) greetingSpan.remove();
-            greetingSpan = null;
+            // Remove wrapper and re-insert bare button
+            if (profileWrapper && profileWrapper.parentNode) {
+                profileWrapper.parentNode.replaceChild(authButton, profileWrapper);
+            }
+            profileWrapper = null;
         }
     };
 
