@@ -6,3 +6,5 @@ NUL
 .DS_Store
 .vercel
 .gstack/
+*.png
+AGENCY/
