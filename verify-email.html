@@ -30,26 +30,16 @@
 <script src="js/api.js"></script>
     <script>
         (async () => {
-            const params = new URLSearchParams(window.location.search);
-            const token = params.get('token');
-            if (!token) {
-                document.getElementById('result-icon').textContent = '✕';
-                document.getElementById('result-icon').style.color = '#ef4444';
-                document.getElementById('result-title').textContent = 'Invalid Link';
-                document.getElementById('result-msg').textContent = 'No verification token provided.';
-                return;
-            }
-            try {
-                await api.post('/auth/verify-email', { token });
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token') && hash.includes('type=signup')) {
                 document.getElementById('result-icon').textContent = '✓';
                 document.getElementById('result-icon').style.color = '#22c55e';
                 document.getElementById('result-title').textContent = 'Email Verified!';
                 document.getElementById('result-msg').innerHTML = 'Your email has been verified. You can now <a href="index.html" style="color:#d4a373;">login to your account</a>.';
-            } catch (err) {
-                document.getElementById('result-icon').textContent = '✕';
-                document.getElementById('result-icon').style.color = '#ef4444';
-                document.getElementById('result-title').textContent = 'Verification Failed';
-                document.getElementById('result-msg').textContent = err.message;
+            } else {
+                document.getElementById('result-icon').textContent = '⏳';
+                document.getElementById('result-title').textContent = 'No Action Needed';
+                document.getElementById('result-msg').innerHTML = 'Email confirmation is disabled. <a href="index.html" style="color:#d4a373;">Go back to the app</a>.';
             }
         })();
     </script>
