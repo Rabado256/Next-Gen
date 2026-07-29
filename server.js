@@ -2,6 +2,8 @@ require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const supabaseJs = require('@supabase/supabase-js');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
 
 const PORT = 3000;
 const ROOT = __dirname;
@@ -64,12 +66,10 @@ async function handleAPI(req, res) {
         return json(res, 400, { error: 'Invalid amount' });
       }
 
-      const stripeKey = process.env.STRIPE_SECRET_KEY;
-      if (!stripeKey || stripeKey.includes('REPLACE_ME')) {
+      if (!process.env.STRIPE_SECRET_KEY) {
         return json(res, 503, { error: 'Stripe not configured. Add your STRIPE_SECRET_KEY to .env' });
       }
 
-      const stripe = require('stripe')(stripeKey);
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount),
         currency: currency || 'usd',
@@ -92,7 +92,7 @@ async function handleAPI(req, res) {
   if (url === '/api/confirm-booking' && req.method === 'POST') {
     try {
       const body = await parseBody(req);
-      const { createClient } = require('@supabase/supabase-js');
+      const { createClient } = supabaseJs;
       const supabase = createClient(
         process.env.SUPABASE_URL,
         process.env.SUPABASE_ANON_KEY

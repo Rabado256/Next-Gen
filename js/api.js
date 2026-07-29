@@ -434,7 +434,7 @@ const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount: Math.round((data.total_amount || 0) * 100),
+        amount: Math.round((parseFloat(String(data.total_amount).replace(/[^0-9.]/g, '')) || 0) * 100),
         currency: data.currency || 'usd',
         metadata: {
           dest_id: data.destination_id,
@@ -450,7 +450,7 @@ const api = {
 
   // Confirm booking in Supabase after Stripe payment succeeds
   async confirmPayment(data) {
-    const ref = 'NG' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    const ref = 'NG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
     const res = await fetch('/api/confirm-booking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

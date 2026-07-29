@@ -40,7 +40,7 @@ function getDocBadgeForBooking(b) {
 // ==================== AUTHENTICATION ====================
 
 // Admin login form submission
-document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+document.getElementById('admin-login-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('admin-email').value.trim();
   const password = document.getElementById('admin-password').value;
@@ -63,7 +63,7 @@ document.getElementById('admin-login-form').addEventListener('submit', async (e)
 });
 
 // Admin logout handler
-document.getElementById('admin-logout-btn').addEventListener('click', () => {
+document.getElementById('admin-logout-btn')?.addEventListener('click', () => {
   if (!confirm('Logout of admin sanctuary?')) return;
   api.logout();
   document.getElementById('admin-login-screen').style.display = 'flex';
@@ -100,10 +100,10 @@ document.querySelectorAll('.admin-nav-item[data-section]').forEach(item => {
 });
 
 // Mobile sidebar toggle
-document.getElementById('admin-mobile-toggle').addEventListener('click', () => {
+document.getElementById('admin-mobile-toggle')?.addEventListener('click', () => {
   document.getElementById('admin-sidebar').classList.toggle('show');
 });
-document.getElementById('admin-sidebar-close').addEventListener('click', () => {
+document.getElementById('admin-sidebar-close')?.addEventListener('click', () => {
   document.getElementById('admin-sidebar').classList.remove('show');
 });
 
@@ -117,7 +117,7 @@ function closeOverlay() {
   document.getElementById('admin-overlay').classList.remove('show');
 }
 // Close overlay when clicking on backdrop
-document.getElementById('admin-overlay').addEventListener('click', (e) => {
+document.getElementById('admin-overlay')?.addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeOverlay();
 });
 
@@ -278,8 +278,8 @@ async function deleteBooking(id) {
 }
 
 // Re-render bookings on search/filter change
-document.getElementById('bookings-search').addEventListener('input', renderBookings);
-document.getElementById('bookings-filter-status').addEventListener('change', renderBookings);
+document.getElementById('bookings-search')?.addEventListener('input', renderBookings);
+document.getElementById('bookings-filter-status')?.addEventListener('change', renderBookings);
 
 // ==================== DESTINATIONS MANAGEMENT ====================
 async function renderDestinations() {
@@ -521,7 +521,7 @@ async function renderUsers() {
     document.getElementById('users-table-body').innerHTML = '<tr class="empty-row"><td colspan="9">Could not load users</td></tr>';
   }
 }
-document.getElementById('users-search').addEventListener('input', renderUsers);
+document.getElementById('users-search')?.addEventListener('input', renderUsers);
 
 async function viewUserProfile(userId) {
   try {
@@ -645,7 +645,7 @@ async function deleteContact(id) {
     showToast(err.message, 'error');
   }
 }
-document.getElementById('contacts-search').addEventListener('input', renderContacts);
+document.getElementById('contacts-search')?.addEventListener('input', renderContacts);
 
 // ==================== NEWSLETTER SUBSCRIBERS ====================
 async function renderNewsletter() {
@@ -670,7 +670,7 @@ async function renderNewsletter() {
     document.getElementById('newsletter-table-body').innerHTML = '<tr class="empty-row"><td colspan="2">No subscribers yet</td></tr>';
   }
 }
-document.getElementById('newsletter-search').addEventListener('input', renderNewsletter);
+document.getElementById('newsletter-search')?.addEventListener('input', renderNewsletter);
 
 // ==================== AUDIT LOGS ====================
 async function renderLogs() {
@@ -763,7 +763,7 @@ async function renderTrips() {
       return;
     }
     tbody.innerHTML = trips.map(t => {
-      const avail = t.max_capacity - t.booked_count;
+      const avail = (t.max_capacity || 0) - (t.booked_count || 0);
       const availColor = avail <= 0 ? 'var(--admin-danger)' : avail <= 3 ? 'var(--admin-warning)' : 'var(--admin-success)';
       return `<tr>
         <td style="font-family: monospace; font-size: 0.75rem;">${escapeHtml(t.id)}</td>

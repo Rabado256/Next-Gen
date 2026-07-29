@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         authSignup.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = authSignup.querySelector('button[type="submit"]');
-            const name = authSignup.querySelector('input[placeholder="Full Name"]')?.value || authSignup.querySelector('input[type="text"]').value;
+            const name = authSignup.querySelector('input[placeholder="Your full name"]')?.value || authSignup.querySelector('input[type="text"]')?.value || '';
             const email = authSignup.querySelector('input[type="email"]').value;
             const passwords = authSignup.querySelectorAll('input[type="password"]');
             const password = passwords[0]?.value;
@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await api.signup(name, email, password);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('auth-modal'));
-                modal.hide();
+                if (modal) modal.hide();
                 authSignup.reset();
                 updateAuthUI();
             } catch (err) {
@@ -595,7 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 await api.login(email, password);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('auth-modal'));
-                modal.hide();
+                if (modal) modal.hide();
                 authLogin.reset();
                 updateAuthUI();
             } catch (err) {
@@ -668,17 +668,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             const subject = contactForm.querySelector('input[placeholder="How can we help?"]')?.value || '';
             const message = contactForm.querySelector('textarea')?.value || '';
             const btn = contactForm.querySelector('button[type="submit"]');
+            const origText = btn.textContent;
             btn.disabled = true;
             btn.textContent = 'Sending...';
             try {
                 await api.submitContact(name, email, subject, message);
             } catch (_) {
-                // Fallback: save to localStorage
                 const contacts = JSON.parse(localStorage.getItem('nextgen_contacts') || '[]');
                 contacts.push({ name, email, subject, message, date: new Date().toLocaleDateString(), read: false });
                 localStorage.setItem('nextgen_contacts', JSON.stringify(contacts));
             }
-            const origText = btn.textContent;
             btn.textContent = 'Message Sent!';
             btn.style.background = 'var(--comptoir-ochre)';
             contactForm.reset();

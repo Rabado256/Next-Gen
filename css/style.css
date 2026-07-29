@@ -2534,34 +2534,7 @@ h2, h3, .serif {
         padding: 2rem 0 1rem;
     }
 
-    /* Sanctuary Reviews */
-    .review-card {
-        background: #fdfdfd;
-        padding: 2.5rem;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .review-stars {
-        color: #000;
-        font-size: 0.8rem;
-        margin-bottom: 1rem;
-    }
-
-    .review-text {
-        font-style: italic;
-        font-size: 0.95rem;
-        line-height: 1.8;
-        margin-bottom: 1.5rem;
-    }
-
-    .review-author {
-        font-size: 0.75rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        opacity: 0.5;
-    }
-
-    /* Partner Bar */
+    /* Partner Bar (mobile override) */
     .partner-bar {
         padding: 4rem 0;
         border-top: 1px solid rgba(0,0,0,0.05);
@@ -2584,62 +2557,89 @@ h2, h3, .serif {
         transform: scale(1.05);
     }
 
-    /* Floating Concierge */
-    .concierge-float {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        z-index: 1000;
-        background: #000;
-        color: #fff;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer;
-    }
-
-    .concierge-float:hover {
-        transform: scale(1.1);
-    }
-
-    /* Stats Widget */
-    .stats-widget {
-        background: #000;
-        color: #fff;
-        padding: 2rem;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        margin-top: 2rem;
-    }
-
-    .stat-item {
-        text-align: center;
-    }
-
-    .stat-value {
-        display: block;
-        font-size: 1.2rem;
-        margin-top: 0.25rem;
-        font-weight: 300;
-    }
-
-    .stat-label {
-        font-size: 0.6rem;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        opacity: 0.5;
-    }
-
     /* Navbar */
     .navbar-brand {
         font-size: 1.5rem !important;
     }
+}
+
+/* Sanctuary Reviews */
+.review-card {
+    background: #fdfdfd;
+    padding: 2.5rem;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.review-stars {
+    color: #000;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.review-text {
+    font-style: italic;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+}
+
+.review-author {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.5;
+}
+
+/* Floating Concierge */
+.concierge-float {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    background: #000;
+    color: #fff;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+.concierge-float:hover {
+    transform: scale(1.1);
+}
+
+/* Stats Widget */
+.stats-widget {
+    background: #000;
+    color: #fff;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.2rem;
+    margin-top: 0.25rem;
+    font-weight: 300;
+}
+
+.stat-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.5;
 }
 
 /* Scroll Arrows */
