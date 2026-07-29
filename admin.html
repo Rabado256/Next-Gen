@@ -261,6 +261,8 @@
         .admin-modal select option { background: var(--admin-card); color: white; }
         .admin-modal label { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--admin-muted); margin-bottom: 0.4rem; display: block; }
         .admin-modal .form-group { margin-bottom: 1rem; }
+        .admin-modal-field { background: transparent; border: 1px solid var(--admin-border); color: white; border-radius: 0; padding: 0.6rem 0.75rem; width: 100%; font-size: 0.85rem; }
+        .admin-modal-field:focus { border-color: var(--admin-accent); box-shadow: none; outline: none; }
 
         /* Action toolbar */
         .admin-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
@@ -628,6 +630,7 @@
                             <th>ID Card</th>
                             <th>Verified</th>
                             <th>Registered</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="users-table-body"></tbody>

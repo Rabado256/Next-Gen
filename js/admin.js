@@ -504,7 +504,7 @@ async function renderUsers() {
     document.getElementById('users-count').textContent = users.length + ' user(s)';
     const tbody = document.getElementById('users-table-body');
     if (users.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No registered users</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No registered users</td></tr>';
       return;
     }
     tbody.innerHTML = users.map(u => `
@@ -515,12 +515,59 @@ async function renderUsers() {
         <td>${escapeHtml(u.identity_card || '—')}</td>
         <td><span style="color: ${u.email_verified ? 'var(--admin-success)' : 'var(--admin-warning)'};">${u.email_verified ? 'Verified' : 'Unverified'}</span></td>
         <td style="font-size: 0.75rem; color: var(--admin-muted);">${escapeHtml(u.created_at || '—')}</td>
+        <td><button class="admin-btn admin-btn-accent admin-btn-sm" onclick="viewUserProfile('${escapeHtml(u.id)}')"><i class="bi bi-eye"></i> View</button></td>
       </tr>`).join('');
   } catch (_) {
     document.getElementById('users-table-body').innerHTML = '<tr class="empty-row"><td colspan="9">Could not load users</td></tr>';
   }
 }
 document.getElementById('users-search').addEventListener('input', renderUsers);
+
+async function viewUserProfile(userId) {
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+    if (!profile) { showToast('User not found', 'error'); return; }
+    showOverlay('Client Profile', `
+      <div style="text-align:center;margin-bottom:2rem">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#d4a373,#b8860b);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.5rem;font-weight:700;color:#fff">${(profile.name || '?')[0]}</div>
+        <h3 style="color:#fff;margin:0;font-family:'Playfair Display',serif">${escapeHtml(profile.name || 'Unknown')}</h3>
+        <span style="display:inline-block;margin-top:0.25rem;font-size:0.75rem;padding:0.2rem 0.75rem;border-radius:999px;background:rgba(212,163,115,0.15);color:#d4a373">${profile.is_admin ? 'Admin' : 'Client'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group"><label>Email</label><input value="${escapeHtml(profile.email || '')}" class="admin-modal-field" id="vu-email"></div>
+        <div class="form-group"><label>Name</label><input value="${escapeHtml(profile.name || '')}" class="admin-modal-field" id="vu-name"></div>
+        <div class="form-group"><label>Passport</label><input value="${escapeHtml(profile.passport || '')}" class="admin-modal-field" id="vu-passport"></div>
+        <div class="form-group"><label>ID Card</label><input value="${escapeHtml(profile.identity_card || '')}" class="admin-modal-field" id="vu-identity_card"></div>
+        <div class="form-group"><label>Country</label><input value="${escapeHtml(profile.country || '')}" class="admin-modal-field" id="vu-country"></div>
+        <div class="form-group"><label>Phone</label><input value="${escapeHtml(profile.emergency || '')}" class="admin-modal-field" id="vu-emergency"></div>
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-top:1.5rem;justify-content:flex-end">
+        <button class="admin-btn admin-btn-outline" onclick="closeOverlay()">Close</button>
+        <button class="admin-btn admin-btn-accent" onclick="updateUserProfile('${escapeHtml(userId)}')">Save Changes</button>
+      </div>
+    `);
+  } catch (_) { showToast('Could not load profile', 'error'); }
+}
+
+async function updateUserProfile(userId) {
+  const updates = {
+    name: document.getElementById('vu-name').value,
+    email: document.getElementById('vu-email').value,
+    passport: document.getElementById('vu-passport').value,
+    identity_card: document.getElementById('vu-identity_card').value,
+    country: document.getElementById('vu-country').value,
+    emergency: document.getElementById('vu-emergency').value,
+  };
+  try {
+    const { error } = await supabaseClient.from('profiles').update(updates).eq('id', userId);
+    if (error) throw error;
+    showToast('Profile updated');
+    closeOverlay();
+    renderUsers();
+  } catch (err) { showToast(err.message, 'error'); }
+}
 
 // ==================== CONTACT SUBMISSIONS ====================
 async function renderContacts() {
