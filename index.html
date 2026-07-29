@@ -1570,7 +1570,7 @@
                 
                 if (hotel === 'Yes') {
                     document.getElementById('confirm-hotel').textContent = 'Reserved';
-                    document.getElementById('confirm-food').textContent = food.charAt(0).toUpperCase() + food.slice(1);
+                    if (food) document.getElementById('confirm-food').textContent = food.charAt(0).toUpperCase() + food.slice(1);
                     document.getElementById('confirm-details').style.display = 'block';
                 }
 

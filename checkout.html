@@ -922,6 +922,20 @@
                 }
             };
 
+            // Update "Back to Home" link so confirmation banner shows on index.html
+            const addMeal = document.getElementById('add-meal');
+            const foodPref = document.getElementById('food-preference');
+            const emailEl = document.getElementById('email');
+            const params = new URLSearchParams({
+                first, last,
+                dest: dest.title,
+                email: emailEl ? emailEl.value : '',
+                hotel: reserveHotel.checked ? 'Yes' : 'No',
+                food: (addMeal && addMeal.checked && foodPref) ? foodPref.value : ''
+            });
+            const backLink = document.querySelector('#success-step a[href="index.html"]');
+            if (backLink) backLink.href = 'index.html?' + params.toString();
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
