@@ -105,7 +105,7 @@
         <div class="container text-white py-4">
             <div class="d-flex align-items-center gap-4">
                 <div class="avatar-upload">
-                    <img id="avatar-img" src="https://ui-avatars.com/api/?name=Guest&background=000&color=fff&size=120" alt="Avatar" class="profile-avatar">
+                    <img id="avatar-img" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23d4a373%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2215%22 fill=%22%23fff%22/%3E%3Cpath d=%22M20 80 Q50 55 80 80%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3C/svg%3E" alt="Avatar" class="profile-avatar">
                     <label for="avatar-input"><i class="bi bi-camera"></i></label>
                     <input type="file" id="avatar-input" accept="image/*">
                 </div>
@@ -373,11 +373,7 @@
     function updateAvatar(name) {
         const img = document.getElementById('avatar-img');
         const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-        if (user.avatar_url) {
-            img.src = user.avatar_url;
-        } else {
-            img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Guest')}&background=000&color=fff&size=120`;
-        }
+        img.src = user.avatar_url || user.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23d4a373%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2215%22 fill=%22%23fff%22/%3E%3Cpath d=%22M20 80 Q50 55 80 80%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3C/svg%3E';
     }
 
     async function loadProfile() {

@@ -26,7 +26,6 @@
         .edit-btn { @apply text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors; }
         .field-label { @apply text-xs font-semibold text-gray-400 uppercase tracking-wider; }
         .field-value { @apply text-sm font-medium text-gray-500 mt-1; }
-        .field-input { @apply w-full text-sm font-medium text-gray-500 mt-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:bg-white transition-all; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
@@ -55,8 +54,9 @@
         </div>
         <nav class="flex-1 px-3 space-y-1">
             <a href="admin.html" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
-            <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>Bookings</a>
-            <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Destinations</a>
+            <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>Orders</a>
+            <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>E-commerce</a>
+            <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Transactions</a>
             <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Trips</a>
             <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>Clients</a>
             <a href="#" class="sidebar-link"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>Reviews</a>
@@ -79,10 +79,10 @@
         </nav>
         <div class="px-4 pb-6 mt-4">
             <div class="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-orange to-amber-500 flex items-center justify-center text-xs font-bold" id="sidebar-avatar">AK</div>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-orange to-amber-500 flex items-center justify-center text-xs font-bold" id="sidebar-avatar">NK</div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate" id="sidebar-name">Amara K.</p>
-                    <p class="text-xs text-white/50 truncate" id="sidebar-role">Travel Consultant</p>
+                    <p class="text-sm font-medium truncate" id="sidebar-name">Natashia Khaleira</p>
+                    <p class="text-xs text-white/50 truncate" id="sidebar-role">Admin</p>
                 </div>
                 <button class="text-white/40 hover:text-white transition-colors" onclick="logout()">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -114,87 +114,59 @@
         </header>
 
         <main class="flex-1 overflow-y-auto p-6 lg:p-8">
-            <div id="loading-state" class="flex items-center justify-center py-20">
-                <div class="text-center">
-                    <div class="w-8 h-8 border-2 border-brand-orange border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                    <p class="text-sm text-gray-500">Loading profile...</p>
-                </div>
-            </div>
+            <div class="max-w-5xl space-y-6">
 
-            <div id="profile-content" class="hidden">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center justify-between mb-2">
                     <h1 class="text-2xl font-bold text-gray-500">My Profile</h1>
-                    <div class="flex gap-2" id="profile-actions">
-                        <button class="edit-btn bg-brand-orange text-white hover:bg-orange-600" id="btn-edit" onclick="enableEditing()">Edit Profile</button>
-                        <button class="edit-btn border border-gray-300 text-gray-700 hover:bg-gray-50" onclick="showToast('Activity log coming soon')">View Activity</button>
+                </div>
+
+                <!-- Profile Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8 flex flex-col sm:flex-row items-center gap-6">
+                    <div class="relative shrink-0">
+                        <img src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23d4a373%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2215%22 fill=%22%23fff%22/%3E%3Cpath d=%22M20 80 Q50 55 80 80%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3C/svg%3E" alt="Natashia Khaleira" class="profile-card-avatar w-28 h-28 rounded-full object-cover shadow-lg border-4 border-white">
+                        <div class="absolute bottom-0 right-0 w-9 h-9 bg-brand-orange rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:bg-orange-600 transition-colors border-2 border-white">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
                     </div>
-                    <div class="flex gap-2 hidden" id="profile-actions-edit">
-                        <button class="edit-btn bg-brand-orange text-white hover:bg-orange-600" onclick="saveProfile()">Save Changes</button>
-                        <button class="edit-btn border border-gray-300 text-gray-700 hover:bg-gray-50" onclick="cancelEditing()">Cancel</button>
+                    <div class="text-center sm:text-left flex-1">
+                        <h2 class="text-xl font-bold text-gray-500" id="display-name">Natashia Khaleira</h2>
+                        <p class="text-brand-orange font-medium text-sm" id="display-role">Admin</p>
+                        <p class="text-gray-500 text-sm mt-1 flex items-center gap-1.5 justify-center sm:justify-start">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span id="display-location">Leeds, United Kingdom</span>
+                        </p>
                     </div>
                 </div>
 
-                <div class="max-w-5xl space-y-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8 flex flex-col sm:flex-row items-center gap-6">
-                        <div class="relative shrink-0">
-                            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-brand-orange to-amber-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg" id="profile-avatar-letter">AK</div>
-                            <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors" id="avatar-upload-trigger">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            </div>
-                        </div>
-                        <div class="text-center sm:text-left flex-1">
-                            <h2 class="text-xl font-bold text-gray-500" id="display-name">Loading...</h2>
-                            <p class="text-brand-orange font-medium text-sm" id="display-role">—</p>
-                            <p class="text-gray-500 text-sm mt-1 flex items-center gap-1.5 justify-center sm:justify-start">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                <span id="display-location">—</span>
-                            </p>
-                        </div>
+                <!-- Personal Information Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-500">Personal Information</h3>
+                        <button class="edit-btn bg-brand-orange text-white hover:bg-orange-600" onclick="showToast('Edit mode coming soon')">Edit</button>
                     </div>
-
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-bold text-gray-500">Personal Information</h3>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="info-display">
-                            <div><p class="field-label">First Name</p><p class="field-value" id="val-firstname">—</p></div>
-                            <div><p class="field-label">Last Name</p><p class="field-value" id="val-lastname">—</p></div>
-                            <div><p class="field-label">Email Address</p><p class="field-value" id="val-email">—</p></div>
-                            <div><p class="field-label">Phone Number</p><p class="field-value" id="val-phone">—</p></div>
-                            <div><p class="field-label">User Role</p><span class="inline-block mt-1 text-xs font-semibold px-3 py-1 rounded-full bg-brand-orange/10 text-brand-orange" id="val-role">—</span></div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 hidden" id="info-edit">
-                            <div><p class="field-label">First Name</p><input class="field-input" id="edit-firstname"></div>
-                            <div><p class="field-label">Last Name</p><input class="field-input" id="edit-lastname"></div>
-                            <div><p class="field-label">Email Address</p><input class="field-input" id="edit-email" type="email"></div>
-                            <div><p class="field-label">Phone Number</p><input class="field-input" id="edit-phone"></div>
-                            <div><p class="field-label">User Role</p>
-                                <select class="field-input" id="edit-role">
-                                    <option value="Travel Consultant">Travel Consultant</option>
-                                    <option value="Senior Travel Consultant">Senior Travel Consultant</option>
-                                    <option value="Travel Agent">Travel Agent</option>
-                                    <option value="Admin">Admin</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-lg font-bold text-gray-500">Address & Documents</h3>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" id="address-display">
-                            <div><p class="field-label">Country</p><p class="field-value" id="val-country">—</p></div>
-                            <div><p class="field-label">City</p><p class="field-value" id="val-city">—</p></div>
-                            <div><p class="field-label">Passport</p><p class="field-value" id="val-passport">—</p></div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 hidden" id="address-edit">
-                            <div><p class="field-label">Country</p><input class="field-input" id="edit-country"></div>
-                            <div><p class="field-label">City</p><input class="field-input" id="edit-city"></div>
-                            <div><p class="field-label">Passport</p><input class="field-input" id="edit-passport"></div>
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div><p class="field-label">First Name</p><p class="field-value" id="val-firstname">Natashia</p></div>
+                        <div><p class="field-label">Last Name</p><p class="field-value" id="val-lastname">Khaleira</p></div>
+                        <div><p class="field-label">Date of Birth</p><p class="field-value" id="val-dob">12 April 1990</p></div>
+                        <div><p class="field-label">Email Address</p><p class="field-value" id="val-email">natashia@nextgen-travel.com</p></div>
+                        <div><p class="field-label">Phone Number</p><p class="field-value" id="val-phone">+44 7700 900123</p></div>
+                        <div><p class="field-label">User Role</p><span class="inline-block mt-1 text-xs font-semibold px-3 py-1 rounded-full bg-brand-orange/10 text-brand-orange" id="val-role">Admin</span></div>
                     </div>
                 </div>
+
+                <!-- Address Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-500">Address</h3>
+                        <button class="edit-btn bg-brand-orange text-white hover:bg-orange-600" onclick="showToast('Edit mode coming soon')">Edit</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div><p class="field-label">Country</p><p class="field-value" id="val-country">United Kingdom</p></div>
+                        <div><p class="field-label">City</p><p class="field-value" id="val-city">Leeds</p></div>
+                        <div><p class="field-label">Postal Code</p><p class="field-value" id="val-zip">LS1 2AB</p></div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -227,114 +199,39 @@
     }
 
     async function loadProfile() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) { window.location.href = 'index.html'; return; }
-
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
-        currentUser = profile || { id: user.id, email: user.email, name: user.user_metadata?.name || '' };
-
-        const fullName = (currentUser.name || currentUser.email || 'User').split(' ');
-        const first = fullName[0] || '';
-        const last = fullName.slice(1).join(' ') || '';
-
-        document.getElementById('profile-avatar-letter').textContent = (first[0] + (last[0] || '')).toUpperCase() || 'U';
-        document.getElementById('sidebar-avatar').textContent = (first[0] + (last[0] || '')).toUpperCase() || 'U';
-        document.getElementById('sidebar-name').textContent = (first + ' ' + last).trim() || 'User';
-        document.getElementById('sidebar-role').textContent = currentUser.is_admin ? 'Admin' : 'Travel Consultant';
-
-        document.getElementById('display-name').textContent = (first + ' ' + last).trim();
-        document.getElementById('display-role').textContent = currentUser.is_admin ? 'Administrator' : 'Travel Consultant';
-        document.getElementById('display-location').textContent = currentUser.country ? `${currentUser.city || ''}, ${currentUser.country}`.replace(/^, /, '') : '—';
-
-        document.getElementById('val-firstname').textContent = first || '—';
-        document.getElementById('val-lastname').textContent = last || '—';
-        document.getElementById('val-email').textContent = currentUser.email || '—';
-        document.getElementById('val-phone').textContent = currentUser.emergency || '—';
-        document.getElementById('val-role').textContent = currentUser.is_admin ? 'Administrator' : currentUser.role || 'Travel Consultant';
-        document.getElementById('val-country').textContent = currentUser.country || '—';
-        document.getElementById('val-city').textContent = currentUser.city || '—';
-        document.getElementById('val-passport').textContent = currentUser.passport || '—';
-
-        document.getElementById('edit-firstname').value = first;
-        document.getElementById('edit-lastname').value = last;
-        document.getElementById('edit-email').value = currentUser.email || '';
-        document.getElementById('edit-phone').value = currentUser.emergency || '';
-        document.getElementById('edit-role').value = currentUser.is_admin ? 'Admin' : (currentUser.role || 'Travel Consultant');
-        document.getElementById('edit-country').value = currentUser.country || '';
-        document.getElementById('edit-city').value = currentUser.city || '';
-        document.getElementById('edit-passport').value = currentUser.passport || '';
-
-        document.getElementById('loading-state').classList.add('hidden');
-        document.getElementById('profile-content').classList.remove('hidden');
-    }
-
-    function enableEditing() {
-        document.getElementById('info-display').classList.add('hidden');
-        document.getElementById('info-edit').classList.remove('hidden');
-        document.getElementById('address-display').classList.add('hidden');
-        document.getElementById('address-edit').classList.remove('hidden');
-        document.getElementById('profile-actions').classList.add('hidden');
-        document.getElementById('profile-actions-edit').classList.remove('hidden');
-    }
-
-    function cancelEditing() {
-        document.getElementById('info-edit').classList.add('hidden');
-        document.getElementById('info-display').classList.remove('hidden');
-        document.getElementById('address-edit').classList.add('hidden');
-        document.getElementById('address-display').classList.remove('hidden');
-        document.getElementById('profile-actions').classList.remove('hidden');
-        document.getElementById('profile-actions-edit').classList.add('hidden');
-    }
-
-    async function saveProfile() {
-        const first = document.getElementById('edit-firstname').value.trim();
-        const last = document.getElementById('edit-lastname').value.trim();
-        const email = document.getElementById('edit-email').value.trim();
-        const phone = document.getElementById('edit-phone').value.trim();
-        const role = document.getElementById('edit-role').value;
-        const country = document.getElementById('edit-country').value.trim();
-        const city = document.getElementById('edit-city').value.trim();
-        const passport = document.getElementById('edit-passport').value.trim();
-
-        document.getElementById('val-firstname').textContent = first || '—';
-        document.getElementById('val-lastname').textContent = last || '—';
-        document.getElementById('val-email').textContent = email || '—';
-        document.getElementById('val-phone').textContent = phone || '—';
-        document.getElementById('val-role').textContent = role;
-        document.getElementById('val-country').textContent = country || '—';
-        document.getElementById('val-city').textContent = city || '—';
-        document.getElementById('val-passport').textContent = passport || '—';
-
-        const fullName = first + ' ' + last;
-        document.getElementById('display-name').textContent = fullName.trim();
-        document.getElementById('display-role').textContent = role;
-        document.getElementById('display-location').textContent = country ? `${city}, ${country}`.replace(/^, /, '') : '—';
-        document.getElementById('sidebar-name').textContent = fullName.trim();
-
-        const letter = (first[0] || '') + (last[0] || '');
-        if (letter) {
-            document.getElementById('profile-avatar-letter').textContent = letter.toUpperCase();
-            document.getElementById('sidebar-avatar').textContent = letter.toUpperCase();
-        }
-
         try {
-            const { error } = await supabaseClient.from('profiles').upsert({
-                id: currentUser.id,
-                email: email,
-                name: fullName.trim(),
-                emergency: phone,
-                country: country,
-                city: city,
-                passport: passport,
-            });
-            if (error) throw error;
-            showToast('Profile saved successfully');
-        } catch (err) {
-            showToast('Saved locally — server sync pending');
-        }
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.location.href = 'index.html'; return; }
 
-        cancelEditing();
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+            currentUser = profile || { id: user.id, email: user.email, name: user.user_metadata?.name || '' };
+
+            const fullName = (currentUser.name || currentUser.email || 'User').split(' ');
+            const first = fullName[0] || '';
+            const last = fullName.slice(1).join(' ') || '';
+
+            document.getElementById('sidebar-avatar').textContent = (first[0] + (last[0] || '')).toUpperCase() || 'U';
+            document.getElementById('sidebar-name').textContent = (first + ' ' + last).trim() || 'User';
+            document.getElementById('sidebar-role').textContent = currentUser.is_admin ? 'Admin' : 'Travel Consultant';
+
+            document.getElementById('display-name').textContent = (first + ' ' + last).trim();
+            document.getElementById('display-role').textContent = currentUser.is_admin ? 'Administrator' : 'Travel Consultant';
+            document.getElementById('display-location').textContent = currentUser.country ? `${currentUser.city || ''}, ${currentUser.country}`.replace(/^, /, '') : 'Leeds, United Kingdom';
+
+            const avatarEl = document.querySelector('.profile-card-avatar');
+            if (avatarEl) {
+                avatarEl.src = user.avatar_url || user.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23d4a373%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2215%22 fill=%22%23fff%22/%3E%3Cpath d=%22M20 80 Q50 55 80 80%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3C/svg%3E';
+            }
+
+            document.getElementById('val-firstname').textContent = first || 'Natashia';
+            document.getElementById('val-lastname').textContent = last || 'Khaleira';
+            document.getElementById('val-email').textContent = currentUser.email || 'natashia@nextgen-travel.com';
+            document.getElementById('val-phone').textContent = currentUser.emergency || '+44 7700 900123';
+            document.getElementById('val-role').textContent = currentUser.is_admin ? 'Admin' : currentUser.role || 'Travel Consultant';
+            document.getElementById('val-country').textContent = currentUser.country || 'United Kingdom';
+            document.getElementById('val-city').textContent = currentUser.city || 'Leeds';
+        } catch (_) {}
     }
 
     async function logout() {
