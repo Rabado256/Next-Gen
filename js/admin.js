@@ -858,6 +858,16 @@ async function saveTrip(e) {
     showToast('From, To, and Date are required', 'error');
     return;
   }
+  // Prevent capacity from being less than existing bookings
+  if (editingTripId) {
+    try {
+      const existing = await api.getTrip(editingTripId);
+      if (existing && data.max_capacity < (existing.booked_count || 0)) {
+        showToast(`Capacity cannot be less than ${existing.booked_count} existing booking(s)`, 'error');
+        return;
+      }
+    } catch (_) { /* proceed anyway */ }
+  }
   try {
     if (editingTripId) {
       data.status = document.getElementById('trip-status').value;

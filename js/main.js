@@ -300,8 +300,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const oldLogout = document.getElementById('logout-btn');
             if (oldLogout) oldLogout.remove();
         } else if (!token && authButton) {
-            // Show "Sign In" button when logged out
-            authButton.innerHTML = '<i class="bi bi-person-circle"></i> Sign In';
+            // Show person icon when logged out
+            authButton.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
             authButton.setAttribute('data-bs-toggle', 'modal');
             authButton.setAttribute('data-bs-target', '#auth-modal');
             authButton.classList.remove('user-profile-btn');
@@ -474,10 +474,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.profile-tab').forEach(tab => {
         tab.addEventListener('click', () => {
             document.querySelectorAll('.profile-tab').forEach(t => {
-                t.style.opacity = '0.5';
+                t.style.background = 'transparent';
+                t.style.color = 'rgba(255,255,255,0.5)';
                 t.classList.remove('active');
             });
-            tab.style.opacity = '1';
+            tab.style.background = 'rgba(212,163,115,0.15)';
+            tab.style.color = '#d4a373';
             tab.classList.add('active');
             
             document.querySelectorAll('.profile-content-section').forEach(s => s.style.display = 'none');
@@ -592,6 +594,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             btn.disabled = false;
             btn.textContent = 'Login';
+        });
+    }
+
+    // Google OAuth sign-in
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', async () => {
+            googleLoginBtn.disabled = true;
+            googleLoginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Connecting...';
+            try {
+                const { error } = await SB.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.origin + window.location.pathname }
+                });
+                if (error) throw error;
+            } catch (err) {
+                showAuthError(authLogin, err.message || 'Google sign-in failed');
+                googleLoginBtn.disabled = false;
+                googleLoginBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.565 24 12.255 24z"/><path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 0 0 0 10.76l3.98-3.09z"/><path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.69 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/></svg> Continue with Google';
+            }
         });
     }
 

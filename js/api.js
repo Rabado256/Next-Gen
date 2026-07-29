@@ -560,11 +560,13 @@ const api = {
       const { data, error } = await query.order('departure_date');
       if (error) throw new Error(error.message);
 
-      // Calculate remaining spots for each trip
-      const tripsWithSpots = (data || []).map(t => ({
-        ...t,
-        available_spots: Math.max(0, (t.max_capacity || 0) - (t.booked_count || 0))
-      }));
+      // Calculate remaining spots and filter out fully booked trips
+      const tripsWithSpots = (data || [])
+        .map(t => ({
+          ...t,
+          available_spots: Math.max(0, (t.max_capacity || 0) - (t.booked_count || 0))
+        }))
+        .filter(t => t.available_spots > 0);
 
       return tripsWithSpots;
     } catch (err) {
@@ -575,13 +577,14 @@ const api = {
 
   // Create a new trip schedule (admin only)
   async createTrip(tripData) {
+    const capacity = Math.max(1, parseInt(tripData.max_capacity) || 20);
     const { data, error } = await SB.from('trips').insert({
       from_location: tripData.from_location,
       to_location: tripData.to_location,
       destination_id: tripData.destination_id || '',
       departure_date: tripData.departure_date || '',
       departure_time: tripData.departure_time || '',
-      max_capacity: tripData.max_capacity || 20,
+      max_capacity: capacity,
       booked_count: tripData.booked_count || 0,
       status: 'active'
     }).select().single();
@@ -591,17 +594,69 @@ const api = {
 
   // Update an existing trip (admin only)
   async updateTrip(id, tripData) {
+    // Check capacity if max_capacity is being reduced
+    if (tripData.max_capacity !== undefined) {
+      const { data: current } = await SB.from('trips')
+        .select('booked_count')
+        .eq('id', id)
+        .single();
+      if (current && tripData.max_capacity < (current.booked_count || 0)) {
+        throw new Error(`Capacity cannot be less than ${current.booked_count} existing booking(s)`);
+      }
+    }
     const updates = {};
     if (tripData.from_location !== undefined) updates.from_location = tripData.from_location;
     if (tripData.to_location !== undefined) updates.to_location = tripData.to_location;
     if (tripData.destination_id !== undefined) updates.destination_id = tripData.destination_id;
     if (tripData.departure_date !== undefined) updates.departure_date = tripData.departure_date;
     if (tripData.departure_time !== undefined) updates.departure_time = tripData.departure_time;
-    if (tripData.max_capacity !== undefined) updates.max_capacity = tripData.max_capacity;
+    if (tripData.max_capacity !== undefined) updates.max_capacity = Math.max(1, tripData.max_capacity);
     if (tripData.booked_count !== undefined) updates.booked_count = tripData.booked_count;
     if (tripData.status !== undefined) updates.status = tripData.status;
     const { error } = await SB.from('trips').update(updates).eq('id', id);
     if (error) throw new Error(error.message);
+  },
+
+  // Book a seat on a trip — validates capacity before incrementing booked_count
+  async bookTrip(tripId, seatsToBook = 1) {
+    // Fetch current trip state to check capacity
+    const { data: trip, error: fetchErr } = await SB.from('trips')
+      .select('max_capacity, booked_count, status')
+      .eq('id', tripId)
+      .single();
+    if (fetchErr) throw new Error(fetchErr.message);
+    if (!trip) throw new Error('Trip not found');
+    if (trip.status !== 'active') throw new Error('Trip is not active');
+
+    const available = (trip.max_capacity || 0) - (trip.booked_count || 0);
+    if (available < seatsToBook) {
+      throw new Error(`Only ${available} seat${available !== 1 ? 's' : ''} available on this trip`);
+    }
+
+    // Atomically increment booked_count only if capacity allows
+    const { error: updateErr } = await SB.from('trips')
+      .update({ booked_count: (trip.booked_count || 0) + seatsToBook })
+      .eq('id', tripId)
+      .lte('booked_count', trip.max_capacity - seatsToBook);
+    if (updateErr) throw new Error('Trip is now fully booked. Please choose another trip.');
+    return true;
+  },
+
+  // Release seats on a trip (e.g. on booking cancellation)
+  async releaseTripSeats(tripId, seatsToRelease = 1) {
+    const { data: trip, error: fetchErr } = await SB.from('trips')
+      .select('booked_count')
+      .eq('id', tripId)
+      .single();
+    if (fetchErr) throw new Error(fetchErr.message);
+    if (!trip) throw new Error('Trip not found');
+
+    const newCount = Math.max(0, (trip.booked_count || 0) - seatsToRelease);
+    const { error } = await SB.from('trips')
+      .update({ booked_count: newCount })
+      .eq('id', tripId);
+    if (error) throw new Error(error.message);
+    return true;
   },
 
   // Delete a trip (admin only)
