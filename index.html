@@ -1304,154 +1304,155 @@
 
     <!-- Profile Modal -->
     <div class="modal fade" id="profile-modal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" style="max-width: 960px;">
-            <div class="modal-content" style="border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); background: rgba(10,10,10,0.92); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); box-shadow: 0 32px 80px rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 680px;">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 24px 80px rgba(0,0,0,0.2);">
                 <div class="modal-body p-0" style="max-height: 85vh; overflow-y: auto;">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" style="z-index:5;" data-bs-dismiss="modal" aria-label="Close"></button>
+
                     <!-- Header -->
-                    <div class="px-5 pt-5 pb-4" style="background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%); border-bottom: 1px solid rgba(255,255,255,0.06);">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="d-flex align-items-center gap-4">
-                                <div class="position-relative flex-shrink-0">
-                                    <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);">
-                                        <img id="profile-settings-img" src="" alt="Profile" style="width:100%; height:100%; object-fit:cover;">
-                                    </div>
-                                    <label for="avatar-upload" style="position:absolute; bottom:-2px; right:-2px; width:28px; height:28px; border-radius:50%; background:#fff; color:#000; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; border:2px solid rgba(10,10,10,0.9); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                                        <i class="bi bi-camera-fill"></i>
-                                        <input type="file" id="avatar-upload" hidden accept="image/*">
-                                    </label>
-                                </div>
-                                <div>
-                                    <h2 class="serif text-white mb-1" style="font-size: 1.6rem; line-height: 1.2;">Profile Center</h2>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 100px; background: linear-gradient(135deg, #d4a373, #b8860b); color: #000; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">
-                                            <i class="bi bi-star-fill" style="font-size: 0.5rem;"></i> Elite Sanctuary
-                                        </span>
-                                        <span class="small opacity-50" id="profile-modal-email" style="font-size: 0.75rem;"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white opacity-50" style="font-size: 0.8rem;" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="text-center py-5 px-4" style="background: linear-gradient(135deg, #0d2137, #1a3a4a);">
+                        <div class="avatar-upload d-inline-block position-relative">
+                            <img id="pfl-avatar-img" src="https://ui-avatars.com/api/?name=Guest&background=000&color=fff&size=120" alt="Avatar" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,0.2);">
+                            <label for="pfl-avatar-input" style="position:absolute;bottom:4px;right:4px;width:32px;height:32px;border-radius:50%;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                                <i class="bi bi-camera"></i>
+                            </label>
+                            <input type="file" id="pfl-avatar-input" hidden accept="image/*">
                         </div>
-                        <!-- Quick Stats -->
-                        <div class="d-flex gap-4 mt-4 mb-0">
-                            <div class="text-center" style="flex:1; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <div class="text-white fw-bold" style="font-size: 1.2rem;" id="profile-stat-trips">0</div>
-                                <div class="opacity-40" style="font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4);">Journeys</div>
-                            </div>
-                            <div class="text-center" style="flex:1; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <div class="text-white fw-bold" style="font-size: 1.2rem;" id="profile-stat-wishlist">0</div>
-                                <div class="opacity-40" style="font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4);">Sanctuaries</div>
-                            </div>
-                            <div class="text-center" style="flex:1; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <div class="text-white fw-bold" style="font-size: 1.2rem;" id="profile-stat-countries">0</div>
-                                <div class="opacity-40" style="font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4);">Countries</div>
-                            </div>
+                        <p class="text-white-50 mt-3 mb-0" style="font-size:0.65rem;letter-spacing:0.15em;">YOUR PROFILE</p>
+                        <h3 class="text-white serif mb-0" id="pfl-name-display">My Profile</h3>
+                        <p class="text-white-50 small mb-0" id="pfl-email-display"></p>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="row g-0" style="border-bottom:1px solid rgba(0,0,0,0.06);">
+                        <div class="col-4 text-center py-3" style="border-right:1px solid rgba(0,0,0,0.06);">
+                            <div class="fw-bold" style="font-size:1.4rem;" id="pfl-stat-bookings">0</div>
+                            <p class="mb-0" style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;">Bookings</p>
+                        </div>
+                        <div class="col-4 text-center py-3" style="border-right:1px solid rgba(0,0,0,0.06);">
+                            <div class="fw-bold" style="font-size:1.4rem;" id="pfl-stat-countries">0</div>
+                            <p class="mb-0" style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;">Countries</p>
+                        </div>
+                        <div class="col-4 text-center py-3">
+                            <div class="fw-bold" style="font-size:1.4rem;" id="pfl-stat-wishlist">0</div>
+                            <p class="mb-0" style="color:#888;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;">Wishlist</p>
                         </div>
                     </div>
 
-                    <!-- Body -->
-                    <div class="p-5">
-                        <div class="row g-5">
-                            <!-- Left Column: Settings & Identity -->
-                            <div class="col-lg-5">
-                                <!-- Section card -->
-                                <div style="border-radius: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 1.5rem;">
-                                    <div class="d-flex align-items-center gap-2 mb-4">
-                                        <div style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, rgba(212,163,115,0.2), rgba(184,134,11,0.1)); display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="bi bi-person text-white"></i></div>
-                                        <span class="small tracking-widest text-white-50" style="font-size: 0.65rem; letter-spacing: 0.15em;">Identity & Travel Docs</span>
-                                    </div>
+                    <!-- Sections -->
+                    <div class="p-4">
 
-                                    <form id="profile-settings-form">
-                                        <div style="margin-bottom: 1.25rem;">
-                                            <label class="small text-white-50 mb-1" style="font-size: 0.65rem; letter-spacing: 0.1em;">Full Name</label>
-                                            <input type="text" id="profile-name" class="form-control" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem;">
-                                        </div>
-                                        <div class="row g-2" style="margin-bottom: 1.25rem;">
-                                            <div class="col-6">
-                                                <label class="small text-white-50 mb-1" style="font-size: 0.65rem; letter-spacing: 0.1em;">Passport</label>
-                                                <input type="text" id="profile-passport" class="form-control" placeholder="A0000000" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem;">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="small text-white-50 mb-1" style="font-size: 0.65rem; letter-spacing: 0.1em;">ID Card</label>
-                                                <input type="text" id="profile-identity-card" class="form-control" placeholder="National ID" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem;">
-                                            </div>
-                                        </div>
-                                        <p class="small text-white-50 mb-3" style="font-size: 0.6rem; line-height: 1.5; opacity: 0.5;">
-                                            <i class="bi bi-info-circle"></i> Domestic trips need ID Card. International trips need Passport.
-                                        </p>
-                                        <div class="row g-2" style="margin-bottom: 1.25rem;">
-                                            <div class="col-6">
-                                                <label class="small text-white-50 mb-1" style="font-size: 0.65rem; letter-spacing: 0.1em;">Emergency Contact</label>
-                                                <input type="tel" id="profile-emergency" class="form-control" placeholder="+00..." style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem;">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="small text-white-50 mb-1" style="font-size: 0.65rem; letter-spacing: 0.1em;">Contact Name</label>
-                                                <input type="text" id="profile-emergency-name" class="form-control" placeholder="Person" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem;">
-                                            </div>
-                                        </div>
-                                        <div style="margin-bottom: 1.5rem;">
-                                            <label class="small text-white-50 mb-1" style="font-size: 0.65rem; letter-spacing: 0.1em;">Your Country</label>
-                                            <input type="text" id="profile-country" class="form-control" list="global-countries" placeholder="e.g. United States" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem;">
-                                        </div>
-
-                                        <hr style="border-color: rgba(255,255,255,0.08); margin: 1.5rem 0;">
-
-                                        <div class="d-flex align-items-center gap-2 mb-4">
-                                            <div style="width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, rgba(212,163,115,0.2), rgba(184,134,11,0.1)); display: flex; align-items: center; justify-content: center; font-size: 0.75rem;"><i class="bi bi-sliders text-white"></i></div>
-                                            <span class="small tracking-widest text-white-50" style="font-size: 0.65rem; letter-spacing: 0.15em;">Global Preferences</span>
-                                        </div>
-
-                                        <div class="d-flex align-items-center justify-content-between mb-3" style="padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                                            <span style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Always Reserve Hotel</span>
-                                            <div class="form-check form-switch mb-0">
-                                                <input class="form-check-input" type="checkbox" id="pref-always-hotel" style="cursor:pointer; width: 40px; height: 20px; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.15);" checked>
-                                            </div>
-                                        </div>
-                                        <div style="margin-bottom: 1.5rem;">
-                                            <label class="small text-white-50 mb-1" style="font-size: 0.65rem; letter-spacing: 0.1em;">Arrival Meal Preference</label>
-                                            <select id="pref-food" class="form-select" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem;">
-                                                <option value="none" style="background: #1a1a1a;">I'll decide later</option>
-                                                <option value="local" style="background: #1a1a1a;">Local Delicacies</option>
-                                                <option value="continental" style="background: #1a1a1a;">Continental</option>
-                                                <option value="vegetarian" style="background: #1a1a1a;">Vegetarian / Vegan</option>
-                                            </select>
-                                        </div>
-
-                                        <div id="profile-alert" class="small mb-2 text-center" style="display:none; border-radius: 8px; padding: 6px 12px;"></div>
-                                        <button type="submit" class="btn w-100" style="border-radius: 10px; padding: 0.7rem; background: linear-gradient(135deg, #d4a373, #b8860b); color: #000; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; border: none; text-transform: uppercase;">Save Profile</button>
-                                    </form>
-
-                                    <button id="profile-logout" class="btn btn-link text-danger text-decoration-none w-100 mt-3 small" style="font-size: 0.7rem; letter-spacing: 0.1em; opacity: 0.6;">Logout Sanctuary</button>
+                        <!-- Personal Information -->
+                        <div class="mb-4" style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:1.5rem;">
+                            <h6 class="serif mb-3" style="font-size:0.9rem;"><i class="bi bi-person me-2"></i>Personal Information</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Full Name</label>
+                                    <input type="text" id="pfl-name" class="form-control form-control-sm border-dark border-opacity-25" placeholder="Your full name">
                                 </div>
-                            </div>
-
-                            <!-- Right Column: Activity & Wishlist -->
-                            <div class="col-lg-7">
-                                <!-- Tabs -->
-                                <div class="d-flex gap-1 mb-4" style="padding: 4px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
-                                    <button class="profile-tab active" data-section="activities" style="flex:1; padding: 8px 16px; border-radius: 8px; border: none; background: transparent; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s; cursor: pointer;">Journeys</button>
-                                    <button class="profile-tab" data-section="wishlist" style="flex:1; padding: 8px 16px; border-radius: 8px; border: none; background: transparent; color: rgba(255,255,255,0.5); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s; cursor: pointer;">Sanctuaries</button>
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Email</label>
+                                    <input type="email" id="pfl-email" class="form-control form-control-sm border-dark border-opacity-25" disabled>
                                 </div>
-
-                                <!-- Journeys tab -->
-                                <div id="profile-section-activities" class="profile-content-section">
-                                    <div style="margin-bottom: 1rem;">
-                                        <span class="small text-white-50" style="font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;">Upcoming</span>
-                                        <div id="upcoming-list" class="mt-2"></div>
-                                    </div>
-                                    <div>
-                                        <span class="small text-white-50" style="font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;">Past Memories</span>
-                                        <div id="past-list" class="mt-2 overflow-auto" style="max-height: 260px;"></div>
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Country</label>
+                                    <input type="text" id="pfl-country" class="form-control form-control-sm border-dark border-opacity-25" list="global-countries" placeholder="e.g. United States">
                                 </div>
-
-                                <!-- Wishlist tab -->
-                                <div id="profile-section-wishlist" class="profile-content-section" style="display: none;">
-                                    <div id="wishlist-list" class="row g-3"></div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Phone</label>
+                                    <input type="tel" id="pfl-phone" class="form-control form-control-sm border-dark border-opacity-25" placeholder="+00...">
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Travel Documents -->
+                        <div class="mb-4" style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:1.5rem;">
+                            <h6 class="serif mb-1" style="font-size:0.9rem;"><i class="bi bi-passport me-2"></i>Travel Documents</h6>
+                            <p class="small text-muted mb-3">Save your documents so checkout forms auto-fill for you.</p>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Passport Number</label>
+                                    <input type="text" id="pfl-passport" class="form-control form-control-sm border-dark border-opacity-25" placeholder="International travel">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Identity Card</label>
+                                    <input type="text" id="pfl-idcard" class="form-control form-control-sm border-dark border-opacity-25" placeholder="Domestic travel">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Emergency Contact</label>
+                                    <input type="tel" id="pfl-emergency" class="form-control form-control-sm border-dark border-opacity-25" placeholder="+00...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-muted mb-1">Emergency Contact Name</label>
+                                    <input type="text" id="pfl-emergency-name" class="form-control form-control-sm border-dark border-opacity-25" placeholder="Contact person">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preferences -->
+                        <div class="mb-4" style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:1.5rem;">
+                            <h6 class="serif mb-3" style="font-size:0.9rem;"><i class="bi bi-sliders me-2"></i>Preferences</h6>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="pfl-hotel">
+                                <label class="form-check-label small" for="pfl-hotel">Always Reserve Hotel Sanctuary</label>
+                            </div>
+                            <div>
+                                <label class="small text-muted mb-1">Preferred Arrival Meal</label>
+                                <select id="pfl-food" class="form-select form-select-sm border-dark border-opacity-25" style="max-width:250px;">
+                                    <option value="">No preference</option>
+                                    <option value="vegetarian">Vegetarian</option>
+                                    <option value="vegan">Vegan</option>
+                                    <option value="halal">Halal</option>
+                                    <option value="kosher">Kosher</option>
+                                    <option value="gluten-free">Gluten-free</option>
+                                    <option value="seafood">Seafood</option>
+                                    <option value="local">Local specialties</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Account Actions -->
+                        <div style="background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:1.5rem;">
+                            <h6 class="serif mb-3" style="font-size:0.9rem;"><i class="bi bi-shield-lock me-2"></i>Account</h6>
+                            <div class="d-flex gap-2">
+                                <button id="pfl-btn-password" class="btn btn-outline-dark btn-sm rounded-0 px-3">Change Password</button>
+                                <button id="pfl-btn-logout" class="btn btn-outline-danger btn-sm rounded-0 px-3">Sign Out</button>
+                            </div>
+                        </div>
+
+                        <!-- Toast -->
+                        <div id="pfl-alert" class="small text-center mt-3" style="display:none;border-radius:8px;padding:8px 16px;"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Change Modal -->
+    <div class="modal fade" id="password-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-body p-4">
+                    <h6 class="serif mb-3">Change Password</h6>
+                    <form id="pfl-password-form">
+                        <div class="mb-3">
+                            <label class="small text-muted">Current Password</label>
+                            <input type="password" id="pfl-current-password" class="form-control form-control-sm rounded-0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted">New Password</label>
+                            <input type="password" id="pfl-new-password" class="form-control form-control-sm rounded-0" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted">Confirm New Password</label>
+                            <input type="password" id="pfl-confirm-password" class="form-control form-control-sm rounded-0" required>
+                        </div>
+                        <div id="pfl-password-error" class="text-danger small mb-3" style="display:none;"></div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-dark btn-sm rounded-0 px-3 flex-fill">Update</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-0 px-3" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

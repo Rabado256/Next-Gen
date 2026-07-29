@@ -312,7 +312,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Populate the Profile Center modal with user data
     const renderProfileCenter = async () => {
-        // Fetch fresh profile from Supabase for cross-device sync
         try {
             const fresh = await api.getProfile();
             if (fresh) {
@@ -322,183 +321,137 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (_) {}
 
         const user = JSON.parse(localStorage.getItem('nextgen_user'));
-        const activities = JSON.parse(localStorage.getItem('nextgen_activities') || '[]');
-        const wishlist = JSON.parse(localStorage.getItem('nextgen_wishlist') || '[]');
-        
         if (!user) return;
 
-        // Fill in identity & document fields
-        document.getElementById('profile-name').value = user.name || '';
-        document.getElementById('profile-passport').value = user.passport || '';
-        document.getElementById('profile-identity-card').value = user.identity_card || '';
-        document.getElementById('profile-emergency').value = user.emergency || '';
-        document.getElementById('profile-emergency-name').value = user.emergency_name || '';
-        document.getElementById('profile-country').value = user.country || '';
-        document.getElementById('profile-settings-img').src = user.avatar_url || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff`;
+        document.getElementById('pfl-name').value = user.name || '';
+        document.getElementById('pfl-email').value = user.email || '';
+        document.getElementById('pfl-country').value = user.country || '';
+        document.getElementById('pfl-phone').value = user.phone || '';
+        document.getElementById('pfl-passport').value = user.passport || '';
+        document.getElementById('pfl-idcard').value = user.identity_card || '';
+        document.getElementById('pfl-emergency').value = user.emergency || '';
+        document.getElementById('pfl-emergency-name').value = user.emergency_name || '';
 
-        // Fill in global travel preferences
-        document.getElementById('pref-always-hotel').checked = user.pref_hotel == 1 || user.pref_hotel === true;
-        document.getElementById('pref-food').value = user.pref_food || 'none';
+        document.getElementById('pfl-hotel').checked = user.pref_hotel == 1 || user.pref_hotel === true;
+        document.getElementById('pfl-food').value = user.pref_food || '';
 
-        // Separate activities into upcoming and past trips
-        const upcomingList = document.getElementById('upcoming-list');
-        const pastList = document.getElementById('past-list');
-        
-        const now = new Date();
-        const upcoming = activities.filter(a => new Date(a.date) >= now);
-        const past = activities.filter(a => new Date(a.date) < now);
+        const name = user.name || 'Guest';
+        document.getElementById('pfl-name-display').textContent = name;
+        document.getElementById('pfl-email-display').textContent = user.email || '';
+        document.getElementById('pfl-avatar-img').src = user.avatar_url || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=000&color=fff&size=120`;
 
-        // Render individual activity card
-        const renderAct = (act) => `
-            <div class="border border-white border-opacity-10 p-3 mb-3 bg-white bg-opacity-5">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="serif italic mb-0">${escapeHtml(act.dest)}</h6>
-                    <span class="extra-small tracking-widest opacity-50">${escapeHtml(act.ref)}</span>
-                </div>
-                <div class="d-flex justify-content-between small opacity-75">
-                    <span>${escapeHtml(act.date)} // ${escapeHtml(act.guests)} Guest${parseInt(act.guests) > 1 ? 's' : ''}</span>
-                    <span class="fw-bold">${escapeHtml(act.total)}</span>
-                </div>
-                ${act.hotel === 'Yes' ? '<div class="extra-small mt-2 text-info opacity-75">Includes Hotel Sanctuary</div>' : ''}
-            </div>
-        `;
-
-        upcomingList.innerHTML = upcoming.length > 0 ? upcoming.map(renderAct).join('') : '<p class="text-muted extra-small italic">No upcoming journeys scheduled.</p>';
-        pastList.innerHTML = past.length > 0 ? past.map(renderAct).join('') : '<p class="text-muted extra-small italic">No past memories found.</p>';
-
-        // Render saved wishlist destinations
-        const wishlistContainer = document.getElementById('wishlist-list');
-        if (wishlist.length > 0) {
-            wishlistContainer.innerHTML = wishlist.map(item => `
-                <div class="col-6">
-                    <div class="border border-white border-opacity-10 p-2 text-center bg-white bg-opacity-5">
-                        <img src="${escapeHtml(item.img)}" class="img-fluid grayscale opacity-75 mb-2" style="height: 60px; object-fit: cover; width: 100%;">
-                        <h6 class="extra-small tracking-widest mb-1 text-truncate">${escapeHtml(item.title).toUpperCase()}</h6>
-                        <a href="destination.html?id=${encodeURIComponent(item.id)}" class="extra-small text-white text-decoration-none opacity-50">View Details →</a>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            wishlistContainer.innerHTML = '<p class="text-muted extra-small italic text-center w-100">Your wishlist is empty.</p>';
-        }
+        try {
+            const bookings = await api.getUserBookings();
+            document.getElementById('pfl-stat-bookings').textContent = bookings.length;
+            const countries = new Set(bookings.map(b => b.to_location).filter(Boolean));
+            document.getElementById('pfl-stat-countries').textContent = countries.size;
+        } catch (_) {}
+        const wishlist = JSON.parse(localStorage.getItem('nextgen_wishlist') || '[]');
+        document.getElementById('pfl-stat-wishlist').textContent = wishlist.length;
     };
 
-    // ---- Document Validation Helpers ----
-    // Format passport: uppercase, alphanumeric only
-    function formatPassport(val) {
-      return val.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    }
-    // Validate passport: 5-20 alphanumeric chars
-    function validatePassport(val) {
-      const cleaned = formatPassport(val);
-      return cleaned.length >= 5 && cleaned.length <= 20 && /^[A-Z0-9]+$/.test(cleaned);
-    }
-    // Format identity card: uppercase, alphanumeric + spaces/hyphens
-    function formatIdentityCard(val) {
-      return val.trim().toUpperCase().replace(/[^A-Z0-9\s-]/g, '');
-    }
-    // Validate identity card: 4-30 chars
-    function validateIdentityCard(val) {
-      const cleaned = formatIdentityCard(val);
-      return cleaned.length >= 4 && cleaned.length <= 30;
-    }
-
-    // Real-time formatting & validation on blur for document fields
-    const passportInput = document.getElementById('profile-passport');
-    const idCardInput = document.getElementById('profile-identity-card');
-    if (passportInput) {
-      passportInput.addEventListener('blur', function() {
-        const formatted = formatPassport(this.value);
-        this.value = formatted;
-        if (formatted && !validatePassport(formatted)) {
-          this.style.borderColor = '#dc3545';
-          this.title = 'Passport: 5-20 alphanumeric characters';
-        } else {
-          this.style.borderColor = '';
-          this.title = '';
-        }
-      });
-    }
-    if (idCardInput) {
-      idCardInput.addEventListener('blur', function() {
-        const formatted = formatIdentityCard(this.value);
-        this.value = formatted;
-        if (formatted && !validateIdentityCard(formatted)) {
-          this.style.borderColor = '#dc3545';
-          this.title = 'ID Card: 4-30 characters, letters, numbers, spaces, hyphens';
-        } else {
-          this.style.borderColor = '';
-          this.title = '';
-        }
-      });
-    }
-
-    // Profile Settings Form — save to Supabase + localStorage
-    const profileForm = document.getElementById('profile-settings-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const user = JSON.parse(localStorage.getItem('nextgen_user'));
-            const rawPassport = document.getElementById('profile-passport').value;
-            const rawIdCard = document.getElementById('profile-identity-card').value;
-            const profileData = {
-                name: document.getElementById('profile-name').value,
-                passport: formatPassport(rawPassport),
-                identity_card: formatIdentityCard(rawIdCard),
-                country: document.getElementById('profile-country').value,
-                emergency: document.getElementById('profile-emergency').value,
-                emergency_name: document.getElementById('profile-emergency-name').value,
-                pref_hotel: document.getElementById('pref-always-hotel').checked,
-                pref_food: document.getElementById('pref-food').value,
-                avatar: user.avatar_url || user.avatar || '',
-            };
-            // Update local cache immediately
-            user.name = profileData.name;
-            user.passport = profileData.passport;
-            user.identity_card = profileData.identity_card;
-            user.country = profileData.country;
-            user.emergency = profileData.emergency;
-            user.emergency_name = profileData.emergency_name;
-            user.pref_hotel = profileData.pref_hotel ? 1 : 0;
-            user.pref_food = profileData.pref_food;
+    // Profile form — save to Supabase + localStorage
+    const pflName = document.getElementById('pfl-name');
+    if (pflName) {
+        document.getElementById('pfl-name').addEventListener('blur', async () => {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.name = document.getElementById('pfl-name').value;
             localStorage.setItem('nextgen_user', JSON.stringify(user));
-            // Sync to server (best-effort)
-            try {
-                await api.updateProfile(profileData);
-                updateAuthUI();
-            } catch (_) {
-                // Saved locally at least — server sync will happen on next login
-            }
-            const profileAlert = document.getElementById('profile-alert');
-            if (profileAlert) {
-                profileAlert.textContent = 'Profile and preferences updated successfully.';
-                profileAlert.style.display = 'block';
-                setTimeout(() => { profileAlert.style.display = 'none'; }, 4000);
-            }
+            document.getElementById('pfl-name-display').textContent = user.name || 'My Profile';
+            updateAuthUI();
+            try { await api.updateProfile({ name: user.name }); } catch (_) {}
         });
     }
 
-    // Profile tab switching (Settings / Activities / Wishlist)
-    document.querySelectorAll('.profile-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.profile-tab').forEach(t => {
-                t.style.background = 'transparent';
-                t.style.color = 'rgba(255,255,255,0.5)';
-                t.classList.remove('active');
-            });
-            tab.style.background = 'rgba(212,163,115,0.15)';
-            tab.style.color = '#d4a373';
-            tab.classList.add('active');
-            
-            document.querySelectorAll('.profile-content-section').forEach(s => s.style.display = 'none');
-            document.getElementById('profile-section-' + tab.dataset.section).style.display = 'block';
+    const pflCountry = document.getElementById('pfl-country');
+    if (pflCountry) {
+        pflCountry.addEventListener('blur', async () => {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.country = pflCountry.value;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ country: user.country }); } catch (_) {}
         });
-    });
+    }
 
-    // Avatar upload via FileReader (stored as base64 data URL)
-    const avatarUpload = document.getElementById('avatar-upload');
-    if (avatarUpload) {
-        avatarUpload.addEventListener('change', (e) => {
+    const pflPhone = document.getElementById('pfl-phone');
+    if (pflPhone) {
+        pflPhone.addEventListener('blur', async () => {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.phone = pflPhone.value;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ phone: user.phone }); } catch (_) {}
+        });
+    }
+
+    const pflPassport = document.getElementById('pfl-passport');
+    if (pflPassport) {
+        pflPassport.addEventListener('blur', async () => {
+            const val = pflPassport.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+            pflPassport.value = val;
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.passport = val;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ passport: val }); } catch (_) {}
+        });
+    }
+
+    const pflIdcard = document.getElementById('pfl-idcard');
+    if (pflIdcard) {
+        pflIdcard.addEventListener('blur', async () => {
+            const val = pflIdcard.value.trim().toUpperCase().replace(/[^A-Z0-9\s-]/g, '');
+            pflIdcard.value = val;
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.identity_card = val;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ identity_card: val }); } catch (_) {}
+        });
+    }
+
+    const pflEmergency = document.getElementById('pfl-emergency');
+    if (pflEmergency) {
+        pflEmergency.addEventListener('blur', async () => {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.emergency = pflEmergency.value;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ emergency: user.emergency }); } catch (_) {}
+        });
+    }
+
+    const pflEmergName = document.getElementById('pfl-emergency-name');
+    if (pflEmergName) {
+        pflEmergName.addEventListener('blur', async () => {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.emergency_name = pflEmergName.value;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ emergency_name: user.emergency_name }); } catch (_) {}
+        });
+    }
+
+    // Preferences
+    const pflHotel = document.getElementById('pfl-hotel');
+    if (pflHotel) {
+        pflHotel.addEventListener('change', async () => {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.pref_hotel = pflHotel.checked ? 1 : 0;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ pref_hotel: pflHotel.checked }); } catch (_) {}
+        });
+    }
+
+    const pflFood = document.getElementById('pfl-food');
+    if (pflFood) {
+        pflFood.addEventListener('change', async () => {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            user.pref_food = pflFood.value;
+            localStorage.setItem('nextgen_user', JSON.stringify(user));
+            try { await api.updateProfile({ pref_food: pflFood.value }); } catch (_) {}
+        });
+    }
+
+    // Avatar upload
+    const pflAvatarInput = document.getElementById('pfl-avatar-input');
+    if (pflAvatarInput) {
+        pflAvatarInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -507,21 +460,67 @@ document.addEventListener('DOMContentLoaded', async () => {
                     user.avatar = event.target.result;
                     user.avatar_url = event.target.result;
                     localStorage.setItem('nextgen_user', JSON.stringify(user));
-                    document.getElementById('profile-settings-img').src = user.avatar;
+                    document.getElementById('pfl-avatar-img').src = user.avatar;
                     updateAuthUI();
-                    try {
-                        await api.updateProfile({ avatar: user.avatar });
-                    } catch (_) {}
+                    try { await api.updateProfile({ avatar: user.avatar }); } catch (_) {}
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
 
+    // Change password
+    const pflBtnPassword = document.getElementById('pfl-btn-password');
+    if (pflBtnPassword) {
+        pflBtnPassword.addEventListener('click', () => {
+            new bootstrap.Modal(document.getElementById('password-modal')).show();
+        });
+    }
+
+    const pflPasswordForm = document.getElementById('pfl-password-form');
+    if (pflPasswordForm) {
+        pflPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errEl = document.getElementById('pfl-password-error');
+            errEl.style.display = 'none';
+            const newPass = document.getElementById('pfl-new-password').value;
+            const confirmPass = document.getElementById('pfl-confirm-password').value;
+            if (newPass !== confirmPass) {
+                errEl.textContent = 'Passwords do not match';
+                errEl.style.display = 'block';
+                return;
+            }
+            try {
+                const { data: { user }, error: authErr } = await SB.auth.getUser();
+                if (authErr) throw authErr;
+                const currentPass = document.getElementById('pfl-current-password').value;
+                const { error: loginErr } = await SB.auth.signInWithPassword({ email: user.email, password: currentPass });
+                if (loginErr) {
+                    errEl.textContent = 'Current password is incorrect';
+                    errEl.style.display = 'block';
+                    return;
+                }
+                const { error: updateErr } = await SB.auth.updateUser({ password: newPass });
+                if (updateErr) throw updateErr;
+                bootstrap.Modal.getInstance(document.getElementById('password-modal')).hide();
+                document.getElementById('pfl-password-form').reset();
+                const alert = document.getElementById('pfl-alert');
+                alert.textContent = 'Password updated successfully';
+                alert.style.background = '#d4edda';
+                alert.style.color = '#155724';
+                alert.style.display = 'block';
+                setTimeout(() => { alert.style.display = 'none'; }, 4000);
+            } catch (err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+            }
+        });
+    }
+
     // Logout button in profile center
-    const profileLogout = document.getElementById('profile-logout');
-    if (profileLogout) {
-        profileLogout.addEventListener('click', () => {
+    const pflLogout = document.getElementById('pfl-btn-logout');
+    if (pflLogout) {
+        pflLogout.addEventListener('click', () => {
             api.logout();
             window.location.reload();
         });
