@@ -350,181 +350,121 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('pfl-stat-wishlist').textContent = wishlist.length;
     };
 
-    // Profile form — save to Supabase + localStorage
-    const pflName = document.getElementById('pfl-name');
-    if (pflName) {
-        document.getElementById('pfl-name').addEventListener('blur', async () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.name = document.getElementById('pfl-name').value;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            document.getElementById('pfl-name-display').textContent = user.name || 'My Profile';
-            updateAuthUI();
-            try { await api.updateProfile({ name: user.name }); } catch (_) {}
-        });
+    function showPflAlert(msg, type) {
+        const a = document.getElementById('pfl-alert');
+        if (!a) return;
+        a.textContent = msg;
+        a.style.background = type === 'error' ? '#f8d7da' : '#d4edda';
+        a.style.color = type === 'error' ? '#721c24' : '#155724';
+        a.style.display = 'block';
+        setTimeout(() => { a.style.display = 'none'; }, 4000);
     }
 
-    const pflCountry = document.getElementById('pfl-country');
-    if (pflCountry) {
-        pflCountry.addEventListener('blur', async () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.country = pflCountry.value;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ country: user.country }); } catch (_) {}
-        });
-    }
+    // Personal Information save
+    document.getElementById('pfl-save-personal')?.addEventListener('click', async () => {
+        const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+        user.name = document.getElementById('pfl-name').value;
+        user.country = document.getElementById('pfl-country').value;
+        user.phone = document.getElementById('pfl-phone').value;
+        localStorage.setItem('nextgen_user', JSON.stringify(user));
+        document.getElementById('pfl-name-display').textContent = user.name || 'My Profile';
+        updateAuthUI();
+        try {
+            await api.updateProfile({ name: user.name, country: user.country, phone: user.phone });
+            showPflAlert('Profile updated successfully');
+        } catch (_) { showPflAlert('Saved locally', 'error'); }
+    });
 
-    const pflPhone = document.getElementById('pfl-phone');
-    if (pflPhone) {
-        pflPhone.addEventListener('blur', async () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.phone = pflPhone.value;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ phone: user.phone }); } catch (_) {}
-        });
-    }
+    // Travel Documents save
+    document.getElementById('pfl-save-docs')?.addEventListener('click', async () => {
+        const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+        const passport = document.getElementById('pfl-passport').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const idcard = document.getElementById('pfl-idcard').value.trim().toUpperCase().replace(/[^A-Z0-9\s-]/g, '');
+        document.getElementById('pfl-passport').value = passport;
+        document.getElementById('pfl-idcard').value = idcard;
+        user.passport = passport;
+        user.identity_card = idcard;
+        user.emergency = document.getElementById('pfl-emergency').value;
+        user.emergency_name = document.getElementById('pfl-emergency-name').value;
+        localStorage.setItem('nextgen_user', JSON.stringify(user));
+        try {
+            await api.updateProfile({ passport, identity_card: idcard, emergency: user.emergency, emergency_name: user.emergency_name });
+            showPflAlert('Documents saved successfully');
+        } catch (_) { showPflAlert('Saved locally', 'error'); }
+    });
 
-    const pflPassport = document.getElementById('pfl-passport');
-    if (pflPassport) {
-        pflPassport.addEventListener('blur', async () => {
-            const val = pflPassport.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-            pflPassport.value = val;
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.passport = val;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ passport: val }); } catch (_) {}
-        });
-    }
-
-    const pflIdcard = document.getElementById('pfl-idcard');
-    if (pflIdcard) {
-        pflIdcard.addEventListener('blur', async () => {
-            const val = pflIdcard.value.trim().toUpperCase().replace(/[^A-Z0-9\s-]/g, '');
-            pflIdcard.value = val;
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.identity_card = val;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ identity_card: val }); } catch (_) {}
-        });
-    }
-
-    const pflEmergency = document.getElementById('pfl-emergency');
-    if (pflEmergency) {
-        pflEmergency.addEventListener('blur', async () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.emergency = pflEmergency.value;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ emergency: user.emergency }); } catch (_) {}
-        });
-    }
-
-    const pflEmergName = document.getElementById('pfl-emergency-name');
-    if (pflEmergName) {
-        pflEmergName.addEventListener('blur', async () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.emergency_name = pflEmergName.value;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ emergency_name: user.emergency_name }); } catch (_) {}
-        });
-    }
-
-    // Preferences
-    const pflHotel = document.getElementById('pfl-hotel');
-    if (pflHotel) {
-        pflHotel.addEventListener('change', async () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.pref_hotel = pflHotel.checked ? 1 : 0;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ pref_hotel: pflHotel.checked }); } catch (_) {}
-        });
-    }
-
-    const pflFood = document.getElementById('pfl-food');
-    if (pflFood) {
-        pflFood.addEventListener('change', async () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-            user.pref_food = pflFood.value;
-            localStorage.setItem('nextgen_user', JSON.stringify(user));
-            try { await api.updateProfile({ pref_food: pflFood.value }); } catch (_) {}
-        });
-    }
+    // Preferences save
+    document.getElementById('pfl-save-prefs')?.addEventListener('click', async () => {
+        const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+        user.pref_hotel = document.getElementById('pfl-hotel').checked ? 1 : 0;
+        user.pref_food = document.getElementById('pfl-food').value;
+        localStorage.setItem('nextgen_user', JSON.stringify(user));
+        try {
+            await api.updateProfile({ pref_hotel: document.getElementById('pfl-hotel').checked, pref_food: user.pref_food });
+            showPflAlert('Preferences saved');
+        } catch (_) { showPflAlert('Saved locally', 'error'); }
+    });
 
     // Avatar upload
-    const pflAvatarInput = document.getElementById('pfl-avatar-input');
-    if (pflAvatarInput) {
-        pflAvatarInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = async (event) => {
-                    const user = JSON.parse(localStorage.getItem('nextgen_user'));
-                    user.avatar = event.target.result;
-                    user.avatar_url = event.target.result;
-                    localStorage.setItem('nextgen_user', JSON.stringify(user));
-                    document.getElementById('pfl-avatar-img').src = user.avatar;
-                    updateAuthUI();
-                    try { await api.updateProfile({ avatar: user.avatar }); } catch (_) {}
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
+    document.getElementById('pfl-avatar-input')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const user = JSON.parse(localStorage.getItem('nextgen_user'));
+                user.avatar = event.target.result;
+                user.avatar_url = event.target.result;
+                localStorage.setItem('nextgen_user', JSON.stringify(user));
+                document.getElementById('pfl-avatar-img').src = user.avatar;
+                updateAuthUI();
+                try { await api.updateProfile({ avatar: user.avatar }); } catch (_) {}
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
     // Change password
-    const pflBtnPassword = document.getElementById('pfl-btn-password');
-    if (pflBtnPassword) {
-        pflBtnPassword.addEventListener('click', () => {
-            new bootstrap.Modal(document.getElementById('password-modal')).show();
-        });
-    }
+    document.getElementById('pfl-btn-password')?.addEventListener('click', () => {
+        new bootstrap.Modal(document.getElementById('password-modal')).show();
+    });
 
-    const pflPasswordForm = document.getElementById('pfl-password-form');
-    if (pflPasswordForm) {
-        pflPasswordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errEl = document.getElementById('pfl-password-error');
-            errEl.style.display = 'none';
-            const newPass = document.getElementById('pfl-new-password').value;
-            const confirmPass = document.getElementById('pfl-confirm-password').value;
-            if (newPass !== confirmPass) {
-                errEl.textContent = 'Passwords do not match';
+    document.getElementById('pfl-password-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errEl = document.getElementById('pfl-password-error');
+        errEl.style.display = 'none';
+        const newPass = document.getElementById('pfl-new-password').value;
+        const confirmPass = document.getElementById('pfl-confirm-password').value;
+        if (newPass !== confirmPass) {
+            errEl.textContent = 'Passwords do not match';
+            errEl.style.display = 'block';
+            return;
+        }
+        try {
+            const { data: { user }, error: authErr } = await SB.auth.getUser();
+            if (authErr) throw authErr;
+            const currentPass = document.getElementById('pfl-current-password').value;
+            const { error: loginErr } = await SB.auth.signInWithPassword({ email: user.email, password: currentPass });
+            if (loginErr) {
+                errEl.textContent = 'Current password is incorrect';
                 errEl.style.display = 'block';
                 return;
             }
-            try {
-                const { data: { user }, error: authErr } = await SB.auth.getUser();
-                if (authErr) throw authErr;
-                const currentPass = document.getElementById('pfl-current-password').value;
-                const { error: loginErr } = await SB.auth.signInWithPassword({ email: user.email, password: currentPass });
-                if (loginErr) {
-                    errEl.textContent = 'Current password is incorrect';
-                    errEl.style.display = 'block';
-                    return;
-                }
-                const { error: updateErr } = await SB.auth.updateUser({ password: newPass });
-                if (updateErr) throw updateErr;
-                bootstrap.Modal.getInstance(document.getElementById('password-modal')).hide();
-                document.getElementById('pfl-password-form').reset();
-                const alert = document.getElementById('pfl-alert');
-                alert.textContent = 'Password updated successfully';
-                alert.style.background = '#d4edda';
-                alert.style.color = '#155724';
-                alert.style.display = 'block';
-                setTimeout(() => { alert.style.display = 'none'; }, 4000);
-            } catch (err) {
-                errEl.textContent = err.message;
-                errEl.style.display = 'block';
-            }
-        });
-    }
+            const { error: updateErr } = await SB.auth.updateUser({ password: newPass });
+            if (updateErr) throw updateErr;
+            bootstrap.Modal.getInstance(document.getElementById('password-modal')).hide();
+            document.getElementById('pfl-password-form').reset();
+            showPflAlert('Password updated successfully');
+        } catch (err) {
+            errEl.textContent = err.message;
+            errEl.style.display = 'block';
+        }
+    });
 
-    // Logout button in profile center
-    const pflLogout = document.getElementById('pfl-btn-logout');
-    if (pflLogout) {
-        pflLogout.addEventListener('click', () => {
-            api.logout();
-            window.location.reload();
-        });
-    }
+    // Logout
+    document.getElementById('pfl-btn-logout')?.addEventListener('click', () => {
+        api.logout();
+        window.location.reload();
+    });
 
     // Auth tab switching (Login / Signup)
     if (authTabs.length) {
