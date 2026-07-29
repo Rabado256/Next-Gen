@@ -287,11 +287,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Click opens the Profile Center modal
             if (!authButton._hasProfileListener) {
                 authButton._hasProfileListener = true;
-                authButton.addEventListener('click', () => {
+                authButton.addEventListener('click', async () => {
                     const el = document.getElementById('profile-modal');
                     if (!el) return;
                     const profileModal = new bootstrap.Modal(el);
-                    renderProfileCenter();
+                    await renderProfileCenter();
                     profileModal.show();
                 });
             }

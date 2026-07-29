@@ -68,13 +68,8 @@ const api = {
           const { data: profile } = await SB.from('profiles').select('*').eq('id', user.id).maybeSingle();
           userData = profile || { id: user.id, email: user.email, name: user.user_metadata?.name || '' };
         } catch (_) {
-          // Fallback: use auth metadata if profiles query fails (RLS recursion workaround)
-          userData = {
-            id: user.id,
-            email: user.email,
-            name: user.user_metadata?.name || '',
-            is_admin: user.user_metadata?.is_admin === true
-          };
+          // Fallback: keep existing localStorage data if query fails
+          userData = JSON.parse(localStorage.getItem('nextgen_user') || 'null') || { id: user.id, email: user.email, name: user.user_metadata?.name || '' };
         }
         localStorage.setItem('nextgen_user', JSON.stringify(userData));
         return { user: userData, token: session.access_token };
@@ -172,21 +167,14 @@ const api = {
     const { data: { user } } = await SB.auth.getUser();
     if (!user) throw new Error('Not authenticated');
     try {
-      const { data: profile } = await SB.from('profiles').select('*').eq('id', user.id).single();
+      const { data: profile } = await SB.from('profiles').select('*').eq('id', user.id).maybeSingle();
       if (profile) {
         localStorage.setItem('nextgen_user', JSON.stringify(profile));
+        return profile;
       }
-      return profile || user;
+      return user;
     } catch (_) {
-      // Fallback to user metadata
-      const userData = {
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata?.name || '',
-        is_admin: user.user_metadata?.is_admin === true
-      };
-      localStorage.setItem('nextgen_user', JSON.stringify(userData));
-      return userData;
+      return JSON.parse(localStorage.getItem('nextgen_user') || 'null') || user;
     }
   },
 
