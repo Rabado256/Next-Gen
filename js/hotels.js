@@ -63,11 +63,22 @@ const HotelDB = (() => {
   function search(q) {
     if (!q || q.length < 2) return hotels;
     const lower = q.toLowerCase();
-    return hotels.filter(h =>
-      h.name.toLowerCase().includes(lower) ||
-      h.city.toLowerCase().includes(lower) ||
-      h.country.toLowerCase().includes(lower)
-    );
+    const tokens = lower.split(/[,;]\s*/).filter(Boolean);
+    return hotels.filter(h => {
+      const name = h.name.toLowerCase();
+      const city = h.city.toLowerCase();
+      const country = h.country.toLowerCase();
+      if (tokens.length > 1) {
+        const cityMatch = tokens.some(t => city.includes(t));
+        const countryMatch = tokens.some(t => country.includes(t));
+        const nameMatch = tokens.some(t => name.includes(t));
+        if (countryMatch) return true;
+        if (cityMatch) return true;
+        if (nameMatch) return true;
+        return false;
+      }
+      return name.includes(lower) || city.includes(lower) || country.includes(lower);
+    });
   }
 
   function filter(results, filters = {}) {
