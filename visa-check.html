@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visa Check | NextGen Travel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .visa-hero {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            padding: 6rem 0 3rem;
+            text-align: center;
+            color: white;
+        }
+        .visa-card {
+            background: white;
+            border: 1px solid #e5e5e5;
+            padding: 2rem;
+            border-radius: 0;
+            max-width: 640px;
+            margin: -2rem auto 3rem;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+        .visa-result-card {
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            padding: 2rem;
+            text-align: center;
+            max-width: 480px;
+            margin: 2rem auto 0;
+        }
+        .visa-result-card .badge { font-size: 0.85rem; padding: 0.4rem 1rem; }
+        .visa-select {
+            border-radius: 0;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+            padding: 0.6rem 0.75rem;
+        }
+        .visa-swap-btn {
+            width: 36px; height: 36px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .visa-swap-btn:hover { background: #f0f0f0; border-color: #bbb; }
+        .country-list { columns: 3; column-gap: 1.5rem; }
+        .country-list li { font-size: 0.8rem; padding: 0.15rem 0; color: #555; break-inside: avoid; }
+        @media (max-width: 768px) { .country-list { columns: 2; } }
+        @media (max-width: 576px) { .country-list { columns: 1; } .visa-card { margin: -1rem 0.5rem 2rem; padding: 1.5rem; } }
+    </style>
+</head>
+<body class="bg-white">
+
+    <nav class="navbar navbar-expand-lg fixed-top px-4 py-3 nav-scrolled">
+        <div class="container-fluid">
+            <a class="navbar-brand serif fw-bold text-white fs-3" href="index.html">NextGen</a>
+            <button class="navbar-toggler border-0 p-0 ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#visaNav" aria-controls="visaNav" aria-expanded="false" aria-label="Toggle navigation">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="collapse navbar-collapse" id="visaNav">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 ms-auto">
+                    <a href="index.html#destinations" class="text-white text-decoration-none small tracking-widest">Destinations</a>
+                    <a href="index.html#inspirations" class="text-white text-decoration-none small tracking-widest">Inspirations</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="visa-hero">
+        <div class="container">
+            <span class="badge bg-white bg-opacity-10 text-white rounded-0 px-3 py-2 mb-3" style="font-size:0.65rem;letter-spacing:0.15em;">TRAVEL REQUIREMENTS</span>
+            <h1 class="display-4 serif fw-bold mb-2">Visa Check</h1>
+            <p class="text-white-50" style="max-width:480px;margin:0 auto;">Select your nationality and destination to preview visa requirements.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="visa-card">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small tracking-widest text-muted">Nationality</label>
+                    <select id="vc-from" class="form-select visa-select">
+                        <option value="">Select nationality</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="India">India</option>
+                        <option value="Nigeria">Nigeria</option>
+                        <option value="South Africa">South Africa</option>
+                        <option value="Kenya">Kenya</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="France">France</option>
+                        <option value="Germany">Germany</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="Mexico">Mexico</option>
+                        <option value="Japan">Japan</option>
+                        <option value="China">China</option>
+                    </select>
+                </div>
+                <div class="col-md-1 text-center">
+                    <div class="visa-swap-btn" id="vc-swap" title="Swap">
+                        <i class="bi bi-arrow-left-right" style="font-size:0.85rem;color:#666;"></i>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label small tracking-widest text-muted">Destination</label>
+                    <select id="vc-to" class="form-select visa-select">
+                        <option value="">Select destination</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Japan">Japan</option>
+                        <option value="Maldives">Maldives</option>
+                        <option value="France">France</option>
+                        <option value="Switzerland">Switzerland</option>
+                        <option value="Greece">Greece</option>
+                        <option value="Iceland">Iceland</option>
+                        <option value="Morocco">Morocco</option>
+                        <option value="Canada">Canada</option>
+                        <option value="United States">United States</option>
+                        <option value="India">India</option>
+                        <option value="Thailand">Thailand</option>
+                        <option value="Indonesia">Indonesia</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Portugal">Portugal</option>
+                        <option value="Netherlands">Netherlands</option>
+                        <option value="Mexico">Mexico</option>
+                        <option value="Costa Rica">Costa Rica</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="Peru">Peru</option>
+                        <option value="Egypt">Egypt</option>
+                        <option value="Kenya">Kenya</option>
+                        <option value="South Africa">South Africa</option>
+                        <option value="Tanzania">Tanzania</option>
+                        <option value="UAE">UAE</option>
+                        <option value="Turkey">Turkey</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Malaysia">Malaysia</option>
+                        <option value="New Zealand">New Zealand</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Nepal">Nepal</option>
+                        <option value="Sri Lanka">Sri Lanka</option>
+                        <option value="Seychelles">Seychelles</option>
+                        <option value="Mauritius">Mauritius</option>
+                        <option value="Fiji">Fiji</option>
+                        <option value="Norway">Norway</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-grid">
+                    <button class="btn btn-dark rounded-0 py-2" id="vc-check-btn">Check</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="vc-result" style="display:none;">
+            <div class="visa-result-card reveal-up">
+                <div style="font-size:0.65rem;letter-spacing:0.15em;color:#888;text-transform:uppercase;margin-bottom:0.5rem;">
+                    <span id="vc-from-display"></span> → <span id="vc-to-display"></span>
+                </div>
+                <div class="mt-3 mb-2">
+                    <span id="vc-badge" class="badge rounded-0" style="font-size:1rem;padding:0.5rem 1.5rem;"></span>
+                </div>
+                <div id="vc-duration" class="text-muted" style="font-size:0.85rem;"></div>
+                <div id="vc-notes" class="text-muted mt-2" style="font-size:0.8rem;max-width:360px;margin:0.5rem auto 0;"></div>
+                <div id="vc-unknown" class="text-muted" style="font-size:0.85rem;display:none;">This pair is not in our preview dataset. Verify with the embassy.</div>
+                <p class="text-muted mt-3 mb-0" style="font-size:0.65rem;"><i class="bi bi-info-circle"></i> Preview mode — always verify with official embassy sources.</p>
+            </div>
+        </div>
+
+        <div class="mt-5 pt-4 mb-5">
+            <h5 class="serif text-center mb-4">Countries in Our Preview Dataset</h5>
+            <ul class="country-list list-unstyled">
+                <li>United States</li><li>United Kingdom</li><li>Canada</li><li>Australia</li><li>India</li>
+                <li>Nigeria</li><li>South Africa</li><li>Kenya</li><li>Ghana</li><li>France</li>
+                <li>Germany</li><li>Italy</li><li>Spain</li><li>Brazil</li><li>Mexico</li>
+                <li>Japan</li><li>China</li><li>Switzerland</li><li>Greece</li><li>Iceland</li>
+                <li>Morocco</li><li>Indonesia</li><li>Thailand</li><li>Portugal</li>
+                <li>Netherlands</li><li>Costa Rica</li><li>Argentina</li><li>Peru</li>
+                <li>Egypt</li><li>Tanzania</li><li>UAE</li><li>Turkey</li><li>Singapore</li>
+                <li>Malaysia</li><li>New Zealand</li><li>Nepal</li><li>Sri Lanka</li>
+                <li>Seychelles</li><li>Mauritius</li><li>Fiji</li><li>Maldives</li>
+                <li>Norway</li><li>Chile</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/visa-data.js"></script>
+    <script>
+        document.getElementById('vc-check-btn').addEventListener('click', doVisaCheck);
+        document.getElementById('vc-to').addEventListener('change', doVisaCheck);
+        document.getElementById('vc-from').addEventListener('change', doVisaCheck);
+        document.getElementById('vc-swap').addEventListener('click', function() {
+            var from = document.getElementById('vc-from');
+            var to = document.getElementById('vc-to');
+            var tmp = from.value; from.value = to.value; to.value = tmp;
+            doVisaCheck();
+        });
+
+        function doVisaCheck() {
+            var from = document.getElementById('vc-from').value;
+            var to = document.getElementById('vc-to').value;
+            var result = document.getElementById('vc-result');
+            if (!from || !to) { result.style.display = 'none'; return; }
+            var visa = checkVisa(from, to);
+            document.getElementById('vc-from-display').textContent = from;
+            document.getElementById('vc-to-display').textContent = to;
+            if (!visa) {
+                document.getElementById('vc-badge').textContent = '';
+                document.getElementById('vc-duration').textContent = '';
+                document.getElementById('vc-notes').textContent = '';
+                document.getElementById('vc-unknown').style.display = 'block';
+            } else {
+                var typeInfo = getVisaTypeInfo(visa.type);
+                document.getElementById('vc-unknown').style.display = 'none';
+                document.getElementById('vc-badge').textContent = typeInfo.label;
+                document.getElementById('vc-badge').className = 'badge rounded-0 ' + visa.type + '-badge';
+                document.getElementById('vc-badge').style.cssText = 'font-size:1rem;padding:0.5rem 1.5rem;background:' + getTypeColor(visa.type) + ';color:white;';
+                document.getElementById('vc-duration').textContent = visa.duration || '';
+                document.getElementById('vc-notes').textContent = visa.notes || typeInfo.desc + ' for ' + to + '.';
+            }
+            result.style.display = 'block';
+        }
+
+        function getTypeColor(type) {
+            var colors = {
+                VISA_FREE: '#16a34a',
+                VISA_ON_ARRIVAL: '#0891b2',
+                E_VISA: '#2563eb',
+                VISA_REQUIRED: '#dc2626',
+                ETA: '#6b7280'
+            };
+            return colors[type] || '#6b7280';
+        }
+    </script>
+</body>
+</html>
