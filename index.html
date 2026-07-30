@@ -75,74 +75,7 @@
         <div class="search-hero-content">
             <h1 class="search-hero-headline">Adventure awaits you.</h1>
 
-            <datalist id="airport-list">
-                <!-- AFRICA -->
-                <option value="Lagos (LOS) - Nigeria">
-                <option value="Abuja (ABV) - Nigeria">
-                <option value="Port Harcourt (PHC) - Nigeria">
-                <option value="Cape Town (CPT) - South Africa">
-                <option value="Johannesburg (JNB) - South Africa">
-                <option value="Durban (DUR) - South Africa">
-                <option value="Nairobi (NBO) - Kenya">
-                <option value="Mombasa (MBA) - Kenya">
-                <option value="Kisumu (KIS) - Kenya">
-                <!-- ASIA -->
-                <option value="Tokyo (NRT) - Japan">
-                <option value="Osaka (KIX) - Japan">
-                <option value="Kyoto (UKY) - Japan">
-                <option value="Mumbai (BOM) - India">
-                <option value="Delhi (DEL) - India">
-                <option value="Jaipur (JAI) - India">
-                <option value="Bangkok (BKK) - Thailand">
-                <option value="Phuket (HKT) - Thailand">
-                <option value="Chiang Mai (CNX) - Thailand">
-                <!-- EUROPE -->
-                <option value="Paris (CDG) - France">
-                <option value="Nice (NCE) - France">
-                <option value="Lyon (LYS) - France">
-                <option value="Rome (FCO) - Italy">
-                <option value="Venice (VCE) - Italy">
-                <option value="Florence (FLR) - Italy">
-                <option value="Barcelona (BCN) - Spain">
-                <option value="Madrid (MAD) - Spain">
-                <option value="Seville (SVQ) - Spain">
-                <!-- NORTH AMERICA -->
-                <option value="New York (JFK) - USA">
-                <option value="Los Angeles (LAX) - USA">
-                <option value="Miami (MIA) - USA">
-                <option value="Toronto (YYZ) - Canada">
-                <option value="Vancouver (YVR) - Canada">
-                <option value="Montreal (YUL) - Canada">
-                <option value="Mexico City (MEX) - Mexico">
-                <option value="Cancun (CUN) - Mexico">
-                <option value="Tulum (TUY) - Mexico">
-                <!-- SOUTH AMERICA -->
-                <option value="Rio de Janeiro (GIG) - Brazil">
-                <option value="São Paulo (GRU) - Brazil">
-                <option value="Salvador (SSA) - Brazil">
-                <option value="Buenos Aires (EZE) - Argentina">
-                <option value="Mendoza (MDZ) - Argentina">
-                <option value="Bariloche (BRC) - Argentina">
-                <option value="Lima (LIM) - Peru">
-                <option value="Cusco (CUZ) - Peru">
-                <option value="Arequipa (AQP) - Peru">
-                <!-- OCEANIA -->
-                <option value="Sydney (SYD) - Australia">
-                <option value="Melbourne (MEL) - Australia">
-                <option value="Cairns (CNS) - Australia">
-                <option value="Auckland (AKL) - New Zealand">
-                <option value="Queenstown (ZQN) - New Zealand">
-                <option value="Wellington (WLG) - New Zealand">
-                <option value="Nadi (NAN) - Fiji">
-                <option value="Suva (SUV) - Fiji">
-                <option value="Lautoka (LTK) - Fiji">
-                <!-- ANTARCTICA -->
-                <option value="McMurdo Station - Antarctica">
-                <option value="Palmer Station - Antarctica">
-                <option value="South Pole Station - Antarctica">
-            </datalist>
-
-            <datalist id="global-countries"></datalist>
+            <!-- Search Mode Tabs -->
 
             <!-- Search Mode Tabs -->
             <div class="search-tabs">
@@ -163,14 +96,14 @@
                 <div class="booking-capsule search-capsule active" data-capsule="flights">
                     <div class="capsule-field">
                         <span class="capsule-label">From</span>
-                        <input type="text" class="capsule-input" id="flights-from" placeholder="City or airport" autocomplete="off" list="airport-list">
+                        <input type="text" class="capsule-input" id="flights-from" placeholder="City or airport" autocomplete="off">
                     </div>
                     <div class="capsule-swap" id="flights-swap" title="Swap">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                     </div>
                     <div class="capsule-field">
                         <span class="capsule-label">To</span>
-                        <input type="text" class="capsule-input" id="flights-to" placeholder="Destination" autocomplete="off" list="airport-list">
+                        <input type="text" class="capsule-input" id="flights-to" placeholder="Destination" autocomplete="off">
                     </div>
                     <div class="capsule-divider"></div>
                     <div class="capsule-field capsule-date-field">
@@ -1595,6 +1528,104 @@
                     const d2 = String(weekLater.getDate()).padStart(2, '0');
                     co.value = y2 + '-' + m2 + '-' + d2;
                 }
+            })();
+
+            // Airport suggestion dropdown (filtered, positioned under field)
+            (function initAirportSuggest() {
+                const AIRPORTS = [
+                    'Lagos (LOS) - Nigeria', 'Abuja (ABV) - Nigeria', 'Port Harcourt (PHC) - Nigeria',
+                    'Cape Town (CPT) - South Africa', 'Johannesburg (JNB) - South Africa', 'Durban (DUR) - South Africa',
+                    'Nairobi (NBO) - Kenya', 'Mombasa (MBA) - Kenya', 'Kisumu (KIS) - Kenya',
+                    'Tokyo (NRT) - Japan', 'Osaka (KIX) - Japan', 'Kyoto (UKY) - Japan',
+                    'Mumbai (BOM) - India', 'Delhi (DEL) - India', 'Jaipur (JAI) - India',
+                    'Bangkok (BKK) - Thailand', 'Phuket (HKT) - Thailand', 'Chiang Mai (CNX) - Thailand',
+                    'Paris (CDG) - France', 'Nice (NCE) - France', 'Lyon (LYS) - France',
+                    'Rome (FCO) - Italy', 'Venice (VCE) - Italy', 'Florence (FLR) - Italy',
+                    'Barcelona (BCN) - Spain', 'Madrid (MAD) - Spain', 'Seville (SVQ) - Spain',
+                    'New York (JFK) - USA', 'Los Angeles (LAX) - USA', 'Miami (MIA) - USA',
+                    'Toronto (YYZ) - Canada', 'Vancouver (YVR) - Canada', 'Montreal (YUL) - Canada',
+                    'Mexico City (MEX) - Mexico', 'Cancun (CUN) - Mexico', 'Tulum (TUY) - Mexico',
+                    'Rio de Janeiro (GIG) - Brazil', 'São Paulo (GRU) - Brazil', 'Salvador (SSA) - Brazil',
+                    'Buenos Aires (EZE) - Argentina', 'Mendoza (MDZ) - Argentina', 'Bariloche (BRC) - Argentina',
+                    'Lima (LIM) - Peru', 'Cusco (CUZ) - Peru', 'Arequipa (AQP) - Peru',
+                    'Sydney (SYD) - Australia', 'Melbourne (MEL) - Australia', 'Cairns (CNS) - Australia',
+                    'Auckland (AKL) - New Zealand', 'Queenstown (ZQN) - New Zealand', 'Wellington (WLG) - New Zealand',
+                    'Nadi (NAN) - Fiji', 'Suva (SUV) - Fiji', 'Lautoka (LTK) - Fiji',
+                    'McMurdo Station - Antarctica', 'Palmer Station - Antarctica', 'South Pole Station - Antarctica'
+                ];
+
+                function createDropdown(inputId) {
+                    const input = document.getElementById(inputId);
+                    if (!input) return;
+                    const wrapper = input.closest('.capsule-field') || input.parentElement;
+                    wrapper.style.position = 'relative';
+                    const dd = document.createElement('div');
+                    dd.className = 'airport-dropdown';
+                    dd.id = inputId + '-suggest';
+                    dd.style.display = 'none';
+                    wrapper.appendChild(dd);
+
+                    let hideTimer = null;
+
+                    function showMatches() {
+                        const val = input.value.trim().toLowerCase();
+                        if (!val) { dd.style.display = 'none'; return; }
+                        const matches = AIRPORTS.filter(a => a.toLowerCase().includes(val));
+                        if (matches.length === 0 || (matches.length === 1 && matches[0].toLowerCase() === val)) {
+                            dd.style.display = 'none';
+                            return;
+                        }
+                        dd.innerHTML = matches.map(m =>
+                            '<div class="airport-option">' + m.replace(new RegExp('(' + val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<strong>$1</strong>') + '</div>'
+                        ).join('');
+                        dd.style.display = 'block';
+                    }
+
+                    input.addEventListener('input', showMatches);
+                    input.addEventListener('focus', showMatches);
+
+                    input.addEventListener('blur', () => {
+                        hideTimer = setTimeout(() => { dd.style.display = 'none'; }, 180);
+                    });
+
+                    dd.addEventListener('mousedown', (e) => {
+                        const opt = e.target.closest('.airport-option');
+                        if (opt) {
+                            clearTimeout(hideTimer);
+                            input.value = opt.textContent.replace(/<\/?strong>/g, '');
+                            dd.style.display = 'none';
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.focus();
+                        }
+                    });
+
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                            const items = dd.querySelectorAll('.airport-option');
+                            if (!items.length) return;
+                            const dir = e.key === 'ArrowDown' ? 1 : -1;
+                            const active = dd.querySelector('.airport-option.hover');
+                            let idx = Array.from(items).indexOf(active) + dir;
+                            if (idx < 0) idx = items.length - 1;
+                            if (idx >= items.length) idx = 0;
+                            if (active) active.classList.remove('hover');
+                            items[idx].classList.add('hover');
+                            items[idx].scrollIntoView({ block: 'nearest' });
+                            e.preventDefault();
+                        } else if (e.key === 'Enter') {
+                            const active = dd.querySelector('.airport-option.hover');
+                            if (active) {
+                                input.value = active.textContent.replace(/<\/?strong>/g, '');
+                                dd.style.display = 'none';
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                                e.preventDefault();
+                            }
+                        }
+                    });
+                }
+
+                createDropdown('flights-from');
+                createDropdown('flights-to');
             })();
 
             // Flights search

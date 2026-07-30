@@ -1688,6 +1688,55 @@ h2, h3, .serif {
     color: #fff;
 }
 
+/* Airport suggestion dropdown */
+.airport-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(20,20,25,0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    padding: 0.35rem 0;
+}
+.airport-dropdown::-webkit-scrollbar {
+    width: 4px;
+}
+.airport-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+}
+.airport-option {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-family: 'Inter', sans-serif;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.airport-option:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+.airport-option:first-child {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+.airport-option:last-child {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+.airport-option.hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+}
+
 @media (max-width: 768px) {
     .unified-capsule {
         flex-direction: column;
