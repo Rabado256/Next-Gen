@@ -80,14 +80,51 @@
 
                 <div id="dest-itinerary" class="itinerary-editorial"></div>
 
-                <!-- Required Documents -->
+                <!-- Required Documents & Visa -->
             <section class="border border-dark p-4 mt-5 reveal-up" style="background:#fafafa;">
-                <div class="d-flex justify-content-between align-items-start">
+                <h6 class="tracking-widest mb-3" style="font-size:0.7rem;color:var(--comptoir-navy);">Travel Requirements</h6>
+                <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <h6 class="tracking-widest mb-2" style="font-size:0.7rem;color:var(--comptoir-navy);">Required Documents</h6>
                         <p class="small mb-0" id="dest-doc-text">Sign in to see which travel documents are required for this destination.</p>
                     </div>
                     <span id="dest-doc-badge" class="doc-badge-sm doc-badge-unknown" style="display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;">AUTO-DETECT</span>
+                </div>
+                <div id="dest-visa-info" class="small" style="display:none;">
+                    <hr class="my-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:#888;">Visa:</span>
+                        <span id="dest-visa-badge" class="badge rounded-0"></span>
+                        <span id="dest-visa-duration" class="text-muted" style="font-size:0.75rem;"></span>
+                    </div>
+                    <p id="dest-visa-notes" class="text-muted mt-1 mb-0" style="font-size:0.7rem;"></p>
+                </div>
+                <div id="dest-visa-preview" class="small" style="display:none;">
+                    <hr class="my-2">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span style="font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:#888;">Visa Preview:</span>
+                        <select id="visa-nationality-select" class="form-select form-select-sm" style="width:auto;display:inline-block;font-size:0.75rem;border-radius:0;border-color:#ddd;">
+                            <option value="">Select your nationality</option>
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                            <option value="India">India</option>
+                            <option value="Nigeria">Nigeria</option>
+                            <option value="South Africa">South Africa</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="Ghana">Ghana</option>
+                            <option value="France">France</option>
+                            <option value="Germany">Germany</option>
+                            <option value="Italy">Italy</option>
+                            <option value="Spain">Spain</option>
+                            <option value="Brazil">Brazil</option>
+                            <option value="Mexico">Mexico</option>
+                            <option value="Japan">Japan</option>
+                            <option value="China">China</option>
+                        </select>
+                    </div>
+                    <div id="visa-preview-result"></div>
+                    <p class="text-muted mt-1 mb-0" style="font-size:0.65rem;"><i class="bi bi-info-circle"></i> Preview mode — always verify with official embassy sources.</p>
                 </div>
             </section>
 
@@ -311,6 +348,7 @@
     <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/visa-data.js"></script>
     <script>
         function mapSupabaseDest(d) {
             const steps = Array.isArray(d.steps)
@@ -559,43 +597,75 @@
             antarctica:'Antarctica'
         };
 
-        // === Document Detection ===
+        // === Document Detection & Visa ===
         function updateDestDocBadge() {
           var user = JSON.parse(localStorage.getItem('nextgen_user'));
           var badge = document.getElementById('dest-doc-badge');
           var text = document.getElementById('dest-doc-text');
           if (!badge || !text) return;
-          if (!user) {
+          var destCountry = dest.country || DEST_COUNTRIES[id] || null;
+          if (!user || !user.country) {
             badge.textContent = 'SIGN IN';
             badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;';
-            text.textContent = 'Sign in and set your country in profile to see required documents.';
+            text.textContent = user ? 'Set your country in profile to see travel requirements.' : 'Sign in to see your travel requirements.';
+            document.getElementById('dest-visa-preview').style.display = 'block';
+            document.getElementById('dest-visa-info').style.display = 'none';
             return;
           }
-          var userCountry = user.country || null;
-          if (!userCountry) {
-            badge.textContent = 'SET PROFILE';
-            badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;';
-            text.textContent = 'Add your country to your profile for automatic document detection.';
-            return;
-          }
-          // Get destination country from lookup map (fallback), then from API data
-          var destCountry = dest.country || DEST_COUNTRIES[id] || null;
-          if (!destCountry) {
-            badge.textContent = 'UNKNOWN';
-            badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#fef3c7;color:#d97706;';
-            text.textContent = 'Destination country not specified. Please contact support.';
-            return;
-          }
+          var userCountry = user.country;
           if (userCountry.toLowerCase() === destCountry.toLowerCase()) {
             badge.textContent = 'ID CARD';
             badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#dcfce7;color:#16a34a;';
-            text.textContent = 'Domestic travel — Identity Card is required. Passport is optional.';
+            text.textContent = 'Domestic travel — Identity Card is sufficient. Passport optional.';
           } else {
             badge.textContent = 'PASSPORT';
             badge.style.cssText = 'display:inline-block;font-size:0.55rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.2rem 0.5rem;border-radius:3px;background:#dbeafe;color:#2563eb;';
-            text.textContent = 'International travel — Passport is required for ' + destCountry + '.';
+            text.textContent = 'International travel — Passport required for ' + destCountry + '.';
           }
+          showVisaInfo(userCountry, destCountry);
         }
+
+        function showVisaInfo(from, to) {
+          var info = document.getElementById('dest-visa-info');
+          var preview = document.getElementById('dest-visa-preview');
+          if (!from || !to) { info.style.display = 'none'; preview.style.display = 'block'; return; }
+          var visa = checkVisa(from, to);
+          if (!visa) {
+            info.style.display = 'block';
+            preview.style.display = 'none';
+            document.getElementById('dest-visa-badge').textContent = 'Check Embassy';
+            document.getElementById('dest-visa-badge').className = 'badge rounded-0 bg-secondary';
+            document.getElementById('dest-visa-duration').textContent = '';
+            document.getElementById('dest-visa-notes').textContent = 'Visa information for ' + from + ' → ' + to + ' is not in our preview dataset. Verify with the embassy.';
+            return;
+          }
+          var typeInfo = getVisaTypeInfo(visa.type);
+          info.style.display = 'block';
+          preview.style.display = 'none';
+          document.getElementById('dest-visa-badge').textContent = typeInfo.label;
+          document.getElementById('dest-visa-badge').className = 'badge rounded-0 ' + typeInfo.badge;
+          document.getElementById('dest-visa-duration').textContent = visa.duration ? '— ' + visa.duration : '';
+          document.getElementById('dest-visa-notes').textContent = visa.notes ? visa.notes + ' — ' : '';
+          document.getElementById('dest-visa-notes').textContent += typeInfo.desc + ' for ' + to + '.';
+        }
+
+        document.getElementById('visa-nationality-select').addEventListener('change', function() {
+          var destCountry = dest.country || DEST_COUNTRIES[id] || null;
+          var val = this.value;
+          if (!val || !destCountry) {
+            document.getElementById('visa-preview-result').innerHTML = '';
+            return;
+          }
+          var visa = checkVisa(val, destCountry);
+          if (!visa) {
+            document.getElementById('visa-preview-result').innerHTML = '<span class="text-muted">Not in preview dataset. Verify with embassy.</span>';
+            return;
+          }
+          var typeInfo = getVisaTypeInfo(visa.type);
+          document.getElementById('visa-preview-result').innerHTML = '<span class="badge rounded-0 ' + typeInfo.badge + '">' + typeInfo.label + '</span>' +
+            (visa.duration ? ' <span class="text-muted">' + visa.duration + '</span>' : '') +
+            (visa.notes ? '<br><span class="text-muted" style="font-size:0.7rem;">' + visa.notes + '</span>' : '');
+        });
         updateDestDocBadge();
 
         loadReviews();
