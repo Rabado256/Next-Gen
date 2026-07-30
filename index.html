@@ -144,68 +144,64 @@
 
             <datalist id="global-countries"></datalist>
 
-            <!-- Universal Search Bar -->
-            <div class="universal-search">
-                <div class="search-bar-capsule">
-                    <svg class="search-bar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="universal-search-input" class="search-bar-input" placeholder="Where do you want to go?" autocomplete="off" list="universal-destinations">
-                    <datalist id="universal-destinations">
-                        <option value="Visa Check — Check travel visa requirements">
-                        <option value="Amalfi Coast, Italy">
-                        <option value="Bali, Indonesia">
-                        <option value="Barcelona, Spain">
-                        <option value="Kyoto, Japan">
-                        <option value="Cancun, Mexico">
-                        <option value="Tokyo, Japan">
-                        <option value="Dubai, UAE">
-                        <option value="New York, USA">
-                        <option value="Rio de Janeiro, Brazil">
-                        <option value="Cape Town, South Africa">
-                        <option value="Paris, France">
-                        <option value="Santorini, Greece">
-                        <option value="Maldives">
-                        <option value="Swiss Alps, Switzerland">
-                        <option value="Queenstown, New Zealand">
-                        <option value="Safari, Kenya">
-                        <option value="Bora Bora, French Polynesia">
-                        <option value="Machu Picchu, Peru">
-                        <option value="Siem Reap, Cambodia">
-                        <option value="Petra, Jordan">
-                        <option value="Reykjavik, Iceland">
-                        <option value="Antarctica">
-                        <option value="London, UK">
-                        <option value="Rome, Italy">
-                        <option value="Marrakech, Morocco">
-                        <option value="Mumbai, India">
-                        <option value="Bangkok, Thailand">
-                        <option value="Sydney, Australia">
-                        <option value="Havana, Cuba">
-                    </datalist>
-                    <button id="universal-search-btn" class="search-bar-btn">Search</button>
-                </div>
-                <div class="search-bar-hints">
-                    <span>Search destinations, hotels, packages, or <a href="visa-check.html" class="search-hint-link">check visa requirements</a></span>
-                    <button id="advanced-toggle" class="advanced-toggle-btn">Advanced <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
-                </div>
-                <div id="advanced-panel" class="advanced-panel" style="display:none;">
-                    <div class="advanced-row">
-                        <div class="advanced-field">
-                            <label class="advanced-label">Destination</label>
-                            <input type="text" id="adv-dest" class="advanced-input" placeholder="Anywhere" list="universal-destinations">
-                        </div>
-                        <div class="advanced-field">
-                            <label class="advanced-label">Check in</label>
-                            <input type="date" id="adv-checkin" class="advanced-input" value="">
-                        </div>
-                        <div class="advanced-field">
-                            <label class="advanced-label">Check out</label>
-                            <input type="date" id="adv-checkout" class="advanced-input" value="">
-                        </div>
-                        <div class="advanced-field advanced-field-narrow">
-                            <label class="advanced-label">Guests</label>
-                            <input type="number" id="adv-guests" class="advanced-input" value="1" min="1" max="20">
-                        </div>
+            <!-- Unified Search Capsule -->
+            <div class="unified-search">
+                <div class="unified-capsule">
+                    <div class="unified-field unified-field-dest">
+                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.33 8 12 8 12s8-6.67 8-12a8 8 0 0 0-8-8z"/></svg>
+                        <input type="text" id="uni-dest" class="unified-input" placeholder="Destination" autocomplete="off" list="uni-destinations">
                     </div>
+                    <div class="unified-divider"></div>
+                    <div class="unified-field unified-field-date">
+                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <input type="date" id="uni-checkin" class="unified-input" value="">
+                    </div>
+                    <div class="unified-divider"></div>
+                    <div class="unified-field unified-field-date">
+                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="15 14 17 12 19 14"/></svg>
+                        <input type="date" id="uni-checkout" class="unified-input" value="">
+                    </div>
+                    <div class="unified-divider"></div>
+                    <div class="unified-field unified-field-guests">
+                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <input type="number" id="uni-guests" class="unified-input" value="1" min="1" max="20">
+                    </div>
+                    <button id="uni-search-btn" class="unified-search-btn">Search</button>
+                </div>
+                <datalist id="uni-destinations">
+                    <option value="Visa Check — Check travel visa requirements">
+                    <option value="Amalfi Coast, Italy">
+                    <option value="Bali, Indonesia">
+                    <option value="Barcelona, Spain">
+                    <option value="Kyoto, Japan">
+                    <option value="Cancun, Mexico">
+                    <option value="Tokyo, Japan">
+                    <option value="Dubai, UAE">
+                    <option value="New York, USA">
+                    <option value="Rio de Janeiro, Brazil">
+                    <option value="Cape Town, South Africa">
+                    <option value="Paris, France">
+                    <option value="Santorini, Greece">
+                    <option value="Maldives">
+                    <option value="Swiss Alps, Switzerland">
+                    <option value="Queenstown, New Zealand">
+                    <option value="Safari, Kenya">
+                    <option value="Bora Bora, French Polynesia">
+                    <option value="Machu Picchu, Peru">
+                    <option value="Siem Reap, Cambodia">
+                    <option value="Petra, Jordan">
+                    <option value="Reykjavik, Iceland">
+                    <option value="Antarctica">
+                    <option value="London, UK">
+                    <option value="Rome, Italy">
+                    <option value="Marrakech, Morocco">
+                    <option value="Mumbai, India">
+                    <option value="Bangkok, Thailand">
+                    <option value="Sydney, Australia">
+                    <option value="Havana, Cuba">
+                </datalist>
+                <div class="unified-hints">
+                    <span>Search destinations, hotels, packages, or <a href="visa-check.html" class="unified-hint-link">check visa requirements</a></span>
                 </div>
             </div>
         </div>
@@ -1380,54 +1376,35 @@
                 }
             }
 
-            // Universal search handler
-            const searchInput = document.getElementById('universal-search-input');
-            const searchBtn = document.getElementById('universal-search-btn');
+            // Unified search handler
+            const uniDest = document.getElementById('uni-dest');
+            const uniCheckin = document.getElementById('uni-checkin');
+            const uniCheckout = document.getElementById('uni-checkout');
+            const uniGuests = document.getElementById('uni-guests');
+            const uniBtn = document.getElementById('uni-search-btn');
 
-            function performSearch() {
-                const q = searchInput.value.trim();
-                if (!q) return;
-                const lower = q.toLowerCase();
+            function performUnifiedSearch() {
+                const dest = uniDest.value.trim();
+                if (!dest) return;
+                const lower = dest.toLowerCase();
                 if (lower.includes('visa')) {
                     window.location.href = 'visa-check.html';
                     return;
                 }
                 const params = new URLSearchParams();
-                params.set('q', q);
-                const advDest = document.getElementById('adv-dest').value.trim();
-                const advCheckin = document.getElementById('adv-checkin').value;
-                const advCheckout = document.getElementById('adv-checkout').value;
-                const advGuests = document.getElementById('adv-guests').value;
-                if (advDest) params.set('to', advDest);
-                if (advCheckin) params.set('start', advCheckin);
-                if (advCheckout) params.set('end', advCheckout);
-                if (advGuests && advGuests > 1) params.set('guests', advGuests);
+                params.set('q', dest);
+                const checkin = uniCheckin.value;
+                const checkout = uniCheckout.value;
+                const guests = uniGuests.value;
+                if (checkin) params.set('start', checkin);
+                if (checkout) params.set('end', checkout);
+                if (guests && parseInt(guests) > 1) params.set('guests', guests);
                 window.location.href = 'search-results.html?' + params.toString();
             }
 
-            searchBtn.addEventListener('click', performSearch);
-            searchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') performSearch();
-            });
-
-            // Advanced search toggle
-            const advToggle = document.getElementById('advanced-toggle');
-            const advPanel = document.getElementById('advanced-panel');
-            advToggle.addEventListener('click', () => {
-                const open = advPanel.style.display !== 'flex';
-                advPanel.style.display = open ? 'flex' : 'none';
-                advToggle.classList.toggle('open', open);
-            });
-
-            // Pre-fill advanced destination from main input
-            searchInput.addEventListener('input', () => {
-                const advDest = document.getElementById('adv-dest');
-                if (!advDest.dataset.userEdited) {
-                    advDest.value = searchInput.value;
-                }
-            });
-            document.getElementById('adv-dest').addEventListener('input', function() {
-                this.dataset.userEdited = 'true';
+            uniBtn.addEventListener('click', performUnifiedSearch);
+            uniDest.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') performUnifiedSearch();
             });
 
             // Scroll arrows for galleries

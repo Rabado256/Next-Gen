@@ -1476,73 +1476,124 @@ h2, h3, .serif {
     -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
-/* ===== Universal Search Bar ===== */
-.universal-search {
-    max-width: 680px;
+/* ===== Unified Search Capsule ===== */
+.unified-search {
+    max-width: 820px;
     margin: 0 auto;
 }
 
-.search-bar-capsule {
+.unified-capsule {
     display: flex;
     align-items: center;
     background: rgba(255,255,255,0.12);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 60px;
-    padding: 0.3rem 0.3rem 0.3rem 1.25rem;
+    padding: 0.25rem 0.25rem 0.25rem 1.5rem;
     box-shadow: 0 8px 40px rgba(0,0,0,0.2), 0 2px 10px rgba(0,0,0,0.1);
     border: 1px solid rgba(255,255,255,0.15);
     transition: all 0.3s ease;
+    gap: 0;
+    min-height: 58px;
 }
 
-.search-bar-capsule:focus-within {
+.unified-capsule:focus-within {
     box-shadow: 0 8px 50px rgba(0,0,0,0.35), 0 0 0 2px rgba(255,255,255,0.2);
     border-color: rgba(255,255,255,0.3);
 }
 
-.search-bar-icon {
-    flex-shrink: 0;
-    color: rgba(255,255,255,0.6);
-    margin-right: 0.5rem;
+.unified-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+    min-width: 0;
 }
 
-.search-bar-input {
+.unified-field-dest {
+    flex: 2;
+}
+
+.unified-field-date {
+    flex: 1.2;
+    min-width: 100px;
+}
+
+.unified-field-guests {
+    flex: 0.5;
+    min-width: 52px;
+}
+
+.unified-field-icon {
+    flex-shrink: 0;
+    color: rgba(255,255,255,0.45);
+    opacity: 0.7;
+}
+
+.unified-input {
     flex: 1;
     background: none;
     border: none;
     outline: none;
     color: #fff;
     font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    padding: 0.75rem 0;
+    font-size: 0.88rem;
+    padding: 0.65rem 0;
     min-width: 0;
+    width: 100%;
 }
 
-.search-bar-input::placeholder {
-    color: rgba(255,255,255,0.5);
+.unified-input::placeholder {
+    color: rgba(255,255,255,0.4);
 }
 
-.search-bar-btn {
+.unified-input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.4;
+    cursor: pointer;
+}
+
+.unified-input[type="number"] {
+    -moz-appearance: textfield;
+    max-width: 48px;
+    text-align: center;
+}
+
+.unified-input[type="number"]::-webkit-outer-spin-button,
+.unified-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.unified-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255,255,255,0.12);
+    flex-shrink: 0;
+}
+
+.unified-search-btn {
     flex-shrink: 0;
     background: #dc2626;
     color: #fff;
     border: none;
     border-radius: 60px;
-    padding: 0.7rem 2rem;
+    padding: 0.65rem 1.75rem;
+    margin-left: auto;
     font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.25s ease;
     letter-spacing: 0.02em;
 }
 
-.search-bar-btn:hover {
+.unified-search-btn:hover {
     background: #b91c1c;
     transform: scale(1.02);
 }
 
-.search-bar-hints {
+.unified-hints {
     text-align: center;
     margin-top: 1rem;
     font-size: 0.8rem;
@@ -1550,134 +1601,61 @@ h2, h3, .serif {
     font-family: 'Inter', sans-serif;
 }
 
-.search-hint-link {
+.unified-hint-link {
     color: rgba(255,255,255,0.7);
     text-decoration: underline;
     text-underline-offset: 2px;
     transition: color 0.2s;
 }
 
-.search-hint-link:hover {
+.unified-hint-link:hover {
     color: #fff;
 }
 
-.advanced-toggle-btn {
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.5);
-    font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
-    cursor: pointer;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    transition: color 0.2s;
-}
-
-.advanced-toggle-btn:hover {
-    color: rgba(255,255,255,0.8);
-}
-
-.advanced-toggle-btn.open svg {
-    transform: rotate(180deg);
-}
-
-.advanced-toggle-btn svg {
-    transition: transform 0.2s;
-}
-
-.advanced-panel {
-    max-width: 680px;
-    margin: 0.75rem auto 0;
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 16px;
-    padding: 1rem 1.25rem;
-    border: 1px solid rgba(255,255,255,0.1);
-    animation: fadeSlideIn 0.25s ease;
-}
-
-.advanced-row {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-end;
-    flex-wrap: wrap;
-}
-
-.advanced-field {
-    flex: 1;
-    min-width: 120px;
-}
-
-.advanced-field-narrow {
-    flex: 0 0 80px;
-    min-width: 80px;
-}
-
-.advanced-label {
-    display: block;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.5);
-    margin-bottom: 0.3rem;
-}
-
-.advanced-input {
-    width: 100%;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    padding: 0.5rem 0.65rem;
-    color: #fff;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.advanced-input:focus {
-    border-color: rgba(255,255,255,0.35);
-}
-
-.advanced-input::placeholder {
-    color: rgba(255,255,255,0.35);
-}
-
-.advanced-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.5;
-}
-
-@media (max-width: 576px) {
-    .search-bar-capsule {
+@media (max-width: 768px) {
+    .unified-capsule {
         flex-direction: column;
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 1rem;
-        gap: 0.75rem;
+        gap: 0.6rem;
+        min-height: auto;
     }
-    .search-bar-icon {
-        display: none;
-    }
-    .search-bar-input {
+    .unified-field {
         width: 100%;
-        text-align: center;
-        font-size: 0.95rem;
+        padding: 0;
     }
-    .search-bar-btn {
-        width: 100%;
-    }
-    .advanced-row {
-        flex-direction: column;
-    }
-    .advanced-field,
-    .advanced-field-narrow {
+    .unified-field-dest,
+    .unified-field-date,
+    .unified-field-guests {
         flex: 1 1 100%;
         min-width: 0;
+    }
+    .unified-field-icon {
+        display: none;
+    }
+    .unified-divider {
+        display: none;
+    }
+    .unified-input[type="date"] {
+        text-align: center;
+    }
+    .unified-input[type="number"] {
+        max-width: none;
+        text-align: center;
+    }
+    .unified-search-btn {
+        width: 100%;
+        padding: 0.7rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .unified-capsule {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+    .unified-input {
+        font-size: 0.82rem;
     }
 }
 
