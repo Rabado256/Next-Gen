@@ -139,7 +139,7 @@
                 <div class="booking-capsule search-capsule" data-capsule="hotel">
                     <div class="capsule-field" style="flex: 1.5;">
                         <span class="capsule-label">Destination</span>
-                        <input type="text" class="capsule-input" id="hotel-dest" placeholder="City or hotel name" autocomplete="off" list="uni-destinations">
+                        <input type="text" class="capsule-input" id="hotel-dest" placeholder="City or hotel name" autocomplete="off">
                     </div>
                     <div class="capsule-divider"></div>
                     <div class="capsule-field capsule-date-field">
@@ -238,38 +238,6 @@
                         Check Visa
                     </button>
                 </div>
-
-                <datalist id="uni-destinations">
-                    <option value="Amalfi Coast, Italy">
-                    <option value="Bali, Indonesia">
-                    <option value="Barcelona, Spain">
-                    <option value="Kyoto, Japan">
-                    <option value="Cancun, Mexico">
-                    <option value="Tokyo, Japan">
-                    <option value="Dubai, UAE">
-                    <option value="New York, USA">
-                    <option value="Rio de Janeiro, Brazil">
-                    <option value="Cape Town, South Africa">
-                    <option value="Paris, France">
-                    <option value="Santorini, Greece">
-                    <option value="Maldives">
-                    <option value="Swiss Alps, Switzerland">
-                    <option value="Queenstown, New Zealand">
-                    <option value="Safari, Kenya">
-                    <option value="Bora Bora, French Polynesia">
-                    <option value="Machu Picchu, Peru">
-                    <option value="Siem Reap, Cambodia">
-                    <option value="Petra, Jordan">
-                    <option value="Reykjavik, Iceland">
-                    <option value="Antarctica">
-                    <option value="London, UK">
-                    <option value="Rome, Italy">
-                    <option value="Marrakech, Morocco">
-                    <option value="Mumbai, India">
-                    <option value="Bangkok, Thailand">
-                    <option value="Sydney, Australia">
-                    <option value="Havana, Cuba">
-                </datalist>
                 <div class="unified-hints">
                     <span>Search flights, hotels, or <a href="visa-check.html" class="unified-hint-link">check visa requirements</a></span>
                 </div>
@@ -1892,6 +1860,7 @@
 
                 createDropdown('flights-from');
                 createDropdown('flights-to');
+                createDropdown('hotel-dest');
             })();
 
             // Flights search
