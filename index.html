@@ -1530,9 +1530,246 @@
                 }
             })();
 
-            // Airport suggestion dropdown (filtered, positioned under field)
-            (function initAirportSuggest() {
-                const AIRPORTS = [
+            // Location suggestion dropdown (countries, states, airports)
+            (function initLocationSuggest() {
+                const ENTRIES = [
+                    // ===== ALL COUNTRIES =====
+                    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
+                    'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+                    'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan',
+                    'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso',
+                    'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Central African Republic', 'Chad',
+                    'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus',
+                    'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
+                    'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini',
+                    'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana',
+                    'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana',
+                    'Haiti', 'Honduras', 'Hungary',
+                    'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Ivory Coast',
+                    'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan',
+                    'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania',
+                    'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta',
+                    'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco',
+                    'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar',
+                    'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria',
+                    'North Korea', 'North Macedonia', 'Norway',
+                    'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru',
+                    'Philippines', 'Poland', 'Portugal',
+                    'Qatar', 'Romania', 'Russia', 'Rwanda',
+                    'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa',
+                    'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles',
+                    'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia',
+                    'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname',
+                    'Sweden', 'Switzerland', 'Syria',
+                    'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga',
+                    'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
+                    'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States',
+                    'Uruguay', 'Uzbekistan',
+                    'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
+                    'Yemen', 'Zambia', 'Zimbabwe',
+
+                    // ===== USA STATES =====
+                    'Alabama, United States', 'Alaska, United States', 'Arizona, United States',
+                    'Arkansas, United States', 'California, United States', 'Colorado, United States',
+                    'Connecticut, United States', 'Delaware, United States', 'Florida, United States',
+                    'Georgia, United States', 'Hawaii, United States', 'Idaho, United States',
+                    'Illinois, United States', 'Indiana, United States', 'Iowa, United States',
+                    'Kansas, United States', 'Kentucky, United States', 'Louisiana, United States',
+                    'Maine, United States', 'Maryland, United States', 'Massachusetts, United States',
+                    'Michigan, United States', 'Minnesota, United States', 'Mississippi, United States',
+                    'Missouri, United States', 'Montana, United States', 'Nebraska, United States',
+                    'Nevada, United States', 'New Hampshire, United States', 'New Jersey, United States',
+                    'New Mexico, United States', 'New York, United States', 'North Carolina, United States',
+                    'North Dakota, United States', 'Ohio, United States', 'Oklahoma, United States',
+                    'Oregon, United States', 'Pennsylvania, United States', 'Rhode Island, United States',
+                    'South Carolina, United States', 'South Dakota, United States', 'Tennessee, United States',
+                    'Texas, United States', 'Utah, United States', 'Vermont, United States',
+                    'Virginia, United States', 'Washington, United States', 'West Virginia, United States',
+                    'Wisconsin, United States', 'Wyoming, United States',
+                    'Washington DC, United States',
+
+                    // ===== CANADA PROVINCES =====
+                    'Alberta, Canada', 'British Columbia, Canada', 'Manitoba, Canada',
+                    'New Brunswick, Canada', 'Newfoundland and Labrador, Canada',
+                    'Nova Scotia, Canada', 'Ontario, Canada', 'Prince Edward Island, Canada',
+                    'Quebec, Canada', 'Saskatchewan, Canada',
+                    'Northwest Territories, Canada', 'Nunavut, Canada', 'Yukon, Canada',
+
+                    // ===== UK COUNTRIES =====
+                    'England, United Kingdom', 'Scotland, United Kingdom',
+                    'Wales, United Kingdom', 'Northern Ireland, United Kingdom',
+                    'Greater London, United Kingdom',
+
+                    // ===== NIGERIA STATES =====
+                    'Abia, Nigeria', 'Adamawa, Nigeria', 'Akwa Ibom, Nigeria', 'Anambra, Nigeria',
+                    'Bauchi, Nigeria', 'Bayelsa, Nigeria', 'Benue, Nigeria', 'Borno, Nigeria',
+                    'Cross River, Nigeria', 'Delta, Nigeria', 'Ebonyi, Nigeria', 'Edo, Nigeria',
+                    'Ekiti, Nigeria', 'Enugu, Nigeria', 'FCT Abuja, Nigeria', 'Gombe, Nigeria',
+                    'Imo, Nigeria', 'Jigawa, Nigeria', 'Kaduna, Nigeria', 'Kano, Nigeria',
+                    'Katsina, Nigeria', 'Kebbi, Nigeria', 'Kogi, Nigeria', 'Kwara, Nigeria',
+                    'Lagos, Nigeria', 'Nasarawa, Nigeria', 'Niger, Nigeria', 'Ogun, Nigeria',
+                    'Ondo, Nigeria', 'Osun, Nigeria', 'Oyo, Nigeria', 'Plateau, Nigeria',
+                    'Rivers, Nigeria', 'Sokoto, Nigeria', 'Taraba, Nigeria', 'Yobe, Nigeria',
+                    'Zamfara, Nigeria',
+
+                    // ===== INDIA STATES =====
+                    'Andhra Pradesh, India', 'Arunachal Pradesh, India', 'Assam, India',
+                    'Bihar, India', 'Chhattisgarh, India', 'Goa, India', 'Gujarat, India',
+                    'Haryana, India', 'Himachal Pradesh, India', 'Jharkhand, India',
+                    'Karnataka, India', 'Kerala, India', 'Madhya Pradesh, India',
+                    'Maharashtra, India', 'Manipur, India', 'Meghalaya, India', 'Mizoram, India',
+                    'Nagaland, India', 'Odisha, India', 'Punjab, India', 'Rajasthan, India',
+                    'Sikkim, India', 'Tamil Nadu, India', 'Telangana, India', 'Tripura, India',
+                    'Uttar Pradesh, India', 'Uttarakhand, India', 'West Bengal, India',
+                    'Delhi, India', 'Chandigarh, India',
+
+                    // ===== BRAZIL STATES =====
+                    'Acre, Brazil', 'Alagoas, Brazil', 'Amapa, Brazil', 'Amazonas, Brazil',
+                    'Bahia, Brazil', 'Ceara, Brazil', 'Distrito Federal, Brazil', 'Espirito Santo, Brazil',
+                    'Goias, Brazil', 'Maranhao, Brazil', 'Mato Grosso, Brazil', 'Mato Grosso do Sul, Brazil',
+                    'Minas Gerais, Brazil', 'Para, Brazil', 'Paraiba, Brazil', 'Parana, Brazil',
+                    'Pernambuco, Brazil', 'Piaui, Brazil', 'Rio de Janeiro, Brazil', 'Rio Grande do Norte, Brazil',
+                    'Rio Grande do Sul, Brazil', 'Rondonia, Brazil', 'Roraima, Brazil',
+                    'Santa Catarina, Brazil', 'Sao Paulo, Brazil', 'Sergipe, Brazil', 'Tocantins, Brazil',
+
+                    // ===== AUSTRALIA STATES =====
+                    'Australian Capital Territory, Australia', 'New South Wales, Australia',
+                    'Northern Territory, Australia', 'Queensland, Australia', 'South Australia, Australia',
+                    'Tasmania, Australia', 'Victoria, Australia', 'Western Australia, Australia',
+
+                    // ===== GERMANY STATES =====
+                    'Baden-Wurttemberg, Germany', 'Bavaria, Germany', 'Berlin, Germany',
+                    'Brandenburg, Germany', 'Bremen, Germany', 'Hamburg, Germany', 'Hesse, Germany',
+                    'Lower Saxony, Germany', 'Mecklenburg-Vorpommern, Germany',
+                    'North Rhine-Westphalia, Germany', 'Rhineland-Palatinate, Germany',
+                    'Saarland, Germany', 'Saxony, Germany', 'Saxony-Anhalt, Germany',
+                    'Schleswig-Holstein, Germany', 'Thuringia, Germany',
+
+                    // ===== FRANCE REGIONS =====
+                    'Auvergne-Rhone-Alpes, France', 'Bourgogne-Franche-Comte, France', 'Brittany, France',
+                    'Centre-Val de Loire, France', 'Corsica, France', 'Grand Est, France',
+                    'Hauts-de-France, France', 'Ile-de-France, France', 'Normandy, France',
+                    'Nouvelle-Aquitaine, France', 'Occitanie, France', 'Pays de la Loire, France',
+                    "Provence-Alpes-Cote d'Azur, France", 'French Guiana, France',
+                    'Guadeloupe, France', 'Martinique, France', 'Reunion, France',
+
+                    // ===== CHINA PROVINCES =====
+                    'Anhui, China', 'Beijing, China', 'Chongqing, China', 'Fujian, China',
+                    'Gansu, China', 'Guangdong, China', 'Guangxi, China', 'Guizhou, China',
+                    'Hainan, China', 'Hebei, China', 'Heilongjiang, China', 'Henan, China',
+                    'Hubei, China', 'Hunan, China', 'Inner Mongolia, China', 'Jiangsu, China',
+                    'Jiangxi, China', 'Jilin, China', 'Liaoning, China', 'Ningxia, China',
+                    'Qinghai, China', 'Shaanxi, China', 'Shandong, China', 'Shanghai, China',
+                    'Shanxi, China', 'Sichuan, China', 'Tianjin, China', 'Xinjiang, China',
+                    'Tibet, China', 'Yunnan, China', 'Zhejiang, China',
+                    'Hong Kong, China', 'Macau, China',
+
+                    // ===== RUSSIA REGIONS =====
+                    'Moscow, Russia', 'Saint Petersburg, Russia', 'Novosibirsk, Russia',
+                    'Krasnodar, Russia', 'Tatarstan, Russia', 'Bashkortostan, Russia',
+                    'Sverdlovsk, Russia', 'Rostov, Russia', 'Chechnya, Russia',
+                    'Dagestan, Russia', 'Krasnoyarsk, Russia', 'Primorsky, Russia',
+                    'Khabarovsk, Russia', 'Volgograd, Russia', 'Nizhny Novgorod, Russia',
+
+                    // ===== SPAIN AUTONOMOUS COMMUNITIES =====
+                    'Andalusia, Spain', 'Aragon, Spain', 'Asturias, Spain', 'Balearic Islands, Spain',
+                    'Basque Country, Spain', 'Canary Islands, Spain', 'Cantabria, Spain',
+                    'Castile and Leon, Spain', 'Castilla-La Mancha, Spain', 'Catalonia, Spain',
+                    'Extremadura, Spain', 'Galicia, Spain', 'Madrid, Spain', 'Murcia, Spain',
+                    'Navarre, Spain', 'La Rioja, Spain', 'Valencia, Spain',
+
+                    // ===== ITALY REGIONS =====
+                    'Abruzzo, Italy', 'Aosta Valley, Italy', 'Apulia, Italy', 'Basilicata, Italy',
+                    'Calabria, Italy', 'Campania, Italy', 'Emilia-Romagna, Italy', 'Friuli-Venezia Giulia, Italy',
+                    'Lazio, Italy', 'Liguria, Italy', 'Lombardy, Italy', 'Marche, Italy',
+                    'Molise, Italy', 'Piedmont, Italy', 'Sardinia, Italy', 'Sicily, Italy',
+                    'Trentino-Alto Adige, Italy', 'Tuscany, Italy', 'Umbria, Italy', 'Veneto, Italy',
+
+                    // ===== MEXICO STATES =====
+                    'Aguascalientes, Mexico', 'Baja California, Mexico', 'Baja California Sur, Mexico',
+                    'Campeche, Mexico', 'Chiapas, Mexico', 'Chihuahua, Mexico', 'Coahuila, Mexico',
+                    'Colima, Mexico', 'Durango, Mexico', 'Guanajuato, Mexico', 'Guerrero, Mexico',
+                    'Hidalgo, Mexico', 'Jalisco, Mexico', 'Mexico City, Mexico', 'Mexico State, Mexico',
+                    'Michoacan, Mexico', 'Morelos, Mexico', 'Nayarit, Mexico', 'Nuevo Leon, Mexico',
+                    'Oaxaca, Mexico', 'Puebla, Mexico', 'Queretaro, Mexico', 'Quintana Roo, Mexico',
+                    'San Luis Potosi, Mexico', 'Sinaloa, Mexico', 'Sonora, Mexico', 'Tabasco, Mexico',
+                    'Tamaulipas, Mexico', 'Tlaxcala, Mexico', 'Veracruz, Mexico', 'Yucatan, Mexico',
+                    'Zacatecas, Mexico',
+
+                    // ===== SOUTH AFRICA PROVINCES =====
+                    'Eastern Cape, South Africa', 'Free State, South Africa', 'Gauteng, South Africa',
+                    'KwaZulu-Natal, South Africa', 'Limpopo, South Africa', 'Mpumalanga, South Africa',
+                    'North West, South Africa', 'Northern Cape, South Africa', 'Western Cape, South Africa',
+
+                    // ===== JAPAN REGIONS / MAJOR PREFECTURES =====
+                    'Aichi, Japan', 'Chiba, Japan', 'Fukuoka, Japan', 'Hiroshima, Japan',
+                    'Hokkaido, Japan', 'Hyogo, Japan', 'Kanagawa, Japan', 'Kyoto, Japan',
+                    'Nagano, Japan', 'Okinawa, Japan', 'Osaka, Japan', 'Saitama, Japan',
+                    'Shizuoka, Japan', 'Tokyo, Japan',
+
+                    // ===== ARGENTINA PROVINCES =====
+                    'Buenos Aires, Argentina', 'Catamarca, Argentina', 'Chaco, Argentina',
+                    'Chubut, Argentina', 'Cordoba, Argentina', 'Corrientes, Argentina',
+                    'Entre Rios, Argentina', 'Formosa, Argentina', 'Jujuy, Argentina',
+                    'La Pampa, Argentina', 'La Rioja, Argentina', 'Mendoza, Argentina',
+                    'Misiones, Argentina', 'Neuquen, Argentina', 'Rio Negro, Argentina',
+                    'Salta, Argentina', 'San Juan, Argentina', 'San Luis, Argentina',
+                    'Santa Cruz, Argentina', 'Santa Fe, Argentina', 'Santiago del Estero, Argentina',
+                    'Tierra del Fuego, Argentina', 'Tucuman, Argentina',
+
+                    // ===== INDONESIA PROVINCES =====
+                    'Aceh, Indonesia', 'Bali, Indonesia', 'Banten, Indonesia', 'Bengkulu, Indonesia',
+                    'Central Java, Indonesia', 'Central Kalimantan, Indonesia', 'Central Sulawesi, Indonesia',
+                    'East Java, Indonesia', 'East Kalimantan, Indonesia', 'East Nusa Tenggara, Indonesia',
+                    'Gorontalo, Indonesia', 'Jakarta, Indonesia', 'Jambi, Indonesia', 'Lampung, Indonesia',
+                    'Maluku, Indonesia', 'North Kalimantan, Indonesia', 'North Maluku, Indonesia',
+                    'North Sulawesi, Indonesia', 'North Sumatra, Indonesia', 'Papua, Indonesia',
+                    'Riau, Indonesia', 'Riau Islands, Indonesia', 'South Kalimantan, Indonesia',
+                    'South Sulawesi, Indonesia', 'South Sumatra, Indonesia', 'Southeast Sulawesi, Indonesia',
+                    'West Java, Indonesia', 'West Kalimantan, Indonesia', 'West Nusa Tenggara, Indonesia',
+                    'West Papua, Indonesia', 'West Sulawesi, Indonesia', 'West Sumatra, Indonesia',
+                    'Yogyakarta, Indonesia',
+
+                    // ===== PAKISTAN PROVINCES =====
+                    'Azad Kashmir, Pakistan', 'Balochistan, Pakistan', 'Gilgit-Baltistan, Pakistan',
+                    'Islamabad, Pakistan', 'Khyber Pakhtunkhwa, Pakistan', 'Punjab, Pakistan',
+                    'Sindh, Pakistan',
+
+                    // ===== TURKEY REGIONS =====
+                    'Ankara, Turkey', 'Antalya, Turkey', 'Istanbul, Turkey', 'Izmir, Turkey',
+
+                    // ===== KENYA COUNTIES =====
+                    'Mombasa, Kenya', 'Nairobi, Kenya', 'Kisumu, Kenya', 'Nakuru, Kenya',
+                    'Eldoret, Kenya', 'Thika, Kenya', 'Malindi, Kenya',
+
+                    // ===== GHANA REGIONS =====
+                    'Accra, Ghana', 'Ashanti, Ghana', 'Kumasi, Ghana', 'Greater Accra, Ghana',
+
+                    // ===== ADDITIONAL MAJOR CITIES (as location anchors) =====
+                    'Dubai, UAE', 'Abu Dhabi, UAE', 'Doha, Qatar', 'Riyadh, Saudi Arabia',
+                    'Tehran, Iran', 'Baghdad, Iraq', 'Amman, Jordan', 'Beirut, Lebanon',
+                    'Kuwait City, Kuwait', 'Muscat, Oman', 'Manama, Bahrain',
+                    'Zurich, Switzerland', 'Geneva, Switzerland', 'Stockholm, Sweden',
+                    'Copenhagen, Denmark', 'Oslo, Norway', 'Helsinki, Finland', 'Reykjavik, Iceland',
+                    'Warsaw, Poland', 'Prague, Czech Republic', 'Vienna, Austria', 'Budapest, Hungary',
+                    'Bucharest, Romania', 'Sofia, Bulgaria', 'Athens, Greece', 'Lisbon, Portugal',
+                    'Brussels, Belgium', 'Amsterdam, Netherlands', 'Dublin, Ireland', 'Luxembourg',
+                    'Montevideo, Uruguay', 'Asuncion, Paraguay', 'Santiago, Chile', 'Bogota, Colombia',
+                    'Caracas, Venezuela', 'Quito, Ecuador', 'La Paz, Bolivia',
+                    'Casablanca, Morocco', 'Tunis, Tunisia', 'Algiers, Algeria', 'Tripoli, Libya',
+                    'Khartoum, Sudan', 'Addis Ababa, Ethiopia', 'Mogadishu, Somalia',
+                    'Luanda, Angola', 'Maputo, Mozambique', 'Harare, Zimbabwe', 'Lusaka, Zambia',
+                    'Kampala, Uganda', 'Kigali, Rwanda', 'Dar es Salaam, Tanzania',
+                    'Yangon, Myanmar', 'Phnom Penh, Cambodia', 'Vientiane, Laos',
+                    'Ulaanbaatar, Mongolia', 'Kathmandu, Nepal', 'Dhaka, Bangladesh',
+                    'Colombo, Sri Lanka', 'Tashkent, Uzbekistan', 'Baku, Azerbaijan',
+                    'Tbilisi, Georgia', 'Yerevan, Armenia', 'Minsk, Belarus', 'Vilnius, Lithuania',
+                    'Riga, Latvia', 'Tallinn, Estonia', 'Bishkek, Kyrgyzstan', 'Ashgabat, Turkmenistan',
+                    'Dushanbe, Tajikistan', 'Astana, Kazakhstan', 'Tirana, Albania',
+                    'Sarajevo, Bosnia and Herzegovina', 'Belgrade, Serbia', 'Zagreb, Croatia',
+                    'Ljubljana, Slovenia', 'Bratislava, Slovakia', 'Podgorica, Montenegro',
+
+                    // ===== MAJOR AIRPORTS =====
                     'Lagos (LOS) - Nigeria', 'Abuja (ABV) - Nigeria', 'Port Harcourt (PHC) - Nigeria',
                     'Cape Town (CPT) - South Africa', 'Johannesburg (JNB) - South Africa', 'Durban (DUR) - South Africa',
                     'Nairobi (NBO) - Kenya', 'Mombasa (MBA) - Kenya', 'Kisumu (KIS) - Kenya',
@@ -1545,13 +1782,42 @@
                     'New York (JFK) - USA', 'Los Angeles (LAX) - USA', 'Miami (MIA) - USA',
                     'Toronto (YYZ) - Canada', 'Vancouver (YVR) - Canada', 'Montreal (YUL) - Canada',
                     'Mexico City (MEX) - Mexico', 'Cancun (CUN) - Mexico', 'Tulum (TUY) - Mexico',
-                    'Rio de Janeiro (GIG) - Brazil', 'São Paulo (GRU) - Brazil', 'Salvador (SSA) - Brazil',
+                    'Rio de Janeiro (GIG) - Brazil', 'Sao Paulo (GRU) - Brazil', 'Salvador (SSA) - Brazil',
                     'Buenos Aires (EZE) - Argentina', 'Mendoza (MDZ) - Argentina', 'Bariloche (BRC) - Argentina',
                     'Lima (LIM) - Peru', 'Cusco (CUZ) - Peru', 'Arequipa (AQP) - Peru',
                     'Sydney (SYD) - Australia', 'Melbourne (MEL) - Australia', 'Cairns (CNS) - Australia',
                     'Auckland (AKL) - New Zealand', 'Queenstown (ZQN) - New Zealand', 'Wellington (WLG) - New Zealand',
                     'Nadi (NAN) - Fiji', 'Suva (SUV) - Fiji', 'Lautoka (LTK) - Fiji',
-                    'McMurdo Station - Antarctica', 'Palmer Station - Antarctica', 'South Pole Station - Antarctica'
+                    'McMurdo Station - Antarctica', 'Palmer Station - Antarctica', 'South Pole Station - Antarctica',
+                    'Dubai (DXB) - UAE', 'Abu Dhabi (AUH) - UAE', 'Doha (DOH) - Qatar',
+                    'Istanbul (IST) - Turkey', 'Antalya (AYT) - Turkey', 'Ankara (ESB) - Turkey',
+                    'Athens (ATH) - Greece', 'Lisbon (LIS) - Portugal', 'Dublin (DUB) - Ireland',
+                    'Amsterdam (AMS) - Netherlands', 'Brussels (BRU) - Belgium', 'Zurich (ZRH) - Switzerland',
+                    'Geneva (GVA) - Switzerland', 'Vienna (VIE) - Austria', 'Prague (PRG) - Czech Republic',
+                    'Budapest (BUD) - Hungary', 'Warsaw (WAW) - Poland', 'Stockholm (ARN) - Sweden',
+                    'Copenhagen (CPH) - Denmark', 'Oslo (OSL) - Norway', 'Helsinki (HEL) - Finland',
+                    'Reykjavik (KEF) - Iceland', 'Singapore (SIN) - Singapore', 'Kuala Lumpur (KUL) - Malaysia',
+                    'Jakarta (CGK) - Indonesia', 'Bali (DPS) - Indonesia', 'Manila (MNL) - Philippines',
+                    'Ho Chi Minh City (SGN) - Vietnam', 'Hanoi (HAN) - Vietnam',
+                    'Casablanca (CMN) - Morocco', 'Cairo (CAI) - Egypt', 'Tunis (TUN) - Tunisia',
+                    'Addis Ababa (ADD) - Ethiopia', 'Dar es Salaam (DAR) - Tanzania',
+                    'Accra (ACC) - Ghana', 'Kumasi (KMS) - Ghana',
+                    'Kigali (KGL) - Rwanda', 'Kampala (EBB) - Uganda',
+                    'Luanda (LAD) - Angola', 'Maputo (MPM) - Mozambique',
+                    'Harare (HRE) - Zimbabwe', 'Lusaka (LUN) - Zambia',
+                    'Dhaka (DAC) - Bangladesh', 'Kathmandu (KTM) - Nepal', 'Colombo (CMB) - Sri Lanka',
+                    'Yangon (RGN) - Myanmar', 'Phnom Penh (PNH) - Cambodia',
+                    'Seoul (ICN) - South Korea', 'Hong Kong (HKG) - China', 'Shanghai (PVG) - China',
+                    'Beijing (PEK) - China', 'Guangzhou (CAN) - China', 'Taipei (TPE) - Taiwan',
+                    'Moscow (SVO) - Russia', 'Saint Petersburg (LED) - Russia',
+                    'Kuwait City (KWI) - Kuwait', 'Muscat (MCT) - Oman', 'Bahrain (BAH) - Bahrain',
+                    'Riyadh (RUH) - Saudi Arabia', 'Jeddah (JED) - Saudi Arabia', 'Amman (AMM) - Jordan',
+                    'Beirut (BEY) - Lebanon', 'Dammam (DMM) - Saudi Arabia', 'Santiago (SCL) - Chile',
+                    'Bogota (BOG) - Colombia', 'Lima (LIM) - Peru', 'Quito (UIO) - Ecuador',
+                    'Caracas (CCS) - Venezuela', 'Montevideo (MVD) - Uruguay', 'Asuncion (ASU) - Paraguay',
+                    'Panama City (PTY) - Panama', 'San Jose (SJO) - Costa Rica',
+                    'Santo Domingo (SDQ) - Dominican Republic', 'San Juan (SJU) - Puerto Rico',
+                    'Nassau (NAS) - Bahamas', 'Kingston (KIN) - Jamaica', 'Port of Spain (POS) - Trinidad'
                 ];
 
                 function createDropdown(inputId) {
@@ -1570,7 +1836,7 @@
                     function showMatches() {
                         const val = input.value.trim().toLowerCase();
                         if (!val) { dd.style.display = 'none'; return; }
-                        const matches = AIRPORTS.filter(a => a.toLowerCase().includes(val));
+                        const matches = ENTRIES.filter(a => a.toLowerCase().includes(val));
                         if (matches.length === 0 || (matches.length === 1 && matches[0].toLowerCase() === val)) {
                             dd.style.display = 'none';
                             return;
