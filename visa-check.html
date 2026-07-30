@@ -177,9 +177,53 @@
                 <div id="vc-unknown" class="text-muted" style="font-size:0.85rem;display:none;">This pair is not in our preview dataset. Verify with the embassy.</div>
                 <p class="text-muted mt-3 mb-0" style="font-size:0.65rem;"><i class="bi bi-info-circle"></i> Preview mode — always verify with official embassy sources.</p>
             </div>
+
+            <div id="vc-apply-section" style="display:none;margin-top:2rem;">
+                <hr>
+                <h5 class="serif text-center mb-3" style="letter-spacing:0.05em;">Visa Application Form</h5>
+                <p class="text-center text-muted small mb-4">Fill in your details to begin the visa process for <strong id="vc-apply-dest"></strong>.</p>
+                <form id="vc-apply-form" style="max-width:480px;margin:0 auto;" onsubmit="submitVisaApplication(event)">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small text-muted">Full Name</label>
+                            <input type="text" class="form-control rounded-0" id="app-name" required placeholder="John Doe">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">Email</label>
+                            <input type="email" class="form-control rounded-0" id="app-email" required placeholder="john@example.com">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">Phone</label>
+                            <input type="tel" class="form-control rounded-0" id="app-phone" placeholder="+1 234 567 8900">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">Passport Number</label>
+                            <input type="text" class="form-control rounded-0" id="app-passport" required placeholder="AB123456">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted">Passport Expiry</label>
+                            <input type="date" class="form-control rounded-0" id="app-expiry" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-muted">Planned Travel Date</label>
+                            <input type="date" class="form-control rounded-0" id="app-travel" required>
+                        </div>
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" class="btn btn-dark rounded-0 px-5 py-2">Submit Application</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div id="vc-nearby-section" style="display:none;margin-top:2rem;">
+                <hr>
+                <h5 class="serif text-center mb-2" style="letter-spacing:0.05em;">Try These Nearby Destinations</h5>
+                <p class="text-center text-muted small mb-3">We don't have visa data for this pair. Try one of these destinations with available visa info for <strong id="vc-nearby-nationality"></strong>.</p>
+                <div id="vc-nearby-list" class="d-flex flex-wrap justify-content-center gap-2 mt-3"></div>
+            </div>
         </div>
 
-        <div class="mt-5 pt-4 mb-5">
+        <div class="mt-5 pt-4 mb-5" id="vc-dataset-section">
             <h5 class="serif text-center mb-4">Countries in Our Preview Dataset</h5>
             <ul class="country-list list-unstyled">
                 <li>United States</li><li>United Kingdom</li><li>Canada</li><li>Australia</li><li>India</li>
@@ -219,19 +263,53 @@
             doVisaCheck();
         });
 
+        function getNearbyDestinations(nationality) {
+            var results = [];
+            var prefix = nationality.toLowerCase() + ':';
+            for (var key in VISA_REQUIREMENTS) {
+                if (key.startsWith(prefix)) {
+                    var dest = key.substring(prefix.length);
+                    results.push(dest.charAt(0).toUpperCase() + dest.slice(1));
+                }
+            }
+            var current = document.getElementById('vc-to').value.toLowerCase();
+            return results.filter(function(d) { return d.toLowerCase() !== current; }).sort();
+        }
+
         function doVisaCheck() {
             var from = document.getElementById('vc-from').value;
             var to = document.getElementById('vc-to').value;
             var result = document.getElementById('vc-result');
-            if (!from || !to) { result.style.display = 'none'; return; }
+            var applySection = document.getElementById('vc-apply-section');
+            var nearbySection = document.getElementById('vc-nearby-section');
+            if (!from || !to) {
+                result.style.display = 'none';
+                applySection.style.display = 'none';
+                nearbySection.style.display = 'none';
+                return;
+            }
             var visa = checkVisa(from, to);
             document.getElementById('vc-from-display').textContent = from;
             document.getElementById('vc-to-display').textContent = to;
+            applySection.style.display = 'none';
+            nearbySection.style.display = 'none';
+
             if (!visa) {
                 document.getElementById('vc-badge').textContent = '';
                 document.getElementById('vc-duration').textContent = '';
                 document.getElementById('vc-notes').textContent = '';
                 document.getElementById('vc-unknown').style.display = 'block';
+                result.style.display = 'block';
+
+                var nearby = getNearbyDestinations(from);
+                if (nearby.length > 0) {
+                    document.getElementById('vc-nearby-nationality').textContent = from;
+                    var list = document.getElementById('vc-nearby-list');
+                    list.innerHTML = nearby.map(function(d) {
+                        return '<button class="btn btn-outline-dark btn-sm rounded-0 px-3 nearby-dest-btn" data-dest="' + d + '">' + d + '</button>';
+                    }).join('');
+                    nearbySection.style.display = 'block';
+                }
             } else {
                 var typeInfo = getVisaTypeInfo(visa.type);
                 document.getElementById('vc-unknown').style.display = 'none';
@@ -240,8 +318,42 @@
                 document.getElementById('vc-badge').style.cssText = 'font-size:1rem;padding:0.5rem 1.5rem;background:' + getTypeColor(visa.type) + ';color:white;';
                 document.getElementById('vc-duration').textContent = visa.duration || '';
                 document.getElementById('vc-notes').textContent = visa.notes || typeInfo.desc + ' for ' + to + '.';
+                result.style.display = 'block';
+
+                document.getElementById('vc-apply-dest').textContent = to + ' (' + typeInfo.label + ')';
+                applySection.style.display = 'block';
             }
-            result.style.display = 'block';
+        }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.nearby-dest-btn');
+            if (btn) {
+                document.getElementById('vc-to').value = btn.dataset.dest;
+                doVisaCheck();
+                document.getElementById('vc-to').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        function submitVisaApplication(e) {
+            e.preventDefault();
+            var name = document.getElementById('app-name').value;
+            var email = document.getElementById('app-email').value;
+            var passport = document.getElementById('app-passport').value;
+            var travel = document.getElementById('app-travel').value;
+            var from = document.getElementById('vc-from').value;
+            var to = document.getElementById('vc-to').value;
+
+            var msg = 'Visa Application Submitted!\n\n';
+            msg += 'Name: ' + name + '\n';
+            msg += 'Email: ' + email + '\n';
+            msg += 'Passport: ' + passport + '\n';
+            msg += 'Travel Date: ' + travel + '\n';
+            msg += 'From: ' + from + '\n';
+            msg += 'To: ' + to + '\n\n';
+            msg += 'We will contact you within 24 hours.';
+
+            alert(msg);
+            document.getElementById('vc-apply-form').reset();
         }
 
         function getTypeColor(type) {
