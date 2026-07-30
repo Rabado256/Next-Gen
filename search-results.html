@@ -1412,6 +1412,34 @@
             }
         })();
         
+    } else if (pageParams.get('search_type') === 'flight') {
+        // Flight search: show destination cards filtered by destination
+        (async () => {
+            let dests;
+            try { dests = await api.getDestinations(); } catch (_) { return; }
+            if (!dests || dests.length === 0) return;
+
+            const resultsGrid = document.querySelector('#search-results-page .row.g-4');
+            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            if (!resultsGrid) return;
+
+            const to = (pageParams.get('to') || '').toLowerCase();
+            let filtered = dests;
+            if (to) {
+                filtered = dests.filter(d =>
+                    (d.title || '').toLowerCase().includes(to) ||
+                    (d.country || '').toLowerCase().includes(to) ||
+                    (d.id || '').toLowerCase().includes(to)
+                );
+            }
+
+            if (heading) {
+                heading.textContent = `Flights to "${pageParams.get('to')}" — ${filtered.length} destination${filtered.length === 1 ? '' : 's'} found`;
+            }
+
+            renderPage(1, filtered, resultsGrid, heading);
+        })();
+
     } else {
         // Fallback: Render destination cards from Supabase
         (async () => {

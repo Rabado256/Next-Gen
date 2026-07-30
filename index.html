@@ -144,32 +144,172 @@
 
             <datalist id="global-countries"></datalist>
 
-            <!-- Unified Search Capsule -->
+            <!-- Search Mode Tabs -->
+            <div class="search-tabs">
+                <button class="search-tab active" data-mode="flights">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                    Flights
+                </button>
+                <button class="search-tab" data-mode="hotel">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V3h2v16h14V3h2v18H3z"/><path d="M7 7h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zM7 12h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
+                    Hotel
+                </button>
+                <button class="search-tab" data-mode="visa">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 12h8"/><path d="M10 9l2 3 2-3"/></svg>
+                    Visa
+                </button>
+            </div>
+
+            <!-- Search Capsules -->
             <div class="unified-search">
-                <div class="unified-capsule">
-                    <div class="unified-field unified-field-dest">
-                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.33 8 12 8 12s8-6.67 8-12a8 8 0 0 0-8-8z"/></svg>
-                        <input type="text" id="uni-dest" class="unified-input" placeholder="Destination" autocomplete="off" list="uni-destinations">
+                <!-- Flights -->
+                <div class="booking-capsule search-capsule active" data-capsule="flights">
+                    <div class="capsule-field">
+                        <span class="capsule-label">From</span>
+                        <input type="text" class="capsule-input" id="flights-from" placeholder="City or airport" autocomplete="off" list="airport-list">
                     </div>
-                    <div class="unified-divider"></div>
-                    <div class="unified-field unified-field-date">
-                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        <input type="date" id="uni-checkin" class="unified-input" value="">
+                    <div class="capsule-swap" id="flights-swap" title="Swap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                     </div>
-                    <div class="unified-divider"></div>
-                    <div class="unified-field unified-field-date">
-                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="15 14 17 12 19 14"/></svg>
-                        <input type="date" id="uni-checkout" class="unified-input" value="">
+                    <div class="capsule-field">
+                        <span class="capsule-label">To</span>
+                        <input type="text" class="capsule-input" id="flights-to" placeholder="Destination" autocomplete="off" list="airport-list">
                     </div>
-                    <div class="unified-divider"></div>
-                    <div class="unified-field unified-field-guests">
-                        <svg class="unified-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <input type="number" id="uni-guests" class="unified-input" value="1" min="1" max="20">
+                    <div class="capsule-divider"></div>
+                    <div class="capsule-field capsule-date-field">
+                        <span class="capsule-label">Depart</span>
+                        <input type="date" class="capsule-input" id="flights-depart">
                     </div>
-                    <button id="uni-search-btn" class="unified-search-btn">Search</button>
+                    <div class="capsule-divider"></div>
+                    <div class="capsule-field capsule-date-field" id="flights-return-wrapper">
+                        <span class="capsule-label">Return <button type="button" class="trip-type-btn" id="trip-type-btn" data-trip="roundtrip">▼ Round-trip</button></span>
+                        <input type="date" class="capsule-input" id="flights-return">
+                    </div>
+                    <div class="capsule-divider"></div>
+                    <div class="capsule-field" style="flex: 0.5; min-width: 60px;">
+                        <span class="capsule-label">Travelers</span>
+                        <input type="number" class="capsule-input" id="flights-travelers" value="1" min="1" max="20" style="text-align:center;">
+                    </div>
+                    <div class="capsule-field" style="flex: 0.55; min-width: 70px;">
+                        <span class="capsule-label">Class</span>
+                        <select class="capsule-select" id="flights-class">
+                            <option value="economy">Economy</option>
+                            <option value="premium">Premium</option>
+                            <option value="business">Business</option>
+                            <option value="first">First</option>
+                        </select>
+                    </div>
+                    <button class="unified-search-btn" id="flights-search-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Search
+                    </button>
                 </div>
+
+                <!-- Hotel -->
+                <div class="booking-capsule search-capsule" data-capsule="hotel">
+                    <div class="capsule-field" style="flex: 1.5;">
+                        <span class="capsule-label">Destination</span>
+                        <input type="text" class="capsule-input" id="hotel-dest" placeholder="City or hotel name" autocomplete="off" list="uni-destinations">
+                    </div>
+                    <div class="capsule-divider"></div>
+                    <div class="capsule-field capsule-date-field">
+                        <span class="capsule-label">Check-in</span>
+                        <input type="date" class="capsule-input" id="hotel-checkin">
+                    </div>
+                    <div class="capsule-divider"></div>
+                    <div class="capsule-field capsule-date-field">
+                        <span class="capsule-label">Check-out</span>
+                        <input type="date" class="capsule-input" id="hotel-checkout">
+                    </div>
+                    <div class="capsule-divider"></div>
+                    <div class="capsule-field" style="flex: 0.6; min-width: 72px;">
+                        <span class="capsule-label">Guests</span>
+                        <input type="number" class="capsule-input" id="hotel-guests" value="1" min="1" max="20" style="text-align:center;">
+                    </div>
+                    <button class="unified-search-btn" id="hotel-search-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Search
+                    </button>
+                </div>
+
+                <!-- Visa -->
+                <div class="booking-capsule search-capsule" data-capsule="visa" style="display:none;">
+                    <div class="capsule-field">
+                        <span class="capsule-label">Nationality</span>
+                        <select class="capsule-select" id="visa-from">
+                            <option value="">Select nationality</option>
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                            <option value="India">India</option>
+                            <option value="Nigeria">Nigeria</option>
+                            <option value="South Africa">South Africa</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="Ghana">Ghana</option>
+                            <option value="France">France</option>
+                            <option value="Germany">Germany</option>
+                            <option value="Italy">Italy</option>
+                            <option value="Spain">Spain</option>
+                            <option value="Brazil">Brazil</option>
+                            <option value="Mexico">Mexico</option>
+                            <option value="Japan">Japan</option>
+                            <option value="China">China</option>
+                        </select>
+                    </div>
+                    <div class="capsule-swap" id="visa-swap" title="Swap">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    </div>
+                    <div class="capsule-field">
+                        <span class="capsule-label">Destination</span>
+                        <select class="capsule-select" id="visa-to">
+                            <option value="">Select destination</option>
+                            <option value="Italy">Italy</option>
+                            <option value="Japan">Japan</option>
+                            <option value="Maldives">Maldives</option>
+                            <option value="France">France</option>
+                            <option value="Switzerland">Switzerland</option>
+                            <option value="Greece">Greece</option>
+                            <option value="Iceland">Iceland</option>
+                            <option value="Morocco">Morocco</option>
+                            <option value="Canada">Canada</option>
+                            <option value="United States">United States</option>
+                            <option value="India">India</option>
+                            <option value="Thailand">Thailand</option>
+                            <option value="Indonesia">Indonesia</option>
+                            <option value="Spain">Spain</option>
+                            <option value="Portugal">Portugal</option>
+                            <option value="Netherlands">Netherlands</option>
+                            <option value="Mexico">Mexico</option>
+                            <option value="Costa Rica">Costa Rica</option>
+                            <option value="Argentina">Argentina</option>
+                            <option value="Brazil">Brazil</option>
+                            <option value="Peru">Peru</option>
+                            <option value="Egypt">Egypt</option>
+                            <option value="Kenya">Kenya</option>
+                            <option value="South Africa">South Africa</option>
+                            <option value="Tanzania">Tanzania</option>
+                            <option value="UAE">UAE</option>
+                            <option value="Turkey">Turkey</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Malaysia">Malaysia</option>
+                            <option value="New Zealand">New Zealand</option>
+                            <option value="Australia">Australia</option>
+                            <option value="Nepal">Nepal</option>
+                            <option value="Sri Lanka">Sri Lanka</option>
+                            <option value="Seychelles">Seychelles</option>
+                            <option value="Mauritius">Mauritius</option>
+                            <option value="Fiji">Fiji</option>
+                            <option value="Norway">Norway</option>
+                        </select>
+                    </div>
+                    <button class="unified-search-btn" id="visa-search-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Check Visa
+                    </button>
+                </div>
+
                 <datalist id="uni-destinations">
-                    <option value="Visa Check — Check travel visa requirements">
                     <option value="Amalfi Coast, Italy">
                     <option value="Bali, Indonesia">
                     <option value="Barcelona, Spain">
@@ -201,7 +341,15 @@
                     <option value="Havana, Cuba">
                 </datalist>
                 <div class="unified-hints">
-                    <span>Search destinations, hotels, packages, or <a href="visa-check.html" class="unified-hint-link">check visa requirements</a></span>
+                    <span>Search flights, hotels, or <a href="visa-check.html" class="unified-hint-link">check visa requirements</a></span>
+                </div>
+                <div class="search-chips" id="search-chips">
+                    <button class="search-chip" data-mode="flight" data-dest="Tokyo, Japan">✈️ Tokyo</button>
+                    <button class="search-chip" data-mode="flight" data-dest="Paris, France">✈️ Paris</button>
+                    <button class="search-chip" data-mode="hotel" data-dest="Bali, Indonesia">🏨 Bali</button>
+                    <button class="search-chip" data-mode="hotel" data-dest="Maldives">🏨 Maldives</button>
+                    <button class="search-chip" data-mode="flight" data-dest="New York, USA">✈️ New York</button>
+                    <button class="search-chip" data-mode="visa" data-dest="Italy">🛂 Italy Visa</button>
                 </div>
             </div>
         </div>
@@ -1376,35 +1524,174 @@
                 }
             }
 
-            // Unified search handler
-            const uniDest = document.getElementById('uni-dest');
-            const uniCheckin = document.getElementById('uni-checkin');
-            const uniCheckout = document.getElementById('uni-checkout');
-            const uniGuests = document.getElementById('uni-guests');
-            const uniBtn = document.getElementById('uni-search-btn');
+            // Mode switching tabs
+            const searchTabs = document.querySelectorAll('.search-tab');
+            const capsules = {
+                flights: document.querySelector('[data-capsule="flights"]'),
+                hotel: document.querySelector('[data-capsule="hotel"]'),
+                visa: document.querySelector('[data-capsule="visa"]')
+            };
+            let currentMode = 'flights';
 
-            function performUnifiedSearch() {
-                const dest = uniDest.value.trim();
-                if (!dest) return;
-                const lower = dest.toLowerCase();
-                if (lower.includes('visa')) {
-                    window.location.href = 'visa-check.html';
-                    return;
+            searchTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const mode = tab.dataset.mode;
+                    if (mode === currentMode) return;
+
+                    searchTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    Object.values(capsules).forEach(c => c.classList.remove('active'));
+                    capsules[mode].classList.add('active');
+
+                    currentMode = mode;
+                });
+            });
+
+            // Swap from/to for flights
+            document.getElementById('flights-swap').addEventListener('click', () => {
+                const from = document.getElementById('flights-from');
+                const to = document.getElementById('flights-to');
+                [from.value, to.value] = [to.value, from.value];
+            });
+
+            // Swap nationality/destination for visa
+            document.getElementById('visa-swap').addEventListener('click', () => {
+                const from = document.getElementById('visa-from');
+                const to = document.getElementById('visa-to');
+                [from.value, to.value] = [to.value, from.value];
+            });
+
+            // Trip type toggle: round-trip / one-way
+            const tripBtn = document.getElementById('trip-type-btn');
+            const returnWrapper = document.getElementById('flights-return-wrapper');
+            if (tripBtn) {
+                tripBtn.addEventListener('click', () => {
+                    const isRound = tripBtn.dataset.trip === 'roundtrip';
+                    tripBtn.dataset.trip = isRound ? 'oneway' : 'roundtrip';
+                    tripBtn.textContent = isRound ? '▲ One-way' : '▼ Round-trip';
+                    returnWrapper.style.opacity = isRound ? '0' : '1';
+                    returnWrapper.style.pointerEvents = isRound ? 'none' : 'auto';
+                    if (isRound) document.getElementById('flights-return').value = '';
+                });
+            }
+
+            // Auto-fill default dates
+            (function setDefaultDates() {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const todayStr = yyyy + '-' + mm + '-' + dd;
+                const depart = document.getElementById('flights-depart');
+                const ret = document.getElementById('flights-return');
+                if (depart && !depart.value) depart.value = todayStr;
+                if (ret && !ret.value) {
+                    const weekLater = new Date(today);
+                    weekLater.setDate(weekLater.getDate() + 7);
+                    const y2 = weekLater.getFullYear();
+                    const m2 = String(weekLater.getMonth() + 1).padStart(2, '0');
+                    const d2 = String(weekLater.getDate()).padStart(2, '0');
+                    ret.value = y2 + '-' + m2 + '-' + d2;
                 }
+                const ci = document.getElementById('hotel-checkin');
+                const co = document.getElementById('hotel-checkout');
+                if (ci && !ci.value) ci.value = todayStr;
+                if (co && !co.value) {
+                    const weekLater = new Date(today);
+                    weekLater.setDate(weekLater.getDate() + 7);
+                    const y2 = weekLater.getFullYear();
+                    const m2 = String(weekLater.getMonth() + 1).padStart(2, '0');
+                    const d2 = String(weekLater.getDate()).padStart(2, '0');
+                    co.value = y2 + '-' + m2 + '-' + d2;
+                }
+            })();
+
+            // Quick destination chips
+            document.querySelectorAll('.search-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const mode = chip.dataset.mode;
+                    const dest = chip.dataset.dest;
+                    if (mode === 'flight') {
+                        const tab = document.querySelector('.search-tab[data-mode="flights"]');
+                        if (tab) tab.click();
+                        document.getElementById('flights-to').value = dest;
+                        document.getElementById('flights-from').focus();
+                    } else if (mode === 'hotel') {
+                        const tab = document.querySelector('.search-tab[data-mode="hotel"]');
+                        if (tab) tab.click();
+                        document.getElementById('hotel-dest').value = dest;
+                        document.getElementById('hotel-dest').focus();
+                    } else if (mode === 'visa') {
+                        const tab = document.querySelector('.search-tab[data-mode="visa"]');
+                        if (tab) tab.click();
+                        const sel = document.getElementById('visa-to');
+                        if (sel) { sel.value = dest; }
+                    }
+                });
+            });
+
+            // Flights search
+            function performFlightsSearch() {
+                const from = document.getElementById('flights-from').value.trim();
+                const to = document.getElementById('flights-to').value.trim();
+                if (!from || !to) return;
                 const params = new URLSearchParams();
+                params.set('search_type', 'flight');
+                params.set('from', from);
+                params.set('to', to);
+                params.set('q', to);
+                const depart = document.getElementById('flights-depart').value;
+                const ret = document.getElementById('flights-return').value;
+                const travelers = document.getElementById('flights-travelers').value;
+                const travelClass = document.getElementById('flights-class')?.value || 'economy';
+                if (depart) params.set('depart', depart);
+                const isRoundTrip = tripBtn.dataset.trip === 'roundtrip';
+                params.set('trip', isRoundTrip ? 'roundtrip' : 'oneway');
+                if (ret && isRoundTrip) params.set('return', ret);
+                if (travelers && parseInt(travelers) > 1) params.set('travelers', travelers);
+                params.set('class', travelClass);
+                window.location.href = 'search-results.html?' + params.toString();
+            }
+
+            document.getElementById('flights-search-btn').addEventListener('click', performFlightsSearch);
+            document.querySelectorAll('#flights-from, #flights-to').forEach(el => {
+                el.addEventListener('keydown', (e) => { if (e.key === 'Enter') performFlightsSearch(); });
+            });
+
+            // Hotel search
+            function performHotelSearch() {
+                const dest = document.getElementById('hotel-dest').value.trim();
+                if (!dest) return;
+                const params = new URLSearchParams();
+                params.set('search_type', 'hotel');
                 params.set('q', dest);
-                const checkin = uniCheckin.value;
-                const checkout = uniCheckout.value;
-                const guests = uniGuests.value;
+                params.set('to', dest);
+                const checkin = document.getElementById('hotel-checkin').value;
+                const checkout = document.getElementById('hotel-checkout').value;
+                const guests = document.getElementById('hotel-guests').value;
                 if (checkin) params.set('start', checkin);
                 if (checkout) params.set('end', checkout);
                 if (guests && parseInt(guests) > 1) params.set('guests', guests);
                 window.location.href = 'search-results.html?' + params.toString();
             }
 
-            uniBtn.addEventListener('click', performUnifiedSearch);
-            uniDest.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') performUnifiedSearch();
+            document.getElementById('hotel-search-btn').addEventListener('click', performHotelSearch);
+            document.getElementById('hotel-dest').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') performHotelSearch();
+            });
+
+            // Visa search
+            function performVisaSearch() {
+                const from = document.getElementById('visa-from').value;
+                const to = document.getElementById('visa-to').value;
+                if (!from || !to) return;
+                window.location.href = 'visa-check.html?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+            }
+
+            document.getElementById('visa-search-btn').addEventListener('click', performVisaSearch);
+            document.querySelectorAll('#visa-from, #visa-to').forEach(el => {
+                el.addEventListener('change', () => { if (document.getElementById('visa-from').value && document.getElementById('visa-to').value) performVisaSearch(); });
             });
 
             // Scroll arrows for galleries

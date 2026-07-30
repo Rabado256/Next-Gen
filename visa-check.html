@@ -199,6 +199,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/visa-data.js"></script>
     <script>
+        // Parse URL params for pre-fill from homepage search
+        (function() {
+            var p = new URLSearchParams(window.location.search);
+            var f = p.get('from');
+            var t = p.get('to');
+            if (f) { document.getElementById('vc-from').value = f; }
+            if (t) { document.getElementById('vc-to').value = t; }
+            if (f && t) { setTimeout(doVisaCheck, 100); }
+        })();
+
         document.getElementById('vc-check-btn').addEventListener('click', doVisaCheck);
         document.getElementById('vc-to').addEventListener('change', doVisaCheck);
         document.getElementById('vc-from').addEventListener('change', doVisaCheck);
