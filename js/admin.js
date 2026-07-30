@@ -65,6 +65,16 @@ function renderPackageDest(b) {
 }
 
 // Render a document-type badge for a booking based on passport/ID card status
+function renderExtrasInfo(b) {
+  try {
+    var sr = JSON.parse(b.special_requests || '{}');
+    if (sr.extras && Array.isArray(sr.extras) && sr.extras.length > 0) {
+      return sr.extras.map(function(e) { return e.name || e.id; }).join(', ');
+    }
+  } catch (_) {}
+  return '—';
+}
+
 function getDocBadgeForBooking(b) {
   if (b.doc_type === 'flight') return '<span class="status-badge status-confirmed" style="background:rgba(168,85,247,0.15);color:#a855f7;">Flight</span>';
   if (b.doc_type === 'hotel') return '<span class="status-badge status-confirmed" style="background:rgba(6,182,212,0.15);color:#06b6d4;">Hotel</span>';
@@ -325,7 +335,7 @@ async function renderBookings() {
     document.getElementById('bookings-count').textContent = bookings.length + ' bookings';
     const tbody = document.getElementById('bookings-table-body');
     if (bookings.length === 0) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No bookings found</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="11">No bookings found</td></tr>';
       return;
     }
     tbody.innerHTML = bookings.map((b, i) => `
@@ -338,6 +348,7 @@ async function renderBookings() {
         <td>$${escapeHtml(b.total || b.total_amount || '—')}</td>
         <td>${getDocBadgeForBooking(b)}</td>
         <td>${(b.hotel_reservation || b.hotel == 1 || b.hotel === 'Yes') ? '<span style="color: var(--admin-success);">Yes</span>' : '—'}</td>
+        <td>${escapeHtml(renderExtrasInfo(b))}</td>
         <td>
           <!-- Inline status change dropdown -->
           <select class="status-select" data-id="${escapeHtml(b.id)}" style="background: var(--admin-card); border: 1px solid var(--admin-border); color: white; padding: 0.25rem 0.5rem; font-size: 0.7rem; border-radius: 4px;">

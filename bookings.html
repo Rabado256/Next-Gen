@@ -352,6 +352,7 @@
                                 <div><i class="bi bi-calendar3 me-1"></i>${date}</div>
                                 <div><i class="bi bi-geo-alt me-1"></i>${b.from_location || '—'} → ${b.to_location || '—'}</div>
                                 ${b.hotel_reservation ? '<div><i class="bi bi-building me-1"></i>Hotel</div>' : ''}
+                                ${(() => { try { const sr = JSON.parse(b.special_requests || '{}'); if (sr.extras && sr.extras.length) { return '<div><i class="bi bi-plus-circle me-1"></i>' + sr.extras.map(e => e.name || e.id).join(', ') + '</div>'; } return ''; } catch(_) { return ''; } })()}
                             </div>
                             <div class="d-flex gap-2 mt-3 flex-wrap">
                                 <a href="destination.html?id=${encodeURIComponent(b.dest_id || '')}" class="btn btn-outline-dark btn-sm rounded-0 px-3" style="font-size: 0.7rem;">View</a>
@@ -418,6 +419,7 @@
                     <div class="d-flex gap-3 mt-2" style="font-size:0.8rem;">
                         <span><i class="bi bi-calendar3 me-1"></i>${date}</span>
                         <span><i class="bi bi-people me-1"></i>${b.guests || 1} guest${(b.guests || 1) > 1 ? 's' : ''}</span>
+                        ${(() => { try { const sr = JSON.parse(b.special_requests || '{}'); if (sr.extras && sr.extras.length) { return '<span><i class="bi bi-plus-circle me-1"></i>' + sr.extras.map(e => e.name || e.id).join(', ') + '</span>'; } return ''; } catch(_) { return ''; } })()}
                     </div>
                 </div>
             </div>`;

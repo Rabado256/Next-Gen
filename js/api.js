@@ -334,7 +334,8 @@ const api = {
         duration: data.duration || '',
         offer_id: data.offer_id || '',
         payment_intent: data.payment_intent || '',
-        duffel_order_id: data.duffel_order_id || ''
+        duffel_order_id: data.duffel_order_id || '',
+        ...(data.extras ? { extras: data.extras } : {})
       })
     }).select().single();
     if (error) throw new Error(error.message);
@@ -366,6 +367,7 @@ const api = {
         hotel_city: data.hotel_city || '',
         hotel_country: data.hotel_country || '',
         room_type: data.room_type || '',
+        ...(data.extras ? { extras: data.extras } : {})
         nights: data.nights || 0,
         rooms: data.rooms || 1,
         check_in: data.check_in || '',
@@ -442,7 +444,8 @@ const api = {
         hotel: data.hotel || '',
         room_type: data.room_type || '',
         includes: data.includes || [],
-        payment_intent: data.payment_intent || ''
+        payment_intent: data.payment_intent || '',
+        ...(data.extras ? { extras: data.extras } : {})
       })
     }).select().single();
     if (error) throw new Error(error.message);
@@ -581,6 +584,7 @@ const api = {
         passport: data.passport || '',
         identity_card: data.identity_card || '',
         special_requests: data.special_requests || '',
+        extras: data.extras || null,
         hotel_reservation: data.hotel || false,
         from_location: data.from_location || '',
         to_location: data.to_location || '',

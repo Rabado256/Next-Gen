@@ -244,22 +244,22 @@
 
                                     <div class="mb-3">
                                         <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-shield-check" style="color:#2ecc71;"></i>Travel Insurance</label>
-                                        <div id="extras-insurance">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('insurance') : ''}</div>
+                                        <div id="extras-insurance"></div>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-car-front" style="color:#3498db;"></i>Airport Transfers</label>
-                                        <div id="extras-transfers">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('transfers') : ''}</div>
+                                        <div id="extras-transfers"></div>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-file-earmark-text" style="color:#e67e22;"></i>Visa Services</label>
-                                        <div id="extras-visa">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('visa') : ''}</div>
+                                        <div id="extras-visa"></div>
                                     </div>
 
                                     <div>
                                         <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-star" style="color:#9b59b6;"></i>Experiences</label>
-                                        <div id="extras-experience">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('experience') : ''}</div>
+                                        <div id="extras-experience"></div>
                                     </div>
 
                                     <div id="extras-total" class="mt-3 pt-3 border-top small" style="display:none;">
@@ -325,6 +325,7 @@
                         <hr class="border-dark">
                         <div class="d-flex justify-content-between mb-1"><span>Package:</span> <span id="rec-pkg"></span></div>
                         <div id="rec-hotel-row" class="d-flex justify-content-between mb-1"><span>Hotel:</span> <span>Included</span></div>
+                        <div id="rec-extras-row" class="d-flex justify-content-between mb-1" style="display:none;"><span>Extras:</span> <span id="rec-extras"></span></div>
                         <div class="d-flex justify-content-between fw-bold mt-3"><span>TOTAL:</span> <span id="rec-total"></span></div>
                         <div class="mt-5 text-center">
                             <!-- Mock Barcode -->
@@ -358,6 +359,10 @@
                     <div id="meal-fee-row" class="d-flex justify-content-between mb-2" style="display: none !important;">
                         <span class="small tracking-widest">Arrival Meal</span>
                         <span id="meal-price" class="small">+$75.00</span>
+                    </div>
+                    <div id="extras-fee-row" class="d-flex justify-content-between mb-2" style="display: none !important;">
+                        <span class="small tracking-widest">Travel Extras</span>
+                        <span id="extras-price" class="small"></span>
                     </div>
                     <div class="d-flex justify-content-between mb-4 pb-4 border-bottom border-dark">
                         <span class="small tracking-widest">Service Fee</span>
@@ -639,6 +644,25 @@
             return EXTRAS.calcTotal(selected);
         }
 
+        function getExtrasForRequests() {
+            if (typeof EXTRAS === 'undefined') return '';
+            const selected = EXTRAS.getSelectedFromDOM();
+            if (selected.length === 0) return '';
+            const names = selected.map(id => EXTRAS.getName(id)).filter(Boolean);
+            return names.length > 0 ? 'Extras: ' + names.join(', ') : '';
+        }
+
+        function getExtrasJSON() {
+            if (typeof EXTRAS === 'undefined') return null;
+            const selected = EXTRAS.getSelectedFromDOM();
+            if (selected.length === 0) return null;
+            return selected.map(id => ({
+                id,
+                name: EXTRAS.getName(id),
+                price: EXTRAS.getPrice(id)
+            }));
+        }
+
         async function updateSummary(withHotel = false) {
             const withMeal = document.getElementById('add-meal')?.checked;
             const mealSelect = document.getElementById('food-preference');
@@ -673,9 +697,12 @@
 
             const extrasRow = document.getElementById('extras-fee-row');
             const extrasTotalEl = document.getElementById('extras-cost');
+            const extrasPriceEl = document.getElementById('extras-price');
             if (extrasPrice > 0) {
                 if (extrasRow) extrasRow.style.setProperty('display', 'flex', 'important');
-                extrasTotalEl.textContent = typeof CURRENCY !== 'undefined' ? await CURRENCY.format(extrasPrice) : '$' + extrasPrice;
+                const formatted = typeof CURRENCY !== 'undefined' ? await CURRENCY.format(extrasPrice) : '$' + extrasPrice;
+                extrasTotalEl.textContent = formatted;
+                if (extrasPriceEl) extrasPriceEl.textContent = '+' + formatted;
                 document.getElementById('extras-total').style.display = 'block';
             } else {
                 if (extrasRow) extrasRow.style.setProperty('display', 'none', 'important');
@@ -700,6 +727,13 @@
             document.getElementById('rec-hotel-row').style.display = 'none';
         } else {
             document.getElementById('checkout-price').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests + (guests > 1 ? ' guests' : ' guest');
+        }
+        // Render travel extras UI
+        if (typeof EXTRAS !== 'undefined') {
+            document.getElementById('extras-insurance').innerHTML = EXTRAS.renderCheckboxes('insurance');
+            document.getElementById('extras-transfers').innerHTML = EXTRAS.renderCheckboxes('transfers');
+            document.getElementById('extras-visa').innerHTML = EXTRAS.renderCheckboxes('visa');
+            document.getElementById('extras-experience').innerHTML = EXTRAS.renderCheckboxes('experience');
         }
         updateSummary(false).then(() => {
             if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
@@ -927,6 +961,13 @@
             await updateSummary(reserveHotel.checked);
         });
 
+        // Update summary when extras change (delegated)
+        document.addEventListener('change', async function(e) {
+            if (e.target.closest('#extras-insurance, #extras-transfers, #extras-visa, #extras-experience')) {
+                await updateSummary(reserveHotel.checked);
+            }
+        });
+
         // Stripe state
         let stripe, elements, clientSecret, paymentIntentId;
 
@@ -1096,7 +1137,8 @@
                                     duration: flightOffer.duration || '',
                                     reference: ref,
                                     payment_intent: paymentIntent.id,
-                                    duffel_order_id: duffelOrderId
+                                    duffel_order_id: duffelOrderId,
+                                    extras: getExtrasJSON()
                                 });
                             } catch (e) {
                                 console.warn('[Flight] Supabase save failed:', e);
@@ -1132,7 +1174,8 @@
                                     check_in: hotelData.checkIn || startDate,
                                     check_out: hotelData.checkOut || endDate,
                                     reference: ref,
-                                    payment_intent: paymentIntent.id
+                                    payment_intent: paymentIntent.id,
+                                    extras: getExtrasJSON()
                                 });
                             } catch (e) {
                                 console.warn('[Hotel] Supabase save failed:', e);
@@ -1166,7 +1209,8 @@
                                     room_type: packageData.roomType,
                                     includes: packageData.includes,
                                     reference: ref,
-                                    payment_intent: paymentIntent.id
+                                    payment_intent: paymentIntent.id,
+                                    extras: getExtrasJSON()
                                 });
                             } catch (e) {
                                 console.warn('[Package] Supabase save failed:', e);
@@ -1199,7 +1243,8 @@
                                 from_location: document.getElementById('from-loc').value,
                                 to_location: document.getElementById('to-loc').value,
                                 travelers: travelers,
-                                reference: ref
+                                reference: ref,
+                                extras: getExtrasJSON()
                             });
                             showSuccess(result.ref || ref, first, last);
                         } catch (e) {
@@ -1226,7 +1271,8 @@
                         to_location: flightOffer.arrivalAirport || '',
                         airline: flightOffer.airline || '',
                         flight_number: flightOffer.flightNumber || '',
-                        reference: ref
+                        reference: ref,
+                        extras: getExtrasJSON()
                     });
                 } catch (e) { console.warn(e); }
                 showSuccess(ref, first, last);
@@ -1248,7 +1294,8 @@
                         rooms: hotelData.roomsNeeded,
                         check_in: hotelData.checkIn || startDate,
                         check_out: hotelData.checkOut || endDate,
-                        reference: ref
+                        reference: ref,
+                        extras: getExtrasJSON()
                     });
                 } catch (e) { console.warn(e); }
                 showSuccess(ref, first, last);
@@ -1271,7 +1318,8 @@
                         hotel: packageData.hotelName,
                         room_type: packageData.roomType,
                         includes: packageData.includes,
-                        reference: ref
+                        reference: ref,
+                        extras: getExtrasJSON()
                     });
                 } catch (e) { console.warn(e); }
                 showSuccess(ref, first, last);
@@ -1289,6 +1337,7 @@
                         passport: document.getElementById('checkout-passport')?.value || '',
                         identity_card: document.getElementById('checkout-identity-card')?.value || '',
                         special_requests: document.getElementById('special-requests').value,
+                        extras: getExtrasJSON(),
                         hotel: reserveHotel.checked ? 1 : 0,
                         from_location: document.getElementById('from-loc').value,
                         to_location: document.getElementById('to-loc').value,
@@ -1329,6 +1378,21 @@
             document.getElementById('rec-total').textContent = document.getElementById('checkout-total').textContent;
             document.getElementById('barcode-num').textContent = ref;
             document.getElementById('rec-hotel-row').style.display = (isHotel && hotelData) ? 'none' : (isPackage && packageData) ? 'none' : (!isFlight && reserveHotel.checked) ? 'flex' : 'none';
+
+            // Show extras in receipt
+            const extrasRec = document.getElementById('rec-extras');
+            const extrasRow = document.getElementById('rec-extras-row');
+            if (typeof EXTRAS !== 'undefined') {
+                const selected = EXTRAS.getSelectedFromDOM();
+                if (selected.length > 0) {
+                    extrasRec.textContent = EXTRAS.renderSummary(selected);
+                    extrasRow.style.display = 'flex';
+                } else {
+                    extrasRow.style.display = 'none';
+                }
+            } else {
+                extrasRow.style.display = 'none';
+            }
 
             // Save to Activity Log
             const travelDate = document.getElementById('travel-date').value;
