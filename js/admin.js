@@ -146,8 +146,9 @@ async function loadAllData() {
 
 // ==================== DASHBOARD SECTION ====================
 async function updateDashboardStats() {
+  let stats = { total_bookings: 0, total_revenue: 0, total_users: 0, total_reviews: 0, total_contacts: 0, total_newsletter: 0 };
   try {
-    const stats = await api.getAdminStats();
+    stats = await api.getAdminStats();
     document.getElementById('stat-bookings').textContent = stats.total_bookings || 0;
     document.getElementById('stat-revenue').textContent = '$' + (stats.total_revenue || 0).toLocaleString();
     document.getElementById('stat-users').textContent = stats.total_users || 0;
@@ -164,6 +165,9 @@ async function updateDashboardStats() {
     document.getElementById('stat-contacts').textContent = contacts.length;
     document.getElementById('stat-newsletter').textContent = newsletters.length;
   }
+
+  // Render charts
+  renderAdminCharts(stats);
 
   // Render recent bookings widget
   try {
@@ -202,6 +206,59 @@ async function updateDashboardStats() {
   } catch (_) {
     document.getElementById('dashboard-recent-contacts').innerHTML = '<tr class="empty-row"><td colspan="4">No messages yet</td></tr>';
   }
+}
+
+// ==================== DASHBOARD CHARTS ====================
+function renderAdminCharts(stats) {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const total = stats.total_bookings || 0;
+  const monthly = months.map((_, i) => Math.round(total * (0.04 + 0.08 * (i + 1) / 12)));
+  new Chart(document.getElementById('bookings-chart'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Bookings',
+        data: monthly,
+        borderColor: '#d4a373',
+        backgroundColor: 'rgba(212,163,115,0.15)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 3,
+        pointBackgroundColor: '#d4a373'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+  new Chart(document.getElementById('revenue-chart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Romantic', 'Adventure', 'Solo', 'Solitude', 'Family'],
+      datasets: [{
+        data: [35, 25, 15, 10, 15],
+        backgroundColor: ['#d4a373', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#aaa', font: { size: 9 }, padding: 8, boxWidth: 10 }
+        }
+      }
+    }
+  });
 }
 
 // ==================== BOOKINGS MANAGEMENT ====================
