@@ -185,6 +185,27 @@
                 </div>
                 <div class="search-bar-hints">
                     <span>Search destinations, hotels, packages, or <a href="visa-check.html" class="search-hint-link">check visa requirements</a></span>
+                    <button id="advanced-toggle" class="advanced-toggle-btn">Advanced <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg></button>
+                </div>
+                <div id="advanced-panel" class="advanced-panel" style="display:none;">
+                    <div class="advanced-row">
+                        <div class="advanced-field">
+                            <label class="advanced-label">Destination</label>
+                            <input type="text" id="adv-dest" class="advanced-input" placeholder="Anywhere" list="universal-destinations">
+                        </div>
+                        <div class="advanced-field">
+                            <label class="advanced-label">Check in</label>
+                            <input type="date" id="adv-checkin" class="advanced-input" value="">
+                        </div>
+                        <div class="advanced-field">
+                            <label class="advanced-label">Check out</label>
+                            <input type="date" id="adv-checkout" class="advanced-input" value="">
+                        </div>
+                        <div class="advanced-field advanced-field-narrow">
+                            <label class="advanced-label">Guests</label>
+                            <input type="number" id="adv-guests" class="advanced-input" value="1" min="1" max="20">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1369,14 +1390,44 @@
                 const lower = q.toLowerCase();
                 if (lower.includes('visa')) {
                     window.location.href = 'visa-check.html';
-                } else {
-                    window.location.href = 'search-results.html?q=' + encodeURIComponent(q);
+                    return;
                 }
+                const params = new URLSearchParams();
+                params.set('q', q);
+                const advDest = document.getElementById('adv-dest').value.trim();
+                const advCheckin = document.getElementById('adv-checkin').value;
+                const advCheckout = document.getElementById('adv-checkout').value;
+                const advGuests = document.getElementById('adv-guests').value;
+                if (advDest) params.set('to', advDest);
+                if (advCheckin) params.set('start', advCheckin);
+                if (advCheckout) params.set('end', advCheckout);
+                if (advGuests && advGuests > 1) params.set('guests', advGuests);
+                window.location.href = 'search-results.html?' + params.toString();
             }
 
             searchBtn.addEventListener('click', performSearch);
             searchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') performSearch();
+            });
+
+            // Advanced search toggle
+            const advToggle = document.getElementById('advanced-toggle');
+            const advPanel = document.getElementById('advanced-panel');
+            advToggle.addEventListener('click', () => {
+                const open = advPanel.style.display !== 'flex';
+                advPanel.style.display = open ? 'flex' : 'none';
+                advToggle.classList.toggle('open', open);
+            });
+
+            // Pre-fill advanced destination from main input
+            searchInput.addEventListener('input', () => {
+                const advDest = document.getElementById('adv-dest');
+                if (!advDest.dataset.userEdited) {
+                    advDest.value = searchInput.value;
+                }
+            });
+            document.getElementById('adv-dest').addEventListener('input', function() {
+                this.dataset.userEdited = 'true';
             });
 
             // Scroll arrows for galleries

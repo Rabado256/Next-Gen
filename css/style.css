@@ -1561,6 +1561,98 @@ h2, h3, .serif {
     color: #fff;
 }
 
+.advanced-toggle-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: color 0.2s;
+}
+
+.advanced-toggle-btn:hover {
+    color: rgba(255,255,255,0.8);
+}
+
+.advanced-toggle-btn.open svg {
+    transform: rotate(180deg);
+}
+
+.advanced-toggle-btn svg {
+    transition: transform 0.2s;
+}
+
+.advanced-panel {
+    max-width: 680px;
+    margin: 0.75rem auto 0;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: fadeSlideIn 0.25s ease;
+}
+
+.advanced-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.advanced-field {
+    flex: 1;
+    min-width: 120px;
+}
+
+.advanced-field-narrow {
+    flex: 0 0 80px;
+    min-width: 80px;
+}
+
+.advanced-label {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 0.3rem;
+}
+
+.advanced-input {
+    width: 100%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 0.5rem 0.65rem;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.advanced-input:focus {
+    border-color: rgba(255,255,255,0.35);
+}
+
+.advanced-input::placeholder {
+    color: rgba(255,255,255,0.35);
+}
+
+.advanced-input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.5;
+}
+
 @media (max-width: 576px) {
     .search-bar-capsule {
         flex-direction: column;
@@ -1578,6 +1670,14 @@ h2, h3, .serif {
     }
     .search-bar-btn {
         width: 100%;
+    }
+    .advanced-row {
+        flex-direction: column;
+    }
+    .advanced-field,
+    .advanced-field-narrow {
+        flex: 1 1 100%;
+        min-width: 0;
     }
 }
 
