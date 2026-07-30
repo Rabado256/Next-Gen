@@ -737,6 +737,17 @@
         // Stripe state
         let stripe, elements, clientSecret, paymentIntentId;
 
+        // Try to resolve Stripe key from server config endpoint first
+        async function resolveStripeKey() {
+            if (window.__STRIPE_PUBLISHABLE_KEY__) return window.__STRIPE_PUBLISHABLE_KEY__;
+            try {
+                const resp = await fetch('/api/config');
+                const cfg = await resp.json();
+                if (cfg.stripe_publishable_key) return cfg.stripe_publishable_key;
+            } catch (_) {}
+            return window.__STRIPE_PUBLISHABLE_KEY__;
+        }
+
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             document.getElementById('step-1').style.display = 'none';
@@ -746,7 +757,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             // Initialize Stripe and create PaymentIntent
-            const stripeKey = window.__STRIPE_PUBLISHABLE_KEY__;
+            const stripeKey = await resolveStripeKey();
             if (!stripeKey || stripeKey.includes('REPLACE_ME')) {
                 document.getElementById('stripe-error').textContent = 'Stripe is not configured. Add your STRIPE_PUBLISHABLE_KEY to config.js and STRIPE_SECRET_KEY to .env.';
                 document.getElementById('stripe-error').style.display = 'block';
@@ -842,8 +853,8 @@
                     // Payment succeeded — save booking to Supabase
                     try {
                         const travelers = await collectTravelers();
-                        const ref = 'NG' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                        await api.confirmPayment({
+                        const ref = 'NG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                        const result = await api.confirmPayment({
                             dest_id: id,
                             guest_name: first + ' ' + last,
                             guest_email: email,
@@ -858,9 +869,10 @@
                             hotel: reserveHotel.checked ? 1 : 0,
                             from_location: document.getElementById('from-loc').value,
                             to_location: document.getElementById('to-loc').value,
-                            travelers: travelers
+                            travelers: travelers,
+                            reference: ref
                         });
-                        showSuccess(ref, first, last);
+                        showSuccess(result.ref || ref, first, last);
                     } catch (e) {
                         console.error('[Booking] Save failed after payment:', e);
                         showSuccess(paymentIntent.id.slice(-8).toUpperCase(), first, last);
@@ -870,7 +882,27 @@
             }
 
             // Fallback: no Stripe configured — generate offline booking
-            const ref = 'NG' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const ref = 'NG-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+            try {
+                await api.confirmPayment({
+                    dest_id: id,
+                    guest_name: first + ' ' + last,
+                    guest_email: email,
+                    guest_phone: phone,
+                    guests: parseInt(guests) || 1,
+                    total: parseFloat(document.getElementById('checkout-total').textContent.replace(/[$,]/g, '')),
+                    travel_date: travelDate,
+                    passport: document.getElementById('checkout-passport')?.value || '',
+                    identity_card: document.getElementById('checkout-identity-card')?.value || '',
+                    special_requests: document.getElementById('special-requests').value,
+                    hotel: reserveHotel.checked ? 1 : 0,
+                    from_location: document.getElementById('from-loc').value,
+                    to_location: document.getElementById('to-loc').value,
+                    reference: ref
+                });
+            } catch (e) {
+                console.warn('[Booking] Offline save failed:', e);
+            }
             showSuccess(ref, first, last);
         });
 

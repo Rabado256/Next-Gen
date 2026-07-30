@@ -56,6 +56,14 @@ async function handleAPI(req, res) {
     return true;
   }
 
+  // GET /api/config — expose public configuration to the client
+  if (url === '/api/config' && req.method === 'GET') {
+    return json(res, 200, {
+      stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || '',
+      supabase_url: process.env.SUPABASE_URL || ''
+    });
+  }
+
   // POST /api/create-payment-intent
   if (url === '/api/create-payment-intent' && req.method === 'POST') {
     try {
@@ -105,6 +113,7 @@ async function handleAPI(req, res) {
         guest_phone: body.guest_phone,
         guests: body.guests,
         total_amount: body.total_amount,
+        total: body.total_amount,
         currency: body.currency || 'usd',
         status: 'confirmed',
         payment_id: body.payment_id,
@@ -113,10 +122,12 @@ async function handleAPI(req, res) {
         identity_card: body.identity_card || '',
         special_requests: body.special_requests || '',
         hotel_reservation: body.hotel_reservation || false,
+        hotel: body.hotel_reservation === true || body.hotel_reservation === 1 || body.hotel_reservation === 'true',
         from_location: body.from_location || '',
         to_location: body.to_location || '',
         travelers: body.travelers || null,
-        reference: body.reference
+        reference: body.reference,
+        ref: body.reference
       }).select('id, reference').single();
 
       if (error) throw error;

@@ -66,7 +66,7 @@ INSERT INTO trips (from_location, to_location, destination_id, departure_date, d
 ('Auckland (AKL)', 'Queenstown (ZQN)', 'queenstown', '2026-10-05', '13:00', 12, 3, 'scheduled')
 ON CONFLICT DO NOTHING;
 
--- Seed a sample booking for testing
-INSERT INTO bookings (user_id, dest_id, guest_name, booking_date, guests, total, hotel, status, ref, from_location, to_location) VALUES
-('00000000-0000-0000-0000-000000000000', 'amalfi', 'Test User', NOW(), 2, 8400, true, 'confirmed', 'NXG-TEST-001', 'New York (JFK)', 'Naples (NAP)')
+-- Seed a sample booking for testing (writes both old and new column names)
+INSERT INTO bookings (user_id, dest_id, guest_name, guest_email, guest_phone, booking_date, guests, total, total_amount, currency, hotel, hotel_reservation, status, ref, reference, payment_id, from_location, to_location) VALUES
+('00000000-0000-0000-0000-000000000000', 'amalfi', 'Test User', 'test@example.com', '+1 (212) 555-0100', NOW(), 2, 8400, 8400, 'usd', true, true, 'confirmed', 'NXG-TEST-001', 'NXG-TEST-001', 'pi_test_seed', 'New York (JFK)', 'Naples (NAP)')
 ON CONFLICT DO NOTHING;

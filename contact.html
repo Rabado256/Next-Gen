@@ -68,15 +68,20 @@
     <nav class="navbar navbar-expand-lg fixed-top px-4 py-3 nav-scrolled">
         <div class="container-fluid">
             <a class="navbar-brand serif fw-bold text-white fs-3" href="index.html">NextGen</a>
-            <div class="ms-auto d-flex align-items-center gap-4">
-                <a href="index.html#destinations" class="text-white text-decoration-none small tracking-widest d-none d-md-block">Destinations</a>
-                <a href="index.html#inspirations" class="text-white text-decoration-none small tracking-widest d-none d-md-block">Inspirations</a>
-                <button class="auth-icon-btn" data-bs-toggle="modal" data-bs-target="#auth-modal" aria-label="Login or Sign Up">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                </button>
+            <button class="navbar-toggler border-0 p-0 ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 ms-auto">
+                    <a href="index.html#destinations" class="text-white text-decoration-none small tracking-widest">Destinations</a>
+                    <a href="index.html#inspirations" class="text-white text-decoration-none small tracking-widest">Inspirations</a>
+                    <button class="auth-icon-btn" data-bs-toggle="modal" data-bs-target="#auth-modal" aria-label="Login or Sign Up">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>

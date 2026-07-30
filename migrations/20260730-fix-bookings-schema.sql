@@ -1,0 +1,12 @@
+-- Fix bookings table schema — add columns that server.js inserts into
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_email TEXT DEFAULT '';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS guest_phone TEXT DEFAULT '';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS total_amount DECIMAL(10,2) DEFAULT 0;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'usd';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_id TEXT DEFAULT '';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS passport TEXT DEFAULT '';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS identity_card TEXT DEFAULT '';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS special_requests TEXT DEFAULT '';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS hotel_reservation BOOLEAN DEFAULT false;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS travelers JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS reference TEXT DEFAULT '';

@@ -286,12 +286,17 @@ const api = {
       user_id: user.id,
       dest_id: bookingData.dest_id || '',
       guest_name: bookingData.name || user.email,
+      guest_email: bookingData.email || '',
       booking_date: bookingData.date || '',
       guests: parseInt(bookingData.guests) || 1,
       total: parseFloat(bookingData.total) || 0,
+      total_amount: parseFloat(bookingData.total) || 0,
+      currency: 'usd',
       hotel: bookingData.hotel === 'Yes' || bookingData.hotel === true,
+      hotel_reservation: bookingData.hotel === 'Yes' || bookingData.hotel === true,
       status: 'confirmed',
       ref,
+      reference: ref,
       from_location: bookingData.from_location || '',
       to_location: bookingData.to_location || '',
       doc_type: bookingData.doc_type || 'unknown'
@@ -450,7 +455,7 @@ const api = {
 
   // Confirm booking in Supabase after Stripe payment succeeds
   async confirmPayment(data) {
-    const ref = 'NG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const ref = data.reference || 'NG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
     const res = await fetch('/api/confirm-booking', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

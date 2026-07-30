@@ -489,6 +489,32 @@ h2, h3, .serif {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Mobile Navbar Collapse */
+.navbar .navbar-collapse {
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 0.75rem;
+}
+.navbar-light.bg-white .navbar-collapse {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.navbar .navbar-collapse .auth-icon-btn {
+    align-self: flex-start;
+}
+@media (min-width: 992px) {
+    .navbar .navbar-collapse {
+        background: none;
+        backdrop-filter: none;
+        border-radius: 0;
+        padding: 0;
+        margin-top: 0;
+    }
+}
+
 /* ==========================================
    HERO SECTION — Full-screen slideshow
    ========================================== */
@@ -1103,6 +1129,22 @@ h2, h3, .serif {
     }
     .inspire-hero-content h1 {
         font-size: 3rem;
+    }
+
+    /* Scale down display headings */
+    .display-1 {
+        font-size: 3.5rem !important;
+    }
+    .display-3 {
+        font-size: 2.5rem !important;
+    }
+    .display-4 {
+        font-size: 2rem !important;
+    }
+
+    /* Blog card images */
+    .blog-card-img {
+        height: 320px !important;
     }
 }
 
@@ -2442,6 +2484,42 @@ h2, h3, .serif {
 @media (max-width: 576px) {
     #world-map {
         height: 250px;
+    }
+
+    /* Scale down display headings */
+    .display-1 {
+        font-size: 2.8rem !important;
+    }
+    .display-3 {
+        font-size: 2rem !important;
+    }
+    .display-4 {
+        font-size: 1.75rem !important;
+    }
+    h1.serif.display-1,
+    h1#detail-title {
+        font-size: 2.5rem !important;
+    }
+
+    /* Stats widget on destination page */
+    .stats-widget {
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1.25rem;
+    }
+    .stats-widget .stat-item {
+        flex: 1 1 40%;
+    }
+    .stat-value {
+        font-size: 1rem;
+    }
+
+    /* Blog card images */
+    .blog-card-img {
+        height: 220px !important;
+    }
+    .blog-title {
+        font-size: 1.35rem !important;
     }
 }
 
