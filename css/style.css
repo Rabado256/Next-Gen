@@ -1558,34 +1558,6 @@ h2, h3, .serif {
     border-color: rgba(251,191,36,0.3);
 }
 
-/* Search chips */
-.search-chips {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-}
-.search-chip {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 20px;
-    padding: 0.3rem 1rem;
-    font-size: 0.75rem;
-    font-family: 'Inter', sans-serif;
-    color: rgba(255,255,255,0.6);
-    cursor: pointer;
-    transition: all 0.25s ease;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-.search-chip:hover {
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    border-color: rgba(255,255,255,0.25);
-    transform: translateY(-1px);
-}
-
 .unified-capsule {
     display: flex;
     align-items: center;
