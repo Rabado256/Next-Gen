@@ -27,8 +27,48 @@ const VIBE_LABELS = { romantic: 'Romantic', adventure: 'Adventure', solo: 'Solo 
 // Track which destination is being edited (null = new destination)
 let editingDestId = null;
 
+// Render flight destination info — tries to extract flight number from special_requests
+function renderFlightDest(b) {
+  var flightNum = '';
+  try {
+    var sr = JSON.parse(b.special_requests || '{}');
+    flightNum = sr.flight_number || '';
+  } catch (_) {}
+  var airline = b.dest_id || b.destination_id || 'Flight';
+  return escapeHtml(airline) + (flightNum ? ' <span style="color:var(--admin-muted);font-size:0.7rem;">' + escapeHtml(flightNum) + '</span>' : '');
+}
+
+// Render hotel destination info — extracts room type and nights from special_requests
+function renderHotelDest(b) {
+  var info = '';
+  try {
+    var sr = JSON.parse(b.special_requests || '{}');
+    info = (sr.room_type || '') + (sr.nights ? ' • ' + sr.nights + ' night(s)' : '');
+  } catch (_) {}
+  var name = b.to_location || b.dest_id || b.destination_id || 'Hotel';
+  return escapeHtml(name) + (info ? ' <span style="color:var(--admin-muted);font-size:0.7rem;">' + escapeHtml(info) + '</span>' : '');
+}
+
+// Render package destination info — extracts duration and hotel from special_requests
+function renderPackageDest(b) {
+  var info = '';
+  try {
+    var sr = JSON.parse(b.special_requests || '{}');
+    var pieces = [];
+    if (sr.duration) pieces.push(sr.duration + ' days');
+    if (sr.nights) pieces.push(sr.nights + ' nights');
+    if (sr.hotel) pieces.push(sr.hotel);
+    info = pieces.join(' • ');
+  } catch (_) {}
+  var name = b.to_location || b.dest_id || 'Package';
+  return escapeHtml(name) + (info ? ' <span style="color:var(--admin-muted);font-size:0.7rem;">' + escapeHtml(info) + '</span>' : '');
+}
+
 // Render a document-type badge for a booking based on passport/ID card status
 function getDocBadgeForBooking(b) {
+  if (b.doc_type === 'flight') return '<span class="status-badge status-confirmed" style="background:rgba(168,85,247,0.15);color:#a855f7;">Flight</span>';
+  if (b.doc_type === 'hotel') return '<span class="status-badge status-confirmed" style="background:rgba(6,182,212,0.15);color:#06b6d4;">Hotel</span>';
+  if (b.doc_type === 'package') return '<span class="status-badge status-confirmed" style="background:rgba(234,179,8,0.15);color:#eab308;">Package</span>';
   var pp = b.passport || '';
   var ic = b.identity_card || '';
   if (pp && !ic) return '<span class="status-badge status-confirmed" style="background:rgba(59,130,246,0.15);color:#3b82f6;">Passport</span>';
@@ -150,11 +190,14 @@ async function updateDashboardStats() {
   try {
     stats = await api.getAdminStats();
     document.getElementById('stat-bookings').textContent = stats.total_bookings || 0;
-    document.getElementById('stat-revenue').textContent = '$' + (stats.total_revenue || 0).toLocaleString();
+    const revEl = document.getElementById('stat-revenue');
+    revEl.textContent = '$' + (stats.total_revenue || 0).toLocaleString();
+    revEl.dataset.usd = stats.total_revenue || 0;
     document.getElementById('stat-users').textContent = stats.total_users || 0;
     document.getElementById('stat-reviews').textContent = stats.total_reviews || 0;
     document.getElementById('stat-contacts').textContent = stats.total_contacts || 0;
     document.getElementById('stat-newsletter').textContent = stats.total_newsletter || 0;
+    if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
   } catch (_) {
     // Fallback to localStorage if Supabase is unavailable
     const activities = JSON.parse(localStorage.getItem('nextgen_activities') || '[]');
@@ -180,7 +223,7 @@ async function updateDashboardStats() {
         <tr>
           <td style="font-family: monospace; font-size: 0.75rem;">${escapeHtml(b.id || b.ref || '—')}</td>
           <td>${escapeHtml(b.guest_name || b.guestName || 'Guest')}</td>
-          <td>${escapeHtml(b.dest_id || b.destination_id || b.dest || '—')}</td>
+        <td>${b.doc_type === 'flight' ? renderFlightDest(b) : b.doc_type === 'hotel' ? renderHotelDest(b) : escapeHtml(b.dest_id || b.destination_id || b.dest || '—')}</td>
           <td><span class="status-badge status-${escapeHtml(b.status || 'confirmed')}">${escapeHtml(b.status || 'confirmed')}</span></td>
         </tr>`).join('');
     }
@@ -289,7 +332,7 @@ async function renderBookings() {
       <tr>
         <td style="font-family: monospace; font-size: 0.75rem;">${escapeHtml(b.id || b.ref || '—')}</td>
         <td>${escapeHtml(b.guest_name || b.guestName || 'Guest')}</td>
-        <td>${escapeHtml(b.dest_id || b.destination_id || b.dest || '—')}</td>
+        <td>${b.doc_type === 'flight' ? renderFlightDest(b) : b.doc_type === 'hotel' ? renderHotelDest(b) : escapeHtml(b.dest_id || b.destination_id || b.dest || '—')}</td>
         <td>${escapeHtml(b.booking_date || b.created_at || b.date || '—')}</td>
         <td>${escapeHtml(b.guests || '—')}</td>
         <td>$${escapeHtml(b.total || b.total_amount || '—')}</td>

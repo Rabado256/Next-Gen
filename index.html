@@ -56,6 +56,7 @@
                     <a href="#destinations" class="text-white text-decoration-none small tracking-widest">Destinations</a>
                     <a href="#inspirations" class="text-white text-decoration-none small tracking-widest">Inspirations</a>
                     <a href="visa-check.html" class="text-white text-decoration-none small tracking-widest">Visa Check</a>
+                    <div id="currency-nav-selector"></div>
                     <button class="auth-icon-btn" data-bs-toggle="modal" data-bs-target="#auth-modal" aria-label="Login or Sign Up">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -362,51 +363,70 @@
             <!-- ===== HOLIDAYS TAB PANEL ===== -->
             <div class="search-panel" id="panel-holidays">
                 <div class="booking-capsule">
-                    <!-- All holiday types -->
+                    <!-- Destination -->
                     <div class="capsule-field capsule-select-field">
-                        <label class="capsule-label">All holiday types</label>
-                        <div class="capsule-pseudo-select">
-                            <span>All holiday types</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
+                        <label class="capsule-label">Destination</label>
+                        <input type="text" class="capsule-input" placeholder="Any destination" list="package-dest-list" id="holiday-dest">
+                        <datalist id="package-dest-list"></datalist>
                     </div>
 
                     <div class="capsule-divider"></div>
 
-                    <!-- Any destination -->
-                    <div class="capsule-field capsule-select-field">
-                        <label class="capsule-label">Any destination</label>
-                        <div class="capsule-pseudo-select">
-                            <span>Any destination</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
+                    <!-- Package type -->
+                    <div class="capsule-field capsule-select-field" id="holiday-type-field">
+                        <label class="capsule-label">Type</label>
+                        <select class="capsule-input" id="holiday-type">
+                            <option value="">All types</option>
+                            <option value="beach">Beach</option>
+                            <option value="safari">Safari</option>
+                            <option value="cultural">Cultural</option>
+                            <option value="adventure">Adventure</option>
+                            <option value="romance">Romance</option>
+                            <option value="family">Family</option>
+                            <option value="city">City Break</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="wellness">Wellness</option>
+                        </select>
                     </div>
 
                     <div class="capsule-divider"></div>
 
-                    <!-- Any duration -->
+                    <!-- Duration -->
                     <div class="capsule-field capsule-select-field">
-                        <label class="capsule-label">Any duration</label>
-                        <div class="capsule-pseudo-select">
-                            <span>Any duration</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
+                        <label class="capsule-label">Duration</label>
+                        <select class="capsule-input" id="holiday-duration">
+                            <option value="">Any duration</option>
+                            <option value="1-4">1–4 days</option>
+                            <option value="5-7">5–7 days</option>
+                            <option value="8-11">8–11 days</option>
+                            <option value="12+">12+ days</option>
+                        </select>
+                    </div>
+
+                    <div class="capsule-divider"></div>
+
+                    <!-- Max budget -->
+                    <div class="capsule-field capsule-select-field">
+                        <label class="capsule-label">Max budget</label>
+                        <select class="capsule-input" id="holiday-budget">
+                            <option value="">Any budget</option>
+                            <option value="2000">Under $2,000</option>
+                            <option value="3000">Under $3,000</option>
+                            <option value="4000">Under $4,000</option>
+                            <option value="5000">Under $5,000</option>
+                            <option value="99999">Any price</option>
+                        </select>
                     </div>
 
                     <!-- Search Button -->
-                    <button class="capsule-search-btn explore-btn" aria-label="Explore holidays">Explore</button>
+                    <button class="capsule-search-btn explore-btn" aria-label="Explore holidays" id="holiday-explore">Explore</button>
                 </div>
             </div>
 
             <!-- Footer links -->
             <div class="search-footer-links">
-                <a href="destination.html" class="search-footer-link">
+                <a href="bookings.html" class="search-footer-link">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     Change or cancel your trip
                 </a>
@@ -1531,7 +1551,10 @@
         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-<script src="js/api.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/currency.js"></script>
+    <script src="js/hotels.js"></script>
+    <script src="js/packages.js"></script>
     <script src="js/duffel.js"></script>
     <script src="js/main.js"></script>
     <script>
@@ -1812,6 +1835,14 @@
                 });
             });
 
+            // Populate package destination datalist
+            const pkgDestList = document.getElementById('package-dest-list');
+            if (pkgDestList && typeof PackageDB !== 'undefined') {
+                pkgDestList.innerHTML = PackageDB.getDestinations().map(d =>
+                    '<option value="' + d + '">'
+                ).join('');
+            }
+
             // Search buttons — use cached destinations if available
             const allDests = window._allDests || [];
             document.querySelectorAll('.capsule-search-btn').forEach(btn => {
@@ -1843,18 +1874,16 @@
                         const guests = document.getElementById('hotel-adults-count').textContent;
                         const start = tab.querySelector('input[type="date"]:first-of-type').value;
                         const end = tab.querySelector('input[type="date"]:last-of-type').value;
-                        const match = allDests.find(d => where.toLowerCase().includes((d.title || d.id).toLowerCase()));
-                        params.append('id', match ? match.id : 'amalfi');
-                        params.append('guests', guests);
-                        params.append('search_type', 'hotel');
-                        params.append('to', where);
-                        params.append('start', start);
-                        params.append('end', end);
+                        window.location.href = 'search-results.html?search_type=hotel&to=' + encodeURIComponent(where || 'Lagos') + '&guests=' + guests + '&start=' + start + '&end=' + end;
+                        return;
                     } else if (tab.id === 'panel-holidays') {
-                        params.append('id', allDests[0]?.id || 'amalfi');
-                        params.append('guests', '1');
-                        params.append('search_type', 'holiday');
-                    }
+                        const dest = document.getElementById('holiday-dest')?.value || '';
+                        const type = document.getElementById('holiday-type')?.value || '';
+                        const duration = document.getElementById('holiday-duration')?.value || '';
+                        const budget = document.getElementById('holiday-budget')?.value || '';
+                        const searchParams = new URLSearchParams({ search_type: 'package', dest, type, duration, budget });
+                        window.location.href = 'search-results.html?' + searchParams.toString();
+                        return;
 
                     const checkoutUrl = 'checkout.html?' + params.toString();
                     let routeText = '';

@@ -305,6 +305,78 @@ const api = {
     return data;
   },
 
+  // Create a flight booking (separate from destination bookings)
+  async createFlightBooking(data) {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const ref = data.reference || 'FL-' + Date.now().toString(36).toUpperCase();
+    const { data: result, error } = await SB.from('bookings').insert({
+      user_id: user.id,
+      guest_name: data.guest_name || '',
+      guest_email: data.guest_email || '',
+      guest_phone: data.guest_phone || '',
+      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
+      guests: parseInt(data.guests) || 1,
+      total: parseFloat(data.total) || 0,
+      total_amount: parseFloat(data.total) || 0,
+      currency: data.currency || 'usd',
+      status: 'confirmed',
+      ref,
+      reference: ref,
+      from_location: data.from_location || '',
+      to_location: data.to_location || '',
+      dest_id: data.airline || 'Flight',
+      doc_type: 'flight',
+      special_requests: JSON.stringify({
+        flight_number: data.flight_number || '',
+        departure_time: data.departure_time || '',
+        arrival_time: data.arrival_time || '',
+        duration: data.duration || '',
+        offer_id: data.offer_id || '',
+        payment_intent: data.payment_intent || '',
+        duffel_order_id: data.duffel_order_id || ''
+      })
+    }).select().single();
+    if (error) throw new Error(error.message);
+    return result;
+  },
+
+  async createHotelBooking(data) {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const ref = data.reference || 'HT-' + Date.now().toString(36).toUpperCase();
+    const { data: result, error } = await SB.from('bookings').insert({
+      user_id: user.id,
+      guest_name: data.guest_name || '',
+      guest_email: data.guest_email || '',
+      guest_phone: data.guest_phone || '',
+      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
+      guests: parseInt(data.guests) || 1,
+      total: parseFloat(data.total) || 0,
+      total_amount: parseFloat(data.total) || 0,
+      currency: data.currency || 'usd',
+      status: 'confirmed',
+      ref,
+      reference: ref,
+      from_location: data.hotel_city || '',
+      to_location: data.hotel_name || '',
+      dest_id: data.hotel_name || 'Hotel',
+      doc_type: 'hotel',
+      special_requests: JSON.stringify({
+        hotel_city: data.hotel_city || '',
+        hotel_country: data.hotel_country || '',
+        room_type: data.room_type || '',
+        nights: data.nights || 0,
+        rooms: data.rooms || 1,
+        check_in: data.check_in || '',
+        check_out: data.check_out || '',
+        payment_intent: data.payment_intent || ''
+      })
+    }).select().single();
+    if (error) throw new Error(error.message);
+    return result;
+  },
+
   // Stub: get booking invoice URL
   getBookingInvoice(id) { return '/api/bookings/' + id + '/invoice'; },
   // Stub: download booking invoice as blob
@@ -338,6 +410,43 @@ const api = {
     }).select().single();
     if (error) throw new Error(error.message);
     return data;
+  },
+
+  async createPackageBooking(data) {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const ref = data.reference || 'PK-' + Date.now().toString(36).toUpperCase();
+    const { data: result, error } = await SB.from('bookings').insert({
+      user_id: user.id,
+      guest_name: data.guest_name || '',
+      guest_email: data.guest_email || '',
+      guest_phone: data.guest_phone || '',
+      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
+      guests: parseInt(data.guests) || 1,
+      total: parseFloat(data.total) || 0,
+      total_amount: parseFloat(data.total) || 0,
+      currency: data.currency || 'usd',
+      status: 'confirmed',
+      ref,
+      reference: ref,
+      from_location: data.package_dest || '',
+      to_location: data.package_name || '',
+      dest_id: data.package_name || 'Package',
+      doc_type: 'package',
+      special_requests: JSON.stringify({
+        package_id: data.package_id || '',
+        package_dest: data.package_dest || '',
+        package_country: data.package_country || '',
+        duration: data.duration || 0,
+        nights: data.nights || 0,
+        hotel: data.hotel || '',
+        room_type: data.room_type || '',
+        includes: data.includes || [],
+        payment_intent: data.payment_intent || ''
+      })
+    }).select().single();
+    if (error) throw new Error(error.message);
+    return result;
   },
 
   // ==================== CONTACT FORM ====================
@@ -485,6 +594,47 @@ const api = {
     }
     const result = await res.json();
     return { ref: result.booking?.reference || ref, ...result };
+  },
+
+  // Cancel a booking by reference — updates status to 'cancelled'
+  async cancelBooking(ref) {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data, error } = await SB.from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('reference', ref)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Booking not found');
+    return data;
+  },
+
+  // Fetch a single booking by its reference code (public lookup)
+  async getBookingByRef(ref) {
+    if (!ref || ref.trim().length < 3) throw new Error('Invalid reference code');
+    const { data, error } = await SB.from('bookings')
+      .select('*')
+      .eq('reference', ref.trim().toUpperCase())
+      .single();
+    if (error) throw new Error('Booking not found. Please check your reference code.');
+    return data;
+  },
+
+  // Update booking date (modify flow)
+  async updateBookingDate(ref, newDate) {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data, error } = await SB.from('bookings')
+      .update({ booking_date: newDate })
+      .eq('reference', ref)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Booking not found');
+    return data;
   },
 
   // ==================== AVAILABILITY ====================

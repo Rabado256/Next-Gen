@@ -174,7 +174,34 @@
 
         .btn-explore-sm:hover {
             background: var(--primary-black);
-            color: white;
+            color: #fff;
+        }
+
+        .hotel-rating {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #e6a817;
+        }
+
+        .hotel-amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .hotel-amenity {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.2rem 0.5rem;
+            background: #f5f5f5;
+            border-radius: 3px;
+            color: #666;
+        }
+
+        .hotel-room-select {
+            font-size: 0.75rem !important;
+            max-width: 200px;
         }
 
         .navbar.nav-scrolled {
@@ -291,6 +318,7 @@
                     <a href="index.html#destinations" class="text-white text-decoration-none small tracking-widest">Destinations</a>
                     <a href="index.html#inspirations" class="text-white text-decoration-none small tracking-widest">Inspirations</a>
                     <a href="visa-check.html" class="text-white text-decoration-none small tracking-widest">Visa Check</a>
+                    <div id="currency-nav-selector"></div>
                     <button class="auth-icon-btn" data-bs-toggle="modal" data-bs-target="#auth-modal" aria-label="Login or Sign Up">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -777,6 +805,9 @@
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
+    <script src="js/currency.js"></script>
+    <script src="js/hotels.js"></script>
+    <script src="js/packages.js"></script>
     <script src="js/duffel.js"></script>
     <script src="js/main.js"></script>
     <script>
@@ -1013,7 +1044,7 @@
             const vibe = d.vibe || 'romantic';
             const label = vibeLabels[vibe] || 'Curated Sanctuary';
             const img = d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600&h=400';
-            const price = d.price ? '$' + (d.price / 2).toLocaleString() + ' <span class="small opacity-50 fw-normal">/ person</span>' : 'Contact us';
+            const price = d.price ? '<span class="currency-price" data-usd="' + (d.price / 2) + '">$' + (d.price / 2).toLocaleString() + '</span> <span class="small opacity-50 fw-normal">/ person</span>' : 'Contact us';
             return `<div class="col-md-6">
                 <a href="destination.html?id=${encodeURIComponent(escapeHtml(d.id))}" class="result-card">
                     <img src="${escapeHtml(img)}" alt="${escapeHtml(d.title || d.id)}" class="result-card-img">
@@ -1050,7 +1081,225 @@
         });
     }
 
-    // Check for Duffel API results first
+    // Check for hotel search first
+    const pageParams = new URLSearchParams(window.location.search);
+    
+    if (pageParams.get('search_type') === 'hotel' && typeof HotelDB !== 'undefined') {
+        // Render hotel results
+        (async () => {
+            const resultsGrid = document.querySelector('#search-results-page .row.g-4');
+            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            if (!resultsGrid) return;
+            
+            const query = pageParams.get('to') || '';
+            const guests = parseInt(pageParams.get('guests')) || 2;
+            const start = pageParams.get('start') || '';
+            const end = pageParams.get('end') || '';
+            
+            const results = HotelDB.sort(HotelDB.search(query), 'price-asc');
+            
+            if (results.length === 0) {
+                heading.textContent = query ? `No hotels found for "${query}"` : 'No hotels found';
+                resultsGrid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <h4 class="serif mb-3">No hotels available</h4>
+                        <p class="text-muted">Try a different city or destination.</p>
+                        <a href="index.html" class="btn btn-dark rounded-0 px-4 py-2">Search Again</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            heading.textContent = `Showing ${results.length} hotel${results.length === 1 ? '' : 's'} ${query ? 'in ' + escapeHtml(query) : 'across all destinations'}`;
+            
+            resultsGrid.innerHTML = results.map(hotel => {
+                const amenityTags = hotel.amenities.slice(0, 6).map(a =>
+                    `<span class="hotel-amenity">${escapeHtml(a)}</span>`
+                ).join('');
+                
+                return `
+                    <div class="col-md-6">
+                        <div class="result-card hotel-card">
+                            <img src="${escapeHtml(hotel.image)}" alt="${escapeHtml(hotel.name)}" class="result-card-img" style="height: 200px; object-fit: cover;" loading="lazy">
+                            <div class="result-card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="result-card-tag">${escapeHtml(hotel.city)}, ${escapeHtml(hotel.country)}</span>
+                                        <h3 class="result-card-title mt-1" style="font-size: 1.1rem;">${escapeHtml(hotel.name)}</h3>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="result-price"><span class="currency-price" data-usd="${hotel.price}">$${hotel.price}</span></div>
+                                        <small class="text-muted">per night</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="hotel-rating">★ ${hotel.rating}</span>
+                                    <span class="text-muted small">(${hotel.reviews.toLocaleString()} reviews)</span>
+                                </div>
+                                
+                                <div class="hotel-amenities mb-3">${amenityTags}</div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <select class="hotel-room-select form-select form-select-sm border-dark rounded-0">
+                                        ${hotel.rooms.map(r =>
+                                            `<option value="${escapeHtml(r.type)}" data-max="${r.maxGuests}" data-price="${r.price}">${escapeHtml(r.type)} — $${r.price}/night (up to ${r.maxGuests})</option>`
+                                        ).join('')}
+                                    </select>
+                                    <button class="btn-explore-sm hotel-select-btn" data-hotel-id="${escapeHtml(hotel.id)}">Select Room</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+            
+            resultsGrid.querySelectorAll('.hotel-select-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const hotelId = btn.dataset.hotelId;
+                    const hotel = HotelDB.getById(hotelId);
+                    if (!hotel) return;
+                    const body = btn.closest('.result-card-body');
+                    const roomSelect = body.querySelector('.hotel-room-select');
+                    const roomType = roomSelect.value;
+                    const opt = roomSelect.options[roomSelect.selectedIndex];
+                    const roomPrice = parseInt(opt.dataset.price);
+                    const maxGuests = parseInt(opt.dataset.max);
+                    const nights = start && end ? Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000)) : 1;
+                    const roomsNeeded = Math.ceil(guests / maxGuests);
+                    const totalPrice = roomPrice * nights * roomsNeeded;
+                    
+                    sessionStorage.setItem('selected_hotel', JSON.stringify({
+                        id: hotelId, name: hotel.name, city: hotel.city, country: hotel.country,
+                        roomType, pricePerNight: roomPrice, nights, roomsNeeded, total: totalPrice,
+                        image: hotel.image, checkIn: start, checkOut: end
+                    }));
+                    
+                    const cp = new URLSearchParams({
+                        search_type: 'hotel', id: hotelId, to: hotel.name,
+                        guests: guests, start: start, end: end
+                    });
+                    window.location.href = 'checkout.html?' + cp.toString();
+                });
+            });
+        })();
+        
+    } else if (pageParams.get('search_type') === 'package' && typeof PackageDB !== 'undefined') {
+        // Render holiday package results
+        (async () => {
+            const resultsGrid = document.querySelector('#search-results-page .row.g-4');
+            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            if (!resultsGrid) return;
+
+            const dest = pageParams.get('dest') || '';
+            const type = pageParams.get('type') || '';
+            const duration = pageParams.get('duration') || '';
+            const budget = pageParams.get('budget') || '';
+
+            let results = PackageDB.search(dest || 'all');
+
+            const filters = {};
+            if (type) filters.type = type;
+            if (budget) filters.maxBudget = parseInt(budget);
+            if (duration === '1-4') filters.maxDuration = 4;
+            else if (duration === '5-7') { filters.minDuration = 5; filters.maxDuration = 7; }
+            else if (duration === '8-11') { filters.minDuration = 8; filters.maxDuration = 11; }
+            else if (duration === '12+') filters.minDuration = 12;
+
+            results = PackageDB.filter(results, filters);
+            results = PackageDB.sort(results, 'popular');
+
+            if (results.length === 0) {
+                heading.textContent = dest ? `No packages found for "${dest}"` : 'No packages found';
+                resultsGrid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <h4 class="serif mb-3">No holiday packages available</h4>
+                        <p class="text-muted">Try a different destination, type, or budget.</p>
+                        <a href="index.html" class="btn btn-dark rounded-0 px-4 py-2">Search Again</a>
+                    </div>
+                `;
+                return;
+            }
+
+            const typeDisplay = type ? type.charAt(0).toUpperCase() + type.slice(1) : '';
+            heading.textContent = `Showing ${results.length} package${results.length === 1 ? '' : 's'}${dest ? ' for ' + escapeHtml(dest) : ''}${typeDisplay ? ' • ' + typeDisplay : ''}`;
+
+            resultsGrid.innerHTML = results.map(pkg => {
+                const discounted = PackageDB.getDiscountedPrice(pkg);
+                const typeLabel = pkg.type.charAt(0).toUpperCase() + pkg.type.slice(1);
+                const stars = '★'.repeat(Math.round(pkg.rating)) + '☆'.repeat(5 - Math.round(pkg.rating));
+
+                return `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="result-card package-card" data-package-id="${escapeHtml(pkg.id)}">
+                            <div class="position-relative">
+                                <img src="${escapeHtml(pkg.image)}" alt="${escapeHtml(pkg.name)}" class="result-card-img" style="height: 200px; object-fit: cover;" loading="lazy">
+                                <span class="position-absolute top-0 start-0 badge m-2" style="background:var(--primary);color:#fff;font-size:0.7rem;font-weight:500;letter-spacing:0.04em;padding:4px 10px;border-radius:0;">${escapeHtml(typeLabel)}</span>
+                                <span class="position-absolute top-0 end-0 badge m-2" style="background:rgba(0,0,0,0.6);color:#fff;font-size:0.75rem;font-weight:600;padding:4px 10px;border-radius:0;">${pkg.discount}% OFF</span>
+                            </div>
+                            <div class="result-card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="result-card-tag">${escapeHtml(pkg.dest)}, ${escapeHtml(pkg.country)}</span>
+                                        <h3 class="result-card-title mt-1" style="font-size:1rem;">${escapeHtml(pkg.name)}</h3>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 mb-2" style="color:#f5a623;font-size:0.85rem;">
+                                    <span>${stars}</span>
+                                    <span style="color:var(--text-muted);font-size:0.75rem;">(${pkg.reviews.toLocaleString()})</span>
+                                </div>
+                                <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:8px;">
+                                    <span>${pkg.duration} days • ${pkg.nights} nights</span>
+                                    <span class="mx-2">•</span>
+                                    <span>${escapeHtml(pkg.hotelName)}</span>
+                                    <span class="mx-2">•</span>
+                                    <span>From ${escapeHtml(pkg.flightsFrom)}</span>
+                                </div>
+                                <div class="mb-2" style="display:flex;flex-wrap:wrap;gap:4px;">
+                                    ${pkg.includes.slice(0, 4).map(i => `<span style="background:rgba(217,119,6,0.1);color:#d97706;font-size:0.7rem;padding:2px 8px;border-radius:0;white-space:nowrap;">${escapeHtml(i)}</span>`).join('')}
+                                    ${pkg.includes.length > 4 ? `<span style="color:var(--text-muted);font-size:0.7rem;">+${pkg.includes.length - 4} more</span>` : ''}
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <div>
+                                        <span style="color:var(--text-muted);font-size:0.75rem;text-decoration:line-through;"><span data-usd="${pkg.basePrice}">$${pkg.basePrice.toLocaleString()}</span></span>
+                                        <span style="color:var(--primary);font-size:1.2rem;font-weight:700;"><span class="currency-price" data-usd="${discounted}">$${discounted.toLocaleString()}</span></span>
+                                        <span style="color:var(--text-muted);font-size:0.7rem;">/person</span>
+                                    </div>
+                                    <button class="btn btn-sm select-package-btn" data-package-id="${escapeHtml(pkg.id)}" style="background:var(--primary);color:#fff;border-radius:0;padding:6px 18px;font-size:0.8rem;font-weight:500;">View Package</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Wire up package buttons
+            resultsGrid.querySelectorAll('.select-package-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const pkgId = this.dataset.packageId;
+                    const pkg = PackageDB.getById(pkgId);
+                    if (!pkg) return;
+                    sessionStorage.setItem('selected_package', JSON.stringify(pkg));
+                    const cp = new URLSearchParams({
+                        search_type: 'package', id: pkgId,
+                        to: pkg.dest, guests: '2',
+                        start: '', end: ''
+                    });
+                    window.location.href = 'checkout.html?' + cp.toString();
+                });
+            });
+
+            // Also wire the whole card click
+            resultsGrid.querySelectorAll('.package-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('.select-package-btn')) return;
+                    const btn = this.querySelector('.select-package-btn');
+                    if (btn) btn.click();
+                });
+            });
+        })();
+
+    } else {
+    // Check for Duffel API results
     const duffelResults = sessionStorage.getItem('duffel_results');
     const duffelParams = sessionStorage.getItem('duffel_search_params');
     
@@ -1095,7 +1344,7 @@
                                         </div>
                                         <div class="text-end">
                                             <div class="result-price" style="font-size: 1.25rem; font-weight: 700;">
-                                                ${formatted.currency === 'USD' ? '$' : '₹'}${formatted.price.toLocaleString()}
+                                                <span class="currency-price" data-usd="${formatted.price}">${formatted.currency === 'USD' ? '$' : '$'}${formatted.price.toLocaleString()}</span>
                                             </div>
                                             <small class="text-muted">per person</small>
                                         </div>
@@ -1132,9 +1381,7 @@
                         const offerId = card.dataset.offerId;
                         const offer = offers.find(o => o.id === offerId);
                         if (offer) {
-                            // Store selected offer for checkout
                             sessionStorage.setItem('selected_flight_offer', JSON.stringify(offer));
-                            // Redirect to checkout with flight details
                             const params = new URLSearchParams(window.location.search);
                             const checkoutParams = new URLSearchParams({
                                 search_type: 'flight',
@@ -1276,6 +1523,10 @@
             });
         })();
     }
+    }
+
+    // Currency conversion for any data-usd elements rendered above
+    if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
     </script>
 
     <!-- Auth Modal -->

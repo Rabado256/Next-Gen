@@ -5,8 +5,11 @@
   "description": "NextGen Travel Agency - Curated journeys beyond the ordinary",
   "scripts": {
     "dev": "npx serve .",
-    "start": "npx serve .",
-    "vercel-build": "echo 'Static build complete'"
+    "start": "node server.js",
+    "vercel-build": "echo 'Static build complete'",
+    "test": "node tests/document-detection.test.js && node tests/api-client.test.js",
+    "test:admin": "node create-admin.js",
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

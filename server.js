@@ -5,8 +5,26 @@ const path = require('path');
 const supabaseJs = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
+
+// ── Auto-seed on first launch ─────────────────────────────────
+(async () => {
+  try {
+    const { createClient } = supabaseJs;
+    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const { count } = await sb.from('destinations').select('*', { count: 'exact', head: true });
+    if (count === 0 || count === null) {
+      console.log('[Seed] No destinations found — running seed...');
+      require('./scripts/seed');
+    } else {
+      console.log(`[Seed] ${count} destinations already present, skipping.`);
+    }
+  } catch (e) {
+    console.log('[Seed] Skipped (offline or first run):', e.message);
+  }
+})();
+// ──────────────────────────────────────────────────────────────
 
 const MIME_TYPES = {
   '.html': 'text/html',

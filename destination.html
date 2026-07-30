@@ -349,6 +349,7 @@
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
+    <script src="js/currency.js"></script>
     <script src="js/main.js"></script>
     <script src="js/visa-data.js"></script>
     <script>
@@ -446,10 +447,12 @@
         document.getElementById('dest-title').textContent = dest.title;
         document.getElementById('dest-desc').textContent = dest.desc;
 
-        function updatePrice() {
+        async function updatePrice() {
             const guests = parseInt(document.getElementById('traveler-count').value) || 1;
             const total = dest.price * guests;
-            document.getElementById('total-price').textContent = '$' + total.toLocaleString();
+            const el = document.getElementById('total-price');
+            el.textContent = typeof CURRENCY !== 'undefined' ? await CURRENCY.format(total) : '$' + total.toLocaleString();
+            el.dataset.usd = total;
             document.getElementById('checkout-link').href = 'checkout.html?id=' + id + '&guests=' + guests;
         }
 

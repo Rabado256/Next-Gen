@@ -236,6 +236,39 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Travel Extras Section -->
+                                <div class="border border-dark p-4 mt-4 reveal-up visible">
+                                    <h6 class="serif mb-1"><i class="bi bi-plus-circle me-2"></i>Travel Extras</h6>
+                                    <p class="small text-muted mb-3">Enhance your journey with these add-ons.</p>
+
+                                    <div class="mb-3">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-shield-check" style="color:#2ecc71;"></i>Travel Insurance</label>
+                                        <div id="extras-insurance">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('insurance') : ''}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-car-front" style="color:#3498db;"></i>Airport Transfers</label>
+                                        <div id="extras-transfers">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('transfers') : ''}</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-file-earmark-text" style="color:#e67e22;"></i>Visa Services</label>
+                                        <div id="extras-visa">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('visa') : ''}</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-star" style="color:#9b59b6;"></i>Experiences</label>
+                                        <div id="extras-experience">${typeof EXTRAS !== 'undefined' ? EXTRAS.renderCheckboxes('experience') : ''}</div>
+                                    </div>
+
+                                    <div id="extras-total" class="mt-3 pt-3 border-top small" style="display:none;">
+                                        <div class="d-flex justify-content-between fw-bold">
+                                            <span>Extras Total</span>
+                                            <span id="extras-cost">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-noir w-100 mt-5 py-3 rounded-0">Proceed to Payment</button>
@@ -419,6 +452,11 @@
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
+    <script src="js/currency.js"></script>
+    <script src="js/extras.js"></script>
+    <script src="js/hotels.js"></script>
+    <script src="js/packages.js"></script>
+    <script src="js/duffel.js"></script>
     <script src="js/main.js"></script>
     <script>
         async function cacheDestinationsFromApi() {
@@ -528,19 +566,97 @@
         let hotelPrice = 500 * guests;
         let mealPrice = 0;
 
-        function updateSummary(withHotel = false) {
+        // === Flight mode support ===
+        const searchType = params.get('search_type') || 'general';
+        const isFlight = searchType === 'flight';
+        const isHotel = searchType === 'hotel';
+        const isPackage = searchType === 'package';
+        let flightOffer = null;
+        if (isFlight) {
+            try {
+                const stored = sessionStorage.getItem('selected_flight_offer');
+                if (stored) {
+                    const raw = JSON.parse(stored);
+                    flightOffer = (typeof DuffelAPI !== 'undefined') ? DuffelAPI.formatOfferForDisplay(raw) : raw;
+                    Object.assign(dest, {
+                        title: `${flightOffer.departureAirport || '?'} → ${flightOffer.arrivalAirport || '?'}`,
+                        edition: `${flightOffer.airline || ''} • ${flightOffer.flightNumber || ''}`,
+                        price: flightOffer.price || (raw.total_amount ? parseFloat(raw.total_amount) : 0),
+                        img: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=800',
+                        raw: raw
+                    });
+                    basePrice = dest.price * guests;
+                    document.getElementById('back-to-dest').href = 'search-results.html';
+                    document.getElementById('back-to-dest').textContent = '← Back to Search Results';
+                }
+            } catch (_) {}
+        }
+
+        // === Hotel mode support ===
+        let hotelData = null;
+        if (isHotel) {
+            try {
+                const stored = sessionStorage.getItem('selected_hotel');
+                if (stored) {
+                    hotelData = JSON.parse(stored);
+                    Object.assign(dest, {
+                        title: hotelData.name,
+                        edition: `${hotelData.city}, ${hotelData.country}`,
+                        price: hotelData.total || 0,
+                        img: hotelData.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800'
+                    });
+                    basePrice = dest.price;
+                    document.getElementById('back-to-dest').href = 'search-results.html';
+                    document.getElementById('back-to-dest').textContent = '← Back to Search Results';
+                }
+            } catch (_) {}
+        }
+
+        // === Package mode support ===
+        let packageData = null;
+        if (isPackage) {
+            try {
+                const stored = sessionStorage.getItem('selected_package');
+                if (stored) {
+                    packageData = JSON.parse(stored);
+                    const discounted = PackageDB.getDiscountedPrice ? PackageDB.getDiscountedPrice(packageData) : Math.round(packageData.basePrice * (1 - (packageData.discount || 0) / 100));
+                    Object.assign(dest, {
+                        title: packageData.name,
+                        edition: `${packageData.dest}, ${packageData.country} • ${packageData.duration} days`,
+                        price: discounted || packageData.basePrice || 0,
+                        img: packageData.image || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=800'
+                    });
+                    basePrice = dest.price * guests;
+                    document.getElementById('back-to-dest').href = 'search-results.html';
+                    document.getElementById('back-to-dest').textContent = '← Back to Search Results';
+                }
+            } catch (_) {}
+        }
+
+        function getExtrasPrice() {
+            if (typeof EXTRAS === 'undefined') return 0;
+            const selected = EXTRAS.getSelectedFromDOM();
+            return EXTRAS.calcTotal(selected);
+        }
+
+        async function updateSummary(withHotel = false) {
             const withMeal = document.getElementById('add-meal')?.checked;
             const mealSelect = document.getElementById('food-preference');
             const selectedMealOption = mealSelect?.options[mealSelect.selectedIndex];
             mealPrice = withMeal ? parseInt(selectedMealOption?.dataset?.price || 0) * guests : 0;
+            const extrasPrice = getExtrasPrice();
 
-            const totalPrice = basePrice + (withHotel ? hotelPrice : 0) + mealPrice;
-            document.getElementById('checkout-total').textContent = '$' + totalPrice.toLocaleString() + '.00';
+            const totalPrice = basePrice + (withHotel ? hotelPrice : 0) + mealPrice + extrasPrice;
+            const totalEl = document.getElementById('checkout-total');
+            totalEl.textContent = typeof CURRENCY !== 'undefined' ? await CURRENCY.format(totalPrice) : '$' + totalPrice.toLocaleString() + '.00';
+            totalEl.dataset.usd = totalPrice;
             
             const hotelRow = document.getElementById('hotel-fee-row');
             if (withHotel) {
                 hotelRow.style.setProperty('display', 'flex', 'important');
-                document.getElementById('hotel-price').textContent = '+$' + hotelPrice.toLocaleString() + '.00';
+                const hpEl = document.getElementById('hotel-price');
+                hpEl.textContent = typeof CURRENCY !== 'undefined' ? '+' + await CURRENCY.format(hotelPrice) : '+$' + hotelPrice.toLocaleString() + '.00';
+                hpEl.dataset.usd = hotelPrice;
             } else {
                 hotelRow.style.setProperty('display', 'none', 'important');
             }
@@ -548,9 +664,22 @@
             const mealRow = document.getElementById('meal-fee-row');
             if (withMeal && mealPrice > 0) {
                 mealRow.style.setProperty('display', 'flex', 'important');
-                document.getElementById('meal-price').textContent = '+$' + mealPrice.toLocaleString() + '.00';
+                const mpEl = document.getElementById('meal-price');
+                mpEl.textContent = typeof CURRENCY !== 'undefined' ? '+' + await CURRENCY.format(mealPrice) : '+$' + mealPrice.toLocaleString() + '.00';
+                mpEl.dataset.usd = mealPrice;
             } else {
                 mealRow.style.setProperty('display', 'none', 'important');
+            }
+
+            const extrasRow = document.getElementById('extras-fee-row');
+            const extrasTotalEl = document.getElementById('extras-cost');
+            if (extrasPrice > 0) {
+                if (extrasRow) extrasRow.style.setProperty('display', 'flex', 'important');
+                extrasTotalEl.textContent = typeof CURRENCY !== 'undefined' ? await CURRENCY.format(extrasPrice) : '$' + extrasPrice;
+                document.getElementById('extras-total').style.display = 'block';
+            } else {
+                if (extrasRow) extrasRow.style.setProperty('display', 'none', 'important');
+                document.getElementById('extras-total').style.display = 'none';
             }
         }
 
@@ -558,8 +687,23 @@
         document.getElementById('checkout-dest-img').alt = dest.title;
         document.getElementById('checkout-dest-title').textContent = dest.title;
         document.getElementById('checkout-dest-edition').textContent = dest.edition;
-        document.getElementById('checkout-price').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests + (guests > 1 ? ' guests' : ' guest');
-        updateSummary(false);
+
+        if (isHotel && hotelData) {
+            const ppn = typeof CURRENCY !== 'undefined' ? Math.round(hotelData.pricePerNight) : hotelData.pricePerNight;
+            document.getElementById('checkout-price').textContent =
+                `${typeof CURRENCY !== 'undefined' ? '$' : '$'}${ppn}/night × ${hotelData.nights} night${hotelData.nights === 1 ? '' : 's'} × ${hotelData.roomsNeeded} room${hotelData.roomsNeeded === 1 ? '' : 's'}`;
+            document.getElementById('rec-hotel-row').style.display = 'none';
+        } else if (isPackage && packageData) {
+            const pp = typeof CURRENCY !== 'undefined' ? Math.round(dest.price / guests) : Math.round(dest.price / guests);
+            document.getElementById('checkout-price').textContent =
+                `$${pp.toLocaleString()}/person × ${guests} guest${guests === 1 ? '' : 's'}`;
+            document.getElementById('rec-hotel-row').style.display = 'none';
+        } else {
+            document.getElementById('checkout-price').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests + (guests > 1 ? ' guests' : ' guest');
+        }
+        updateSummary(false).then(() => {
+            if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
+        });
         document.getElementById('back-to-dest').href = 'destination.html?id=' + id + '&guests=' + guests;
         document.title = 'Book ' + dest.title + ' | NextGen Travel';
 
@@ -570,9 +714,10 @@
         const checkDetails = document.getElementById('check-details');
         const checkStatus = document.getElementById('check-status');
 
-        const searchType = params.get('search_type') || 'general';
         const fromLoc = params.get('from') || '';
         const toLoc = params.get('to') || '';
+        const startDate = params.get('start') || '';
+        const endDate = params.get('end') || '';
 
         checkDest.textContent = toLoc || dest.title;
         checkDetails.textContent = `${searchType.toUpperCase()} // ${guests} GUESTS`;
@@ -584,6 +729,64 @@
 
         (async () => {
             const t0 = Date.now();
+
+            // Flight mode — skip availability check, go straight to form
+            if (isFlight && flightOffer) {
+                checkStatus.textContent = 'Flight Selected';
+                checkSection.querySelector('.spinner-border').style.display = 'none';
+                const checkIcon = document.createElement('div');
+                checkIcon.textContent = '✈';
+                checkIcon.className = 'display-4 mb-3';
+                checkSection.prepend(checkIcon);
+                const msg = document.createElement('p');
+                msg.className = 'text-muted small mt-2';
+                msg.textContent = `${flightOffer.airline} • ${flightOffer.departure} → ${flightOffer.arrival} • ${flightOffer.duration} • ${flightOffer.stopsText}`;
+                checkSection.appendChild(msg);
+                await new Promise(r => setTimeout(r, 800));
+                checkSection.style.display = 'none';
+                formSection.style.display = 'block';
+                formSection.classList.add('reveal-snap', 'visible');
+                return;
+            }
+
+            // Hotel mode — skip availability check
+            if (isHotel && hotelData) {
+                checkStatus.textContent = 'Hotel Selected';
+                checkSection.querySelector('.spinner-border').style.display = 'none';
+                const checkIcon = document.createElement('div');
+                checkIcon.textContent = '🏨';
+                checkIcon.className = 'display-4 mb-3';
+                checkSection.prepend(checkIcon);
+                const msg = document.createElement('p');
+                msg.className = 'text-muted small mt-2';
+                msg.textContent = `${hotelData.name} • ${hotelData.city} • ${hotelData.roomType} • ${hotelData.nights} night${hotelData.nights === 1 ? '' : 's'}`;
+                checkSection.appendChild(msg);
+                await new Promise(r => setTimeout(r, 800));
+                checkSection.style.display = 'none';
+                formSection.style.display = 'block';
+                formSection.classList.add('reveal-snap', 'visible');
+                return;
+            }
+
+            // Package mode — skip availability check
+            if (isPackage && packageData) {
+                checkStatus.textContent = 'Holiday Package Selected';
+                checkSection.querySelector('.spinner-border').style.display = 'none';
+                const checkIcon = document.createElement('div');
+                checkIcon.textContent = '✦';
+                checkIcon.className = 'display-4 mb-3';
+                checkSection.prepend(checkIcon);
+                const msg = document.createElement('p');
+                msg.className = 'text-muted small mt-2';
+                msg.textContent = `${packageData.name} • ${packageData.dest} • ${packageData.duration} days • ${packageData.nights} nights`;
+                checkSection.appendChild(msg);
+                await new Promise(r => setTimeout(r, 800));
+                checkSection.style.display = 'none';
+                formSection.style.display = 'block';
+                formSection.classList.add('reveal-snap', 'visible');
+                return;
+            }
+
             let available = false;
             let availMessage = '';
             try {
@@ -680,12 +883,12 @@
             // Pre-fill hotel if coming from hotel search
             const hotelSelectContainer = document.getElementById('hotel-selection-container');
 
-            // Apply Global Preferences
-            if (user.pref_hotel) {
+            // Apply Global Preferences (skip for standalone hotel mode)
+            if (!isHotel && user.pref_hotel) {
                 const reserveHotel = document.getElementById('reserve-hotel');
                 reserveHotel.checked = true;
                 if (hotelSelectContainer) hotelSelectContainer.style.display = 'block';
-                updateSummary(true);
+                await updateSummary(true);
             }
             if (user.pref_food && user.pref_food !== 'none') {
                 const addMeal = document.getElementById('add-meal');
@@ -695,44 +898,33 @@
             }
         }
 
-        // Pre-fill hotel if coming from hotel search
+        // Auto-check reserve-hotel for non-hotel search modes
         const hotelSelectContainer = document.getElementById('hotel-selection-container');
-        if (searchType === 'hotel') {
-            const reserveHotel = document.getElementById('reserve-hotel');
-            reserveHotel.checked = true;
-            hotelSelectContainer.style.display = 'block';
-            
-            // If the search "to" looks like a hotel name from our list, pre-fill it
-            if (toLoc) {
-                document.getElementById('preferred-hotel').value = toLoc;
-            }
-            updateSummary(true);
-        }
 
         const reserveHotel = document.getElementById('reserve-hotel');
         const addMeal = document.getElementById('add-meal');
         const mealSelection = document.getElementById('arrival-meal-selection');
 
-        reserveHotel.addEventListener('change', function() {
+        reserveHotel.addEventListener('change', async function() {
             if (this.checked) {
                 hotelSelectContainer.style.display = 'block';
-                updateSummary(true);
+                await updateSummary(true);
             } else {
                 hotelSelectContainer.style.display = 'none';
                 mealSelection.style.display = 'none';
                 addMeal.checked = false;
-                updateSummary(false);
+                await updateSummary(false);
             }
         });
 
-        addMeal.addEventListener('change', function() {
+        addMeal.addEventListener('change', async function() {
             mealSelection.style.display = this.checked ? 'block' : 'none';
-            updateSummary(reserveHotel.checked);
+            await updateSummary(reserveHotel.checked);
         });
 
         // Update summary when meal selection changes
-        document.getElementById('food-preference').addEventListener('change', function() {
-            updateSummary(reserveHotel.checked);
+        document.getElementById('food-preference').addEventListener('change', async function() {
+            await updateSummary(reserveHotel.checked);
         });
 
         // Stripe state
@@ -768,7 +960,8 @@
             }
 
             try {
-                const totalAmount = parseFloat(document.getElementById('checkout-total').textContent.replace(/[$,]/g, '')) || dest.price || 4200;
+                const totalEl = document.getElementById('checkout-total');
+                const totalAmount = parseFloat(totalEl.dataset.usd) || dest.price || 4200;
                 const result = await api.createPaymentIntent({
                     destination_id: id,
                     total_amount: totalAmount,
@@ -851,60 +1044,261 @@
                 }
 
                 if (paymentIntent && paymentIntent.status === 'succeeded') {
-                    // Payment succeeded — save booking to Supabase
-                    try {
-                        const travelers = await collectTravelers();
-                        const ref = 'NG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-                        const result = await api.confirmPayment({
-                            dest_id: id,
-                            guest_name: first + ' ' + last,
-                            guest_email: email,
-                            guest_phone: phone,
-                            guests: parseInt(guests) || 1,
-                            total: parseFloat(document.getElementById('checkout-total').textContent.replace(/[$,]/g, '')),
-                            payment_intent: paymentIntent.id,
-                            travel_date: travelDate,
-                            passport: document.getElementById('checkout-passport')?.value || '',
-                            identity_card: document.getElementById('checkout-identity-card')?.value || '',
-                            special_requests: document.getElementById('special-requests').value,
-                            hotel: reserveHotel.checked ? 1 : 0,
-                            from_location: document.getElementById('from-loc').value,
-                            to_location: document.getElementById('to-loc').value,
-                            travelers: travelers,
-                            reference: ref
-                        });
-                        showSuccess(result.ref || ref, first, last);
-                    } catch (e) {
-                        console.error('[Booking] Save failed after payment:', e);
-                        showSuccess(paymentIntent.id.slice(-8).toUpperCase(), first, last);
+                    if (isFlight && flightOffer) {
+                        // === Flight booking flow ===
+                        btn.textContent = 'Booking Flight...';
+                        try {
+                            let duffelOrderId = '';
+                            if (typeof DuffelAPI !== 'undefined' && DuffelAPI.isConfigured() && dest.raw) {
+                                try {
+                                    const orderData = {
+                                        data: {
+                                            selected_offers: [dest.raw.id],
+                                            passengers: [{
+                                                id: 'pax_' + Date.now(),
+                                                given_name: first,
+                                                family_name: last,
+                                                email: email,
+                                                phone: phone,
+                                                title: 'mr',
+                                                gender: 'm',
+                                                date_of_birth: '1990-01-01'
+                                            }],
+                                            payments: [{
+                                                type: 'balance',
+                                                amount: dest.raw.total_amount || dest.price.toString(),
+                                                currency: dest.raw.total_currency || 'USD'
+                                            }]
+                                        }
+                                    };
+                                    const orderResult = await DuffelAPI.createOrder(orderData);
+                                    duffelOrderId = orderResult.data?.id || '';
+                                } catch (duffelErr) {
+                                    console.warn('[Flight] Duffel order skipped:', duffelErr.message);
+                                }
+                            }
+                            const ref = 'FL-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                            const flightNum = (dest.raw?.slices?.[0]?.segments || []).map(s => `${s.marketing_carrier?.iata_code || ''}${s.flight_number || ''}`).join(', ') || flightOffer.flightNumber || '';
+                            try {
+                                await api.createFlightBooking({
+                                    guest_name: first + ' ' + last,
+                                    guest_email: email,
+                                    guest_phone: phone,
+                                    guests: parseInt(guests) || 1,
+                                    total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                                    booking_date: travelDate,
+                                    from_location: flightOffer.departureAirport || '',
+                                    to_location: flightOffer.arrivalAirport || '',
+                                    airline: flightOffer.airline || '',
+                                    flight_number: flightNum,
+                                    departure_time: flightOffer.departure || '',
+                                    arrival_time: flightOffer.arrival || '',
+                                    duration: flightOffer.duration || '',
+                                    reference: ref,
+                                    payment_intent: paymentIntent.id,
+                                    duffel_order_id: duffelOrderId
+                                });
+                            } catch (e) {
+                                console.warn('[Flight] Supabase save failed:', e);
+                            }
+                            showSuccess(ref, first, last);
+                            return;
+                        } catch (e) {
+                            console.error('[Flight] Booking error:', e);
+                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('stripe-error').style.display = 'block';
+                            btn.disabled = false;
+                            btn.textContent = 'Authorize Payment';
+                            return;
+                        }
+                    } else if (isHotel && hotelData) {
+                        // === Hotel booking flow ===
+                        try {
+                            const ref = 'HT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                            try {
+                                await api.createHotelBooking({
+                                    guest_name: first + ' ' + last,
+                                    guest_email: email,
+                                    guest_phone: phone,
+                                    guests: parseInt(guests) || 1,
+                                    total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                                    booking_date: travelDate,
+                                    hotel_name: hotelData.name,
+                                    hotel_city: hotelData.city,
+                                    hotel_country: hotelData.country,
+                                    room_type: hotelData.roomType,
+                                    nights: hotelData.nights,
+                                    rooms: hotelData.roomsNeeded,
+                                    check_in: hotelData.checkIn || startDate,
+                                    check_out: hotelData.checkOut || endDate,
+                                    reference: ref,
+                                    payment_intent: paymentIntent.id
+                                });
+                            } catch (e) {
+                                console.warn('[Hotel] Supabase save failed:', e);
+                            }
+                            showSuccess(ref, first, last);
+                        } catch (e) {
+                            console.error('[Hotel] Booking error:', e);
+                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('stripe-error').style.display = 'block';
+                        }
+                        return;
+                    } else if (isPackage && packageData) {
+                        // === Package booking flow ===
+                        try {
+                            const ref = 'PK-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                            try {
+                                await api.createPackageBooking({
+                                    guest_name: first + ' ' + last,
+                                    guest_email: email,
+                                    guest_phone: phone,
+                                    guests: parseInt(guests) || 1,
+                                    total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                                    booking_date: travelDate,
+                                    package_name: packageData.name,
+                                    package_dest: packageData.dest,
+                                    package_country: packageData.country,
+                                    package_id: packageData.id,
+                                    duration: packageData.duration,
+                                    nights: packageData.nights,
+                                    hotel: packageData.hotelName,
+                                    room_type: packageData.roomType,
+                                    includes: packageData.includes,
+                                    reference: ref,
+                                    payment_intent: paymentIntent.id
+                                });
+                            } catch (e) {
+                                console.warn('[Package] Supabase save failed:', e);
+                            }
+                            showSuccess(ref, first, last);
+                        } catch (e) {
+                            console.error('[Package] Booking error:', e);
+                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('stripe-error').style.display = 'block';
+                        }
+                        return;
+                    } else {
+                        // === Destination booking flow ===
+                        try {
+                            const travelers = await collectTravelers();
+                            const ref = 'NG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                            const result = await api.confirmPayment({
+                                dest_id: id,
+                                guest_name: first + ' ' + last,
+                                guest_email: email,
+                                guest_phone: phone,
+                                guests: parseInt(guests) || 1,
+                                total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                                payment_intent: paymentIntent.id,
+                                travel_date: travelDate,
+                                passport: document.getElementById('checkout-passport')?.value || '',
+                                identity_card: document.getElementById('checkout-identity-card')?.value || '',
+                                special_requests: document.getElementById('special-requests').value,
+                                hotel: reserveHotel.checked ? 1 : 0,
+                                from_location: document.getElementById('from-loc').value,
+                                to_location: document.getElementById('to-loc').value,
+                                travelers: travelers,
+                                reference: ref
+                            });
+                            showSuccess(result.ref || ref, first, last);
+                        } catch (e) {
+                            console.error('[Booking] Save failed after payment:', e);
+                            showSuccess(paymentIntent.id.slice(-8).toUpperCase(), first, last);
+                        }
+                        return;
                     }
-                    return;
                 }
             }
 
-            // Fallback: no Stripe configured — generate offline booking
-            const ref = 'NG-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-            try {
-                await api.confirmPayment({
-                    dest_id: id,
-                    guest_name: first + ' ' + last,
-                    guest_email: email,
-                    guest_phone: phone,
-                    guests: parseInt(guests) || 1,
-                    total: parseFloat(document.getElementById('checkout-total').textContent.replace(/[$,]/g, '')),
-                    travel_date: travelDate,
-                    passport: document.getElementById('checkout-passport')?.value || '',
-                    identity_card: document.getElementById('checkout-identity-card')?.value || '',
-                    special_requests: document.getElementById('special-requests').value,
-                    hotel: reserveHotel.checked ? 1 : 0,
-                    from_location: document.getElementById('from-loc').value,
-                    to_location: document.getElementById('to-loc').value,
-                    reference: ref
-                });
-            } catch (e) {
-                console.warn('[Booking] Offline save failed:', e);
+            // Fallback: no Stripe configured
+            if (isFlight && flightOffer) {
+                const ref = 'FL-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                try {
+                    await api.createFlightBooking({
+                        guest_name: first + ' ' + last,
+                        guest_email: email,
+                        guest_phone: phone,
+                        guests: parseInt(guests) || 1,
+                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                        booking_date: travelDate,
+                        from_location: flightOffer.departureAirport || '',
+                        to_location: flightOffer.arrivalAirport || '',
+                        airline: flightOffer.airline || '',
+                        flight_number: flightOffer.flightNumber || '',
+                        reference: ref
+                    });
+                } catch (e) { console.warn(e); }
+                showSuccess(ref, first, last);
+            } else if (isHotel && hotelData) {
+                const ref = 'HT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                try {
+                    await api.createHotelBooking({
+                        guest_name: first + ' ' + last,
+                        guest_email: email,
+                        guest_phone: phone,
+                        guests: parseInt(guests) || 1,
+                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                        booking_date: travelDate,
+                        hotel_name: hotelData.name,
+                        hotel_city: hotelData.city,
+                        hotel_country: hotelData.country,
+                        room_type: hotelData.roomType,
+                        nights: hotelData.nights,
+                        rooms: hotelData.roomsNeeded,
+                        check_in: hotelData.checkIn || startDate,
+                        check_out: hotelData.checkOut || endDate,
+                        reference: ref
+                    });
+                } catch (e) { console.warn(e); }
+                showSuccess(ref, first, last);
+            } else if (isPackage && packageData) {
+                const ref = 'PK-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                try {
+                    await api.createPackageBooking({
+                        guest_name: first + ' ' + last,
+                        guest_email: email,
+                        guest_phone: phone,
+                        guests: parseInt(guests) || 1,
+                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                        booking_date: travelDate,
+                        package_name: packageData.name,
+                        package_dest: packageData.dest,
+                        package_country: packageData.country,
+                        package_id: packageData.id,
+                        duration: packageData.duration,
+                        nights: packageData.nights,
+                        hotel: packageData.hotelName,
+                        room_type: packageData.roomType,
+                        includes: packageData.includes,
+                        reference: ref
+                    });
+                } catch (e) { console.warn(e); }
+                showSuccess(ref, first, last);
+            } else {
+                const ref = 'NG-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                try {
+                    await api.confirmPayment({
+                        dest_id: id,
+                        guest_name: first + ' ' + last,
+                        guest_email: email,
+                        guest_phone: phone,
+                        guests: parseInt(guests) || 1,
+                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                        travel_date: travelDate,
+                        passport: document.getElementById('checkout-passport')?.value || '',
+                        identity_card: document.getElementById('checkout-identity-card')?.value || '',
+                        special_requests: document.getElementById('special-requests').value,
+                        hotel: reserveHotel.checked ? 1 : 0,
+                        from_location: document.getElementById('from-loc').value,
+                        to_location: document.getElementById('to-loc').value,
+                        reference: ref
+                    });
+                } catch (e) {
+                    console.warn('[Booking] Offline save failed:', e);
+                }
+                showSuccess(ref, first, last);
             }
-            showSuccess(ref, first, last);
         });
 
         function showSuccess(ref, first, last) {
@@ -914,12 +1308,27 @@
 
             document.getElementById('rec-ref').textContent = ref;
             document.getElementById('rec-name').textContent = first + ' ' + last;
-            document.getElementById('rec-dest').textContent = dest.title;
-            document.getElementById('rec-date').textContent = document.getElementById('travel-date').value || new Date().toLocaleDateString();
-            document.getElementById('rec-pkg').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests;
+
+            if (isFlight && flightOffer) {
+                document.getElementById('rec-dest').textContent = `${flightOffer.departureAirport} → ${flightOffer.arrivalAirport}`;
+                document.getElementById('rec-pkg').textContent = `${flightOffer.airline} • ${flightOffer.flightNumber || ''}`;
+                document.getElementById('rec-date').textContent = `${document.getElementById('travel-date').value || ''} • ${flightOffer.departure} - ${flightOffer.arrival}`;
+            } else if (isHotel && hotelData) {
+                document.getElementById('rec-dest').textContent = `${hotelData.name}, ${hotelData.city}`;
+                document.getElementById('rec-pkg').textContent = `${hotelData.roomType} • ${hotelData.nights} night${hotelData.nights === 1 ? '' : 's'} • ${hotelData.roomsNeeded} room${hotelData.roomsNeeded === 1 ? '' : 's'}`;
+                document.getElementById('rec-date').textContent = `${startDate || ''} → ${endDate || ''}`;
+            } else if (isPackage && packageData) {
+                document.getElementById('rec-dest').textContent = `${packageData.name}`;
+                document.getElementById('rec-pkg').textContent = `${packageData.dest}, ${packageData.country} • ${packageData.duration} days • ${packageData.hotelName}`;
+                document.getElementById('rec-date').textContent = `${packageData.nights} nights • ${packageData.type}`;
+            } else {
+                document.getElementById('rec-dest').textContent = dest.title;
+                document.getElementById('rec-pkg').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests;
+                document.getElementById('rec-date').textContent = document.getElementById('travel-date').value || new Date().toLocaleDateString();
+            }
             document.getElementById('rec-total').textContent = document.getElementById('checkout-total').textContent;
             document.getElementById('barcode-num').textContent = ref;
-            document.getElementById('rec-hotel-row').style.display = reserveHotel.checked ? 'flex' : 'none';
+            document.getElementById('rec-hotel-row').style.display = (isHotel && hotelData) ? 'none' : (isPackage && packageData) ? 'none' : (!isFlight && reserveHotel.checked) ? 'flex' : 'none';
 
             // Save to Activity Log
             const travelDate = document.getElementById('travel-date').value;

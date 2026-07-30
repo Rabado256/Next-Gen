@@ -683,4 +683,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initial UI sync based on stored session
     updateAuthUI();
+
+    // ==========================================
+    // MULTI-CURRENCY INIT
+    // ==========================================
+    const navSelector = document.getElementById('currency-nav-selector');
+    if (navSelector && typeof CURRENCY !== 'undefined') {
+        navSelector.appendChild(CURRENCY.renderSelector());
+        CURRENCY.updateDisplay();
+    }
 });

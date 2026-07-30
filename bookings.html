@@ -46,6 +46,32 @@
             color: #ddd;
             margin-bottom: 1.5rem;
         }
+        .lookup-section {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: -3rem;
+            position: relative;
+            z-index: 2;
+        }
+        .lookup-toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+        .doc-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .doc-flight { background: #e8dff5; color: #6f42c1; }
+        .doc-hotel { background: #d1f2eb; color: #1abc9c; }
+        .doc-package { background: #fef3cd; color: #856404; }
+        .doc-destination { background: #d6eaf8; color: #2c3e50; }
     </style>
 </head>
 <body>
@@ -59,6 +85,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 ms-auto">
                     <a href="index.html" class="text-decoration-none text-dark small">Destinations</a>
+                    <div id="currency-nav-selector"></div>
                     <button id="auth-button" class="auth-icon-btn" data-bs-toggle="modal" data-bs-target="#auth-modal" aria-label="Login or Sign Up">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -79,8 +106,34 @@
         </div>
     </header>
 
+    <!-- Reference Lookup -->
+    <div class="container" style="margin-top: -1.5rem;">
+        <div class="lookup-section">
+            <div class="lookup-toggle d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#refLookupBody" aria-expanded="false">
+                <div>
+                    <h6 class="serif mb-1"><i class="bi bi-search me-2"></i>Look up a booking</h6>
+                    <p class="small text-muted mb-0">Enter your reference code to find a booking</p>
+                </div>
+                <i class="bi bi-chevron-down" id="refLookupChevron"></i>
+            </div>
+            <div class="collapse" id="refLookupBody">
+                <div class="mt-3 pt-3 border-top">
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <input type="text" id="ref-lookup-input" class="form-control rounded-0" placeholder="e.g. NXG-A1B2C3" style="text-transform:uppercase;letter-spacing:0.1em;">
+                        </div>
+                        <div class="col-md-4">
+                            <button id="ref-lookup-btn" class="btn btn-dark rounded-0 px-4 py-2 w-100">Find Booking</button>
+                        </div>
+                    </div>
+                    <div id="ref-lookup-result" class="mt-3" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
-    <main class="container py-5">
+    <main class="container py-4">
         <div id="login-required" class="empty-state" style="display:none;">
             <i class="bi bi-person-circle"></i>
             <h3 class="serif mb-3">Sign In Required</h3>
@@ -109,6 +162,49 @@
             </div>
         </div>
     </footer>
+
+    <!-- Cancel Confirmation Modal -->
+    <div class="modal fade" id="cancel-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="border-radius:12px;">
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3" style="font-size:3rem;color:#e74c3c;">⚠</div>
+                    <h5 class="serif mb-2">Cancel Booking</h5>
+                    <p class="small text-muted mb-3">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+                    <input type="hidden" id="cancel-ref-input">
+                    <div id="cancel-error" class="text-danger small mb-3" style="display:none;"></div>
+                    <div class="d-flex gap-2">
+                        <button id="confirm-cancel-btn" class="btn btn-danger rounded-0 px-3 py-2 flex-fill">Yes, Cancel</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-0 px-3 py-2" data-bs-dismiss="modal">Keep It</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modify Date Modal -->
+    <div class="modal fade" id="modify-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content" style="border-radius:12px;">
+                <div class="modal-body p-4">
+                    <h5 class="serif mb-3"><i class="bi bi-calendar me-2"></i>Modify Travel Date</h5>
+                    <div class="mb-3">
+                        <label class="small text-muted mb-1">Booking Reference</label>
+                        <input type="text" id="modify-ref-input" class="form-control rounded-0" readonly style="background:#f8f9fa;letter-spacing:0.1em;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted mb-1">New Travel Date</label>
+                        <input type="date" id="modify-date-input" class="form-control rounded-0">
+                    </div>
+                    <div id="modify-error" class="text-danger small mb-3" style="display:none;"></div>
+                    <div class="d-flex gap-2">
+                        <button id="confirm-modify-btn" class="btn btn-dark rounded-0 px-3 py-2 flex-fill">Update Date</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-0 px-3 py-2" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Auth Modal -->
     <div class="modal fade auth-modal" id="auth-modal" tabindex="-1" aria-hidden="true">
@@ -188,6 +284,7 @@
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/currency.js"></script>
     <script src="js/main.js"></script>
     <script>
     const DEST_IMAGES = {
@@ -229,6 +326,9 @@
             const date = b.booking_date || b.created_at?.split('T')[0] || '—';
             const amount = b.total_amount || b.total || 0;
             const ref = b.reference || b.ref || '—';
+            const docType = b.doc_type || 'destination';
+            const docBadgeClass = docType === 'flight' ? 'doc-flight' : docType === 'hotel' ? 'doc-hotel' : docType === 'package' ? 'doc-package' : 'doc-destination';
+            const isCancellable = status !== 'cancelled';
             return `<div class="booking-card">
                 <div class="row g-0">
                     <div class="col-md-4">
@@ -239,11 +339,12 @@
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
                                     <span class="booking-status ${statusClass}">${status}</span>
-                                    <h5 class="serif mt-2 mb-1">${b.dest_id ? b.dest_id.charAt(0).toUpperCase() + b.dest_id.slice(1).replace(/-/g, ' ') : 'Destination'}</h5>
+                                    <span class="doc-badge ${docBadgeClass} ms-2">${docType}</span>
+                                    <h5 class="serif mt-2 mb-1">${b.to_location || (b.dest_id ? b.dest_id.charAt(0).toUpperCase() + b.dest_id.slice(1).replace(/-/g, ' ') : 'Destination')}</h5>
                                     <p class="small text-muted mb-0">Ref: ${ref}</p>
                                 </div>
                                 <div class="text-end">
-                                    <h5 class="mb-0">$${Number(amount).toLocaleString()}</h5>
+                                    <h5 class="mb-0"><span class="currency-price" data-usd="${amount}">$${Number(amount).toLocaleString()}</span></h5>
                                     <small class="text-muted">${b.guests || 1} guest${(b.guests || 1) > 1 ? 's' : ''}</small>
                                 </div>
                             </div>
@@ -252,12 +353,152 @@
                                 <div><i class="bi bi-geo-alt me-1"></i>${b.from_location || '—'} → ${b.to_location || '—'}</div>
                                 ${b.hotel_reservation ? '<div><i class="bi bi-building me-1"></i>Hotel</div>' : ''}
                             </div>
-                            <a href="destination.html?id=${encodeURIComponent(b.dest_id || '')}" class="btn btn-outline-dark btn-sm rounded-0 mt-3 px-3" style="font-size: 0.7rem;">View Destination</a>
+                            <div class="d-flex gap-2 mt-3 flex-wrap">
+                                <a href="destination.html?id=${encodeURIComponent(b.dest_id || '')}" class="btn btn-outline-dark btn-sm rounded-0 px-3" style="font-size: 0.7rem;">View</a>
+                                ${isCancellable ? `<button class="btn btn-outline-secondary btn-sm rounded-0 px-3 modify-date-btn" data-ref="${ref}" data-date="${date}" style="font-size: 0.7rem;"><i class="bi bi-calendar me-1"></i>Modify</button>` : ''}
+                                ${isCancellable ? `<button class="btn btn-outline-danger btn-sm rounded-0 px-3 cancel-booking-btn" data-ref="${ref}" style="font-size: 0.7rem;"><i class="bi bi-x-circle me-1"></i>Cancel</button>` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>`;
         }).join('');
+
+        // Wire up cancel buttons
+        document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('cancel-ref-input').value = btn.dataset.ref;
+                new bootstrap.Modal(document.getElementById('cancel-modal')).show();
+            });
+        });
+
+        // Wire up modify date buttons
+        document.querySelectorAll('.modify-date-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('modify-ref-input').value = btn.dataset.ref;
+                document.getElementById('modify-date-input').value = btn.dataset.date || '';
+                new bootstrap.Modal(document.getElementById('modify-modal')).show();
+            });
+        });
+
+        if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
+    }
+
+    // Reference lookup handler
+    document.getElementById('ref-lookup-btn').addEventListener('click', async () => {
+        const input = document.getElementById('ref-lookup-input');
+        const resultDiv = document.getElementById('ref-lookup-result');
+        const ref = input.value.trim().toUpperCase();
+        if (!ref || ref.length < 3) {
+            resultDiv.innerHTML = '<div class="alert alert-danger small py-2 mb-0">Please enter a valid reference code</div>';
+            resultDiv.style.display = 'block';
+            return;
+        }
+        resultDiv.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm" role="status"></div> Looking up...</div>';
+        resultDiv.style.display = 'block';
+        try {
+            const b = await api.getBookingByRef(ref);
+            const status = (b.status || 'confirmed').toLowerCase();
+            const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'pending' ? 'status-pending' : 'status-cancelled';
+            const date = b.booking_date || b.created_at?.split('T')[0] || '—';
+            const amount = b.total_amount || b.total || 0;
+            const docType = b.doc_type || 'destination';
+            const docBadgeClass = docType === 'flight' ? 'doc-flight' : docType === 'hotel' ? 'doc-hotel' : docType === 'package' ? 'doc-package' : 'doc-destination';
+            resultDiv.innerHTML = `<div class="card border-0 bg-light rounded-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="booking-status ${statusClass}">${status}</span>
+                            <span class="doc-badge ${docBadgeClass} ms-1">${docType}</span>
+                            <h6 class="serif mt-2 mb-1">${b.to_location || (b.dest_id || 'Destination')}</h6>
+                            <p class="small text-muted mb-0">Ref: ${b.reference || b.ref || ref}</p>
+                        </div>
+                        <h5 class="mb-0 text-nowrap ms-3"><span class="currency-price" data-usd="${amount}">$${Number(amount).toLocaleString()}</span></h5>
+                    </div>
+                    <div class="d-flex gap-3 mt-2" style="font-size:0.8rem;">
+                        <span><i class="bi bi-calendar3 me-1"></i>${date}</span>
+                        <span><i class="bi bi-people me-1"></i>${b.guests || 1} guest${(b.guests || 1) > 1 ? 's' : ''}</span>
+                    </div>
+                </div>
+            </div>`;
+        } catch (err) {
+            resultDiv.innerHTML = `<div class="alert alert-danger small py-2 mb-0">${err.message}</div>`;
+        }
+    });
+
+    // Cancel booking handler
+    document.getElementById('confirm-cancel-btn').addEventListener('click', async () => {
+        const ref = document.getElementById('cancel-ref-input').value;
+        const errorEl = document.getElementById('cancel-error');
+        const btn = document.getElementById('confirm-cancel-btn');
+        errorEl.style.display = 'none';
+        if (!ref) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cancelling...';
+        try {
+            await api.cancelBooking(ref);
+            bootstrap.Modal.getInstance(document.getElementById('cancel-modal')).hide();
+            await loadBookings();
+            showToast('Booking ' + ref + ' has been cancelled successfully.');
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Yes, Cancel';
+        }
+    });
+
+    // Modify date handler
+    document.getElementById('confirm-modify-btn').addEventListener('click', async () => {
+        const ref = document.getElementById('modify-ref-input').value;
+        const newDate = document.getElementById('modify-date-input').value;
+        const errorEl = document.getElementById('modify-error');
+        const btn = document.getElementById('confirm-modify-btn');
+        errorEl.style.display = 'none';
+        if (!ref || !newDate) {
+            errorEl.textContent = 'Please select a new travel date';
+            errorEl.style.display = 'block';
+            return;
+        }
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+        try {
+            await api.updateBookingDate(ref, newDate);
+            bootstrap.Modal.getInstance(document.getElementById('modify-modal')).hide();
+            await loadBookings();
+            showToast('Travel date updated successfully for ' + ref);
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Update Date';
+        }
+    });
+
+    // Chevron rotation on collapse
+    document.getElementById('refLookupBody').addEventListener('show.bs.collapse', () => {
+        document.getElementById('refLookupChevron').style.transform = 'rotate(180deg)';
+    });
+    document.getElementById('refLookupBody').addEventListener('hide.bs.collapse', () => {
+        document.getElementById('refLookupChevron').style.transform = 'rotate(0deg)';
+    });
+
+    function showToast(message) {
+        const container = document.getElementById('toast-container') || (() => {
+            const c = document.createElement('div');
+            c.id = 'toast-container';
+            c.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999';
+            document.body.appendChild(c);
+            return c;
+        })();
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-success alert-dismissible fade show';
+        toast.style.cssText = 'min-width:280px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);font-size:0.85rem;';
+        toast.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
     }
 
     document.addEventListener('DOMContentLoaded', loadBookings);
