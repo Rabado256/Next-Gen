@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   pref_food TEXT DEFAULT 'none',        -- dietary preference
   avatar_url TEXT DEFAULT '',
   country TEXT DEFAULT '',              -- user-selected country
+  phone TEXT DEFAULT '',                -- contact phone number
   is_admin BOOLEAN DEFAULT false,       -- admin flag
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

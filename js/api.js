@@ -190,6 +190,7 @@ const api = {
     if (profile.emergency !== undefined) updates.emergency = profile.emergency;
     if (profile.emergency_name !== undefined) updates.emergency_name = profile.emergency_name;
     if (profile.country !== undefined) updates.country = profile.country;
+    if (profile.phone !== undefined) updates.phone = profile.phone;
     if (profile.pref_hotel !== undefined) updates.pref_hotel = profile.pref_hotel;
     if (profile.pref_food !== undefined) updates.pref_food = profile.pref_food;
     if (profile.avatar !== undefined) updates.avatar_url = profile.avatar;
