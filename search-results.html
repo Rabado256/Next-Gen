@@ -914,7 +914,15 @@
             icon.className = 'doc-banner-icon unknown';
             icon.textContent = '?';
             title.textContent = 'Travel Documents';
-            desc.textContent = 'Sign in and enter your departure location to see required documents for this destination.';
+            if (userCountry && !destCountry) {
+              desc.textContent = 'Could not detect the destination country for this search.';
+            } else if (urlFrom && !userCountry) {
+              desc.textContent = 'Could not detect your departure country from "' + urlFrom + '".';
+            } else if (user && !userCountry) {
+              desc.innerHTML = 'Add your departure country in your <a href="profile.html" class="text-muted text-decoration-underline">profile</a> to see required documents for this destination.';
+            } else {
+              desc.textContent = 'Sign in to see required documents for this destination.';
+            }
           } else {
             banner.style.display = 'none';
           }
