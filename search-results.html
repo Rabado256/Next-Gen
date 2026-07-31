@@ -1104,7 +1104,7 @@
         // Render hotel results
         (async () => {
             const resultsGrid = document.querySelector('#search-results-page .row.g-4');
-            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            const heading = document.querySelector('#search-results-page .d-flex.justify-content-between.align-items-center.mb-4 .small.text-muted.mb-0');
             if (!resultsGrid) return;
             
             const query = pageParams.get('to') || '';
@@ -1203,7 +1203,7 @@
         // Render holiday package results
         (async () => {
             const resultsGrid = document.querySelector('#search-results-page .row.g-4');
-            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            const heading = document.querySelector('#search-results-page .d-flex.justify-content-between.align-items-center.mb-4 .small.text-muted.mb-0');
             if (!resultsGrid) return;
 
             const dest = pageParams.get('dest') || '';
@@ -1323,7 +1323,7 @@
         // Render real flight results from Duffel API
         (async () => {
             const resultsGrid = document.querySelector('#search-results-page .row.g-4');
-            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            const heading = document.querySelector('#search-results-page .d-flex.justify-content-between.align-items-center.mb-4 .small.text-muted.mb-0');
             if (!resultsGrid) return;
             
             try {
@@ -1434,7 +1434,7 @@
         // Flight search: render mock flights, fall back to destination cards
         (async () => {
             const resultsGrid = document.querySelector('#search-results-page .row.g-4');
-            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            const heading = document.querySelector('#search-results-page .d-flex.justify-content-between.align-items-center.mb-4 .small.text-muted.mb-0');
             if (!resultsGrid) return;
 
             const from = pageParams.get('from') || '';
@@ -1622,7 +1622,7 @@
             if (!dests || dests.length === 0) return;
 
             const resultsGrid = document.querySelector('#search-results-page .row.g-4');
-            const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
+            const heading = document.querySelector('#search-results-page .d-flex.justify-content-between.align-items-center.mb-4 .small.text-muted.mb-0');
             if (!resultsGrid) return;
 
             // Filter by search query if present
