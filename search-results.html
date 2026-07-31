@@ -120,6 +120,32 @@
             object-fit: cover;
         }
 
+        .result-card-img-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #f8f9fa, #eef1f5);
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .flight-airline-logo {
+            height: 40px;
+            width: 40px;
+            object-fit: contain;
+            border-radius: 6px;
+            background: #fff;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .flight-airline-tag {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
         .result-card-body {
             padding: 1.5rem;
         }
@@ -1496,13 +1522,21 @@
 
                 resultsGrid.innerHTML = offers.map(offer => {
                     const formatted = DuffelAPI.formatOfferForDisplay(offer);
+                    const airlineLogo = formatted.airlineLogo
+                        ? `https://www.gstatic.com/flights/airline_logos/70px/${encodeURIComponent(formatted.airlineLogo)}.png`
+                        : '';
                     return `
                         <div class="col-md-6">
                             <div class="result-card flight-card" data-offer-id="${formatted.id}" style="cursor: pointer;">
+                                <div class="result-card-img-wrap">
+                                    ${airlineLogo
+                                        ? `<img src="${airlineLogo}" alt="${escapeHtml(formatted.airline)}" class="flight-airline-logo" onerror="this.style.display='none';">`
+                                        : ''}
+                                    <span class="result-card-tag flight-airline-tag">${escapeHtml(formatted.airline)}</span>
+                                </div>
                                 <div class="result-card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
-                                            <span class="result-card-tag">${escapeHtml(formatted.airline)}</span>
                                             <h3 class="result-card-title mt-2">${formatted.departureAirport} → ${formatted.arrivalAirport}</h3>
                                             <p class="result-card-meta mb-0">${escapeHtml(formatted.flightNumber)}</p>
                                         </div>
