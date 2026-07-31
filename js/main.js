@@ -124,9 +124,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const conciergeBtn = document.getElementById('concierge-btn');
     if (conciergeBtn) {
         conciergeBtn.addEventListener('click', () => {
-            const user = JSON.parse(localStorage.getItem('nextgen_user'));
-            const name = user ? user.name.split(' ')[0] : 'Explorer';
-            alert(`Howdy, ${name}! Your personal concierge is being connected. (WhatsApp Integration Simulation)`);
+            const waNumber = '2347064777029';
+            const waMessage = 'Hi! I just checked out your travel agency site and I\'d love some help planning my trip.';
+            window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`, '_blank', 'noopener');
         });
     }
 
