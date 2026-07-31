@@ -114,7 +114,7 @@ document.getElementById('admin-login-form')?.addEventListener('submit', async (e
 
 // Admin logout handler
 document.getElementById('admin-logout-btn')?.addEventListener('click', () => {
-  if (!confirm('Logout of admin sanctuary?')) return;
+  if (!confirm('Logout of admin suite?')) return;
   api.logout();
   document.getElementById('admin-login-screen').style.display = 'flex';
   document.getElementById('admin-wrapper').style.display = 'none';

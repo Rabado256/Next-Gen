@@ -420,7 +420,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <p class="small text-muted mb-0">Showing 18 curated sanctuaries</p>
+                    <p class="small text-muted mb-0">Showing 18 curated escapes</p>
                     <div class="dropdown">
                         <button class="btn btn-link text-black text-decoration-none small dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
                             Sort by: Featured
@@ -439,7 +439,7 @@
                         <a href="destination.html?id=amalfi" class="result-card">
                             <img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&q=80&w=600&h=400" alt="Amalfi" class="result-card-img">
                             <div class="result-card-body">
-                                <span class="result-card-tag">Romantic Sanctuary</span>
+                                <span class="result-card-tag">Romantic Escape</span>
                                 <h3 class="result-card-title">Amalfi Coast, Italy</h3>
                                 <p class="result-card-meta">June 17 — June 24 // 7 Nights</p>
                                 <div class="result-card-footer">
@@ -583,7 +583,7 @@
                         <a href="destination.html?id=maldives" class="result-card">
                             <img src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&q=80&w=600&h=400" alt="Maldives" class="result-card-img">
                             <div class="result-card-body">
-                                <span class="result-card-tag">Ocean Sanctuary</span>
+                                <span class="result-card-tag">Ocean Escape</span>
                                 <h3 class="result-card-title">The Maldives</h3>
                                 <p class="result-card-meta">Dec 20 — Dec 27 // 7 Nights</p>
                                 <div class="result-card-footer">
@@ -739,7 +739,7 @@
                 </div>
                 <div class="footer-links">
                     <h6>Newsletter</h6>
-                    <p class="small opacity-50 mb-3">Join our inner circle for curated sanctuary updates.</p>
+                    <p class="small opacity-50 mb-3">Join our inner circle for curated destination updates.</p>
                     <form id="newsletter-form" class="d-flex gap-2">
                         <input type="email" class="form-control bg-transparent border-secondary text-white rounded-0 form-control-sm" placeholder="Email address" required>
                         <button type="submit" class="btn btn-outline-light btn-sm rounded-0">Join</button>
@@ -783,7 +783,7 @@
             <!-- Success State -->
             <div id="avail-success" class="avail-content" style="display:none;">
                 <div class="avail-icon avail-icon-success">✓</div>
-                <p class="avail-status">Sanctuary Available</p>
+                <p class="avail-status">Available Now</p>
                 <p class="avail-suggestion">Redirecting you now...</p>
             </div>
             <!-- Fail State -->
@@ -1034,17 +1034,17 @@
         const pageItems = items.slice(start, start + PER_PAGE);
 
         if (heading && page === 1) {
-            heading.textContent = `Showing ${items.length} curated ${items.length === 1 ? 'sanctuary' : 'sanctuaries'}`;
+            heading.textContent = `Showing ${items.length} curated ${items.length === 1 ? 'escape' : 'escapes'}`;
         }
 
         const vibeLabels = {
-            romantic: 'Romantic Sanctuary', adventure: 'Adventure Escape', solo: 'Solo Silence',
+            romantic: 'Romantic Escape', adventure: 'Adventure Escape', solo: 'Solo Silence',
             family: 'Family Heritage', cultural: 'Cultural Journey', wellness: 'Wellness Retreat'
         };
 
         grid.innerHTML = pageItems.map(d => {
             const vibe = d.vibe || 'romantic';
-            const label = vibeLabels[vibe] || 'Curated Sanctuary';
+            const label = vibeLabels[vibe] || 'Curated Escape';
             const img = d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600&h=400';
             const price = d.price ? '<span class="currency-price" data-usd="' + (d.price / 2) + '">$' + (d.price / 2).toLocaleString() + '</span> <span class="small opacity-50 fw-normal">/ person</span>' : 'Contact us';
             return `<div class="col-md-6">
@@ -1639,7 +1639,7 @@
             }
 
             if (heading) {
-                heading.textContent = `Showing ${filtered.length} curated ${filtered.length === 1 ? 'sanctuary' : 'sanctuaries'}`;
+                heading.textContent = `Showing ${filtered.length} curated ${filtered.length === 1 ? 'escape' : 'escapes'}`;
             }
 
             renderPage(1, filtered, resultsGrid, heading);
@@ -1744,7 +1744,7 @@
                             </svg>
                         </div>
                         <h5 class="mb-0" style="font-family:'Playfair Display',serif;">Welcome</h5>
-                        <p class="small mb-0" style="color:rgba(255,255,255,0.4);">Sign in to access your sanctuaries</p>
+                        <p class="small mb-0" style="color:rgba(255,255,255,0.4);">Sign in to access your journeys</p>
                     </div>
 
                     <!-- Tabs -->

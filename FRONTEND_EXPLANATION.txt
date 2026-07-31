@@ -212,7 +212,7 @@ SECTION HEADER:
 
 VIBE FILTERS (lines 436-442):
   Pill-shaped filter buttons for mood-based filtering:
-    All Sanctuaries | Romantic | Adventure | Solo Silence | Family Heritage
+    All Escapes | Romantic | Adventure | Solo Silence | Family Heritage
 
   ANIMATION (CSS):
     .vibe-btn::before - A pseudo-element with ochre background that scales
@@ -357,7 +357,7 @@ LAYER STRUCTURE:
 
     Card content:
       01 - Our Philosophy (intentional travel, curation)
-      02 - Our Purpose (connecting with sanctuaries)
+      02 - Our Purpose (connecting with escapes)
       03 - Our Promise (seamless, transparent travel)
 
     HOVER ANIMATION:
@@ -450,7 +450,7 @@ PROFILE MODAL (lines 1301-1419):
     - Save button + Logout link
 
   Right Column (Activity & Wishlist):
-    Tabbed interface: Journeys | My Sanctuaries
+    Tabbed interface: Journeys | My Wishlist
     - Upcoming trips list
     - Past memories list
     - Wishlist grid (saved destinations)

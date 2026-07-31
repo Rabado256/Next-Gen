@@ -93,7 +93,7 @@ The entry point feels like an elegant digital travel magazine.
 - **Photo Gallery:** Curated image collection of the destination.
 - **Reviews Section:** User-submitted ratings and comments, fetched from Supabase.
 - **Smart Document Badge:** Required travel documents based on destination vs. user's profile country.
-- **Action Buttons:** "Reserve Your Sanctuary" and "Add to Wishlist" with persistence.
+- **Action Buttons:** "Reserve Your Escape" and "Add to Wishlist" with persistence.
 
 ### 4.4. Custom Itinerary Builder (itinerary-builder.html)
 - **Multi-Day Builder:** Add/remove days with custom titles, descriptions, activities per day.
@@ -125,10 +125,10 @@ Full Supabase Auth integration across the platform.
 - **Profile Center:** Glassmorphic modal with:
   - Personal Info: Name, passport, identity card, emergency contact, country
   - Travel Preferences: Always-book-hotel toggle, food preference
-  - Tabbed Content: "Journeys" (booking history) and "Sanctuaries" (wishlist)
+  - Tabbed Content: "Journeys" (booking history) and "Escapes" (wishlist)
   - Avatar Upload: FileReader-based base64 with localStorage persistence
-  - Quick Stats: Journey count, sanctuary count, countries visited
-  - Gradient header with "Elite Sanctuary" membership badge
+  - Quick Stats: Journey count, escape count, countries visited
+  - Gradient header with "Elite Voyager" membership badge
 
 ### 4.7. User Profile & Bookings
 
@@ -270,8 +270,8 @@ A sophisticated three-layer glassmorphism system applied to 30+ element types:
 
 #### Profile Modal Design
 - **Container:** `rgba(10,10,10,0.92)` with `backdrop-filter: blur(40px)`, `border-radius: 24px`
-- **Header:** Gradient background, 72px circular avatar with camera upload overlay, "Elite Sanctuary" gold gradient badge, quick stat cards
-- **Layout:** Two-column — left (identity docs + preferences), right (tabbed Journeys/Sanctuaries content)
+- **Header:** Gradient background, 72px circular avatar with camera upload overlay, "Elite Voyager" gold gradient badge, quick stat cards
+- **Layout:** Two-column — left (identity docs + preferences), right (tabbed Journeys/Escapes content)
 - **Tabs:** Active tab uses `rgba(212,163,115,0.15)` background with gold text
 - **Form fields:** Dark inputs (`rgba(255,255,255,0.06)`) with gold focus ring
 
