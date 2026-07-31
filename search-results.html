@@ -809,6 +809,7 @@
     <script src="js/hotels.js"></script>
     <script src="js/packages.js"></script>
     <script src="js/duffel.js"></script>
+    <script src="js/mock-flights.js"></script>
     <script src="js/main.js"></script>
     <script>
         // ===== SMART DOCUMENT DETECTION =====
@@ -1413,23 +1414,111 @@
         })();
         
     } else if (pageParams.get('search_type') === 'flight') {
-        // Flight search: show destination cards filtered by destination
+        // Flight search: render mock flights, fall back to destination cards
         (async () => {
-            let dests;
-            try { dests = await api.getDestinations(); } catch (_) { return; }
-            if (!dests || dests.length === 0) return;
-
             const resultsGrid = document.querySelector('#search-results-page .row.g-4');
             const heading = document.querySelector('#search-results-page .small.text-muted.mb-0');
             if (!resultsGrid) return;
 
-            const to = (pageParams.get('to') || '').toLowerCase();
+            const from = pageParams.get('from') || '';
+            const to = pageParams.get('to') || '';
+            const depart = pageParams.get('depart') || '';
+            const ret = pageParams.get('return') || '';
+            const guests = parseInt(pageParams.get('travelers')) || 1;
+            const cabinClass = pageParams.get('class') || 'economy';
+            const trip = pageParams.get('trip') || 'roundtrip';
+
+            const renderMock = () => {
+                if (typeof MockFlights === 'undefined') return false;
+                const offers = MockFlights.generateOffers({ from, to, depart, ret, cabinClass, trip });
+                if (!offers || offers.length === 0) return false;
+
+                if (heading) {
+                    const cheapest = Math.round(Math.min(...offers.map(o => parseFloat(o.total_amount))));
+                    heading.textContent = `Showing ${offers.length} flights ${to ? 'to "' + escapeHtml(to) + '"' : ''} — from $${cheapest.toLocaleString()}`;
+                }
+
+                resultsGrid.innerHTML = offers.map(offer => {
+                    const formatted = DuffelAPI.formatOfferForDisplay(offer);
+                    return `
+                        <div class="col-md-6">
+                            <div class="result-card flight-card" data-offer-id="${formatted.id}" style="cursor: pointer;">
+                                <div class="result-card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <span class="result-card-tag">${escapeHtml(formatted.airline)}</span>
+                                            <h3 class="result-card-title mt-2">${formatted.departureAirport} → ${formatted.arrivalAirport}</h3>
+                                            <p class="result-card-meta mb-0">${escapeHtml(formatted.flightNumber)}</p>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="result-price" style="font-size: 1.25rem; font-weight: 700;">
+                                                <span class="currency-price" data-usd="${formatted.price}">$${formatted.price.toLocaleString()}</span>
+                                            </div>
+                                            <small class="text-muted">per person</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 0.85rem;">
+                                        <div>
+                                            <strong>${formatted.departure}</strong>
+                                            <span class="text-muted mx-2">${formatted.departureAirport}</span>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-muted">${formatted.duration}</div>
+                                            <small>${formatted.stopsText}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <strong>${formatted.arrival}</strong>
+                                            <span class="text-muted mx-2">${formatted.arrivalAirport}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">${escapeHtml(formatted.cabinClass)} class</small>
+                                        <span class="btn-explore-sm">Select & Book</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                resultsGrid.querySelectorAll('.flight-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const offer = offers.find(o => o.id === card.dataset.offerId);
+                        if (!offer) return;
+                        sessionStorage.setItem('selected_flight_offer', JSON.stringify(offer));
+                        const checkoutParams = new URLSearchParams({
+                            search_type: 'flight',
+                            from: from,
+                            to: to,
+                            start: depart,
+                            end: ret,
+                            guests: String(guests),
+                            offer_id: offer.id,
+                            price: offer.total_amount,
+                            currency: offer.total_currency
+                        });
+                        window.location.href = 'checkout.html?' + checkoutParams.toString();
+                    });
+                });
+                return true;
+            };
+
+            if (renderMock()) return;
+
+            // Fallback: show destination cards filtered by destination
+            let dests;
+            try { dests = await api.getDestinations(); } catch (_) { return; }
+            if (!dests || dests.length === 0) return;
+
+            const lowerTo = to.toLowerCase();
             let filtered = dests;
-            if (to) {
+            if (lowerTo) {
                 filtered = dests.filter(d =>
-                    (d.title || '').toLowerCase().includes(to) ||
-                    (d.country || '').toLowerCase().includes(to) ||
-                    (d.id || '').toLowerCase().includes(to)
+                    (d.title || '').toLowerCase().includes(lowerTo) ||
+                    (d.country || '').toLowerCase().includes(lowerTo) ||
+                    (d.id || '').toLowerCase().includes(lowerTo)
                 );
             }
 
