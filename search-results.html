@@ -413,6 +413,12 @@
 
             <!-- Results Grid -->
             <div class="col-lg-9">
+                <div id="flight-heading" class="mb-4" style="display:none;">
+                    <p class="small tracking-widest opacity-50 mb-1" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">Flights</p>
+                    <h1 class="serif fs-2 mb-1">Choose Your Flight</h1>
+                    <p class="small text-muted mb-0" id="flight-route-summary"></p>
+                </div>
+
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <p class="small text-muted mb-0">Showing 18 curated sanctuaries</p>
                     <div class="dropdown">
@@ -1077,6 +1083,20 @@
         });
     }
 
+    function showFlightHeading(from, to, depart, ret) {
+        const block = document.getElementById('flight-heading');
+        if (!block) return;
+        block.style.display = 'block';
+        const summary = document.getElementById('flight-route-summary');
+        if (summary) {
+            const route = [from, to].filter(Boolean).join(' → ');
+            const dates = [];
+            if (depart) dates.push('Departs ' + depart);
+            if (ret) dates.push('Returns ' + ret);
+            summary.textContent = [route, dates.join(' • ')].filter(Boolean).join(' // ');
+        }
+    }
+
     // Check for hotel search first
     const pageParams = new URLSearchParams(window.location.search);
     
@@ -1311,6 +1331,8 @@
                 const searchParams = JSON.parse(duffelParams || '{}');
                 const offers = data.data?.offers || [];
                 
+                showFlightHeading(searchParams.from, searchParams.to, searchParams.depart, searchParams.return);
+                
                 if (offers.length === 0) {
                     heading.textContent = 'No flights found for this route';
                     resultsGrid.innerHTML = `
@@ -1422,6 +1444,8 @@
             const guests = parseInt(pageParams.get('travelers')) || 1;
             const cabinClass = pageParams.get('class') || 'economy';
             const trip = pageParams.get('trip') || 'roundtrip';
+
+            showFlightHeading(from, to, depart, ret);
 
             // === Visa gate for this route ===
             const renderVisaGate = () => {
@@ -1566,6 +1590,7 @@
             if (renderMock()) return;
 
             // Fallback: show destination cards filtered by destination
+            showFlightHeading(pageParams.get('from'), pageParams.get('to'), depart, ret);
             let dests;
             try { dests = await api.getDestinations(); } catch (_) { return; }
             if (!dests || dests.length === 0) return;
