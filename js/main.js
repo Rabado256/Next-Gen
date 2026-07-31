@@ -639,57 +639,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // ---- 3. Currency Switcher (USD / EUR toggle) ----
+    // ---- 3. Currency Switcher (footer selector) ----
     const currencyToggle = document.querySelector('.footer-currency');
-    if (currencyToggle) {
-        currencyToggle.style.cursor = 'pointer';
-        currencyToggle.addEventListener('click', () => {
-            const currentCurrency = currencyToggle.textContent.trim().split(' ')[0];
-            const newCurrency = currentCurrency === 'USD' ? 'EUR' : 'USD';
-            const symbol = newCurrency === 'USD' ? '$' : '€';
-            const oldSymbol = currentCurrency === 'USD' ? '$' : '€';
-
-            currencyToggle.innerHTML = `${newCurrency} <span style="opacity:0.4;">▼</span>`;
-
-            // Update known price elements on the page
-            const priceSelectors = [
-                '.result-price', '.dest-card-desc', '.booking-confirm-text',
-                '.total-price', '#checkout-total', '#checkout-price',
-                '#hotel-price', '.result-card-footer .result-price'
-            ];
-            
-            priceSelectors.forEach(selector => {
-                document.querySelectorAll(selector).forEach(el => {
-                    if (el.textContent.includes(oldSymbol)) {
-                        el.textContent = el.textContent.replace(oldSymbol, symbol);
-                    }
-                });
-            });
-
-            // Walk price-specific containers only (avoid corrupting non-price text)
-            const priceContainers = document.querySelectorAll('.result-price, .dest-card-desc, .booking-confirm-text, .total-price, #checkout-total, #checkout-price, #hotel-price, .result-card-footer, .dest-price');
-            priceContainers.forEach(parent => {
-                const walker = document.createTreeWalker(parent, NodeFilter.SHOW_TEXT, null, false);
-                let node = walker.nextNode();
-                while (node) {
-                    if (node.textContent.includes(oldSymbol)) {
-                        node.textContent = node.textContent.replace(new RegExp('\\' + oldSymbol, 'g'), symbol);
-                    }
-                    node = walker.nextNode();
-                }
-            });
-        });
+    if (currencyToggle && typeof CURRENCY !== 'undefined') {
+        currencyToggle.innerHTML = '';
+        currencyToggle.style.color = 'rgba(255,255,255,0.85)';
+        currencyToggle.appendChild(CURRENCY.renderSelector());
+        CURRENCY.updateDisplay();
     }
 
     // Initial UI sync based on stored session
     updateAuthUI();
-
-    // ==========================================
-    // MULTI-CURRENCY INIT
-    // ==========================================
-    const navSelector = document.getElementById('currency-nav-selector');
-    if (navSelector && typeof CURRENCY !== 'undefined') {
-        navSelector.appendChild(CURRENCY.renderSelector());
-        CURRENCY.updateDisplay();
-    }
 });

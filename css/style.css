@@ -1323,6 +1323,59 @@ h2, h3, .serif {
     border-color: rgba(255,255,255,0.3);
 }
 
+.footer-currency {
+    display: inline-flex;
+    align-items: center;
+    color: rgba(255,255,255,0.85);
+}
+
+.footer-currency .dropdown > .btn {
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 4px;
+    padding: 0.35rem 0.75rem !important;
+}
+
+.footer-currency .dropdown > .btn:hover {
+    border-color: rgba(255,255,255,0.3) !important;
+}
+
+.footer-currency .dropdown-menu {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.footer-currency .dropdown-menu .dropdown-item {
+    color: rgba(255,255,255,0.8);
+}
+
+.footer-currency .dropdown-menu .dropdown-item:hover,
+.footer-currency .dropdown-menu .dropdown-item.active {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+/* ===== Visa result (inline on welcome page) ===== */
+.visa-result {
+    max-width: 720px;
+    margin: 1.25rem auto 0;
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    text-align: left;
+}
+
+.visa-badge {
+    display: inline-block;
+    padding: 0.4rem 1.2rem;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
 .footer-bottom {
     display: flex;
     justify-content: space-between;

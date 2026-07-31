@@ -55,7 +55,6 @@
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3 ms-auto">
                     <a href="#destinations" class="text-white text-decoration-none small tracking-widest">Destinations</a>
                     <a href="#inspirations" class="text-white text-decoration-none small tracking-widest">Inspirations</a>
-                    <div id="currency-nav-selector"></div>
                     <button class="auth-icon-btn" data-bs-toggle="modal" data-bs-target="#auth-modal" aria-label="Login or Sign Up">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -86,6 +85,10 @@
                 <button class="search-tab" data-mode="hotel">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V3h2v16h14V3h2v18H3z"/><path d="M7 7h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zM7 12h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
                     Hotel
+                </button>
+                <button class="search-tab" data-mode="visa">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Visa
                 </button>
 
             </div>
@@ -163,7 +166,7 @@
                 </div>
 
                 <!-- Visa -->
-                <div class="booking-capsule search-capsule" data-capsule="visa" style="display:none;">
+                <div class="booking-capsule search-capsule" data-capsule="visa">
                     <div class="capsule-field">
                         <span class="capsule-label">Nationality</span>
                         <select class="capsule-select" id="visa-from">
@@ -241,6 +244,9 @@
 
 
             </div>
+
+            <!-- Visa result (inline search) -->
+            <div id="visa-result" class="visa-result" style="display:none;"></div>
         </div>
     </header>
 
@@ -1010,7 +1016,6 @@
                     <h6>Discover</h6>
                     <a href="destination.html">Destinations</a>
                     <a href="index.html#inspirations">Inspirations</a>
-                    <a href="visa-check.html">Visa Check</a>
                     <a href="index.html#about">About</a>
                     <a href="blog.html">Blog</a>
                     <a href="contact.html">Contact</a>
@@ -1357,6 +1362,7 @@
     <script src="js/currency.js"></script>
     <script src="js/hotels.js"></script>
     <script src="js/packages.js"></script>
+    <script src="js/visa-data.js"></script>
     <script src="js/duffel.js"></script>
     <script src="js/main.js"></script>
     <script>
@@ -1911,12 +1917,42 @@
                 if (e.key === 'Enter') performHotelSearch();
             });
 
-            // Visa search
+            // Visa search (inline results on the welcome page)
+            const visaResult = document.getElementById('visa-result');
             function performVisaSearch() {
                 const from = document.getElementById('visa-from').value;
                 const to = document.getElementById('visa-to').value;
-                if (!from || !to) return;
-                window.location.href = 'visa-check.html?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+                if (!from || !to || !visaResult || typeof checkVisa === 'undefined') return;
+
+                const visa = checkVisa(from, to);
+                visaResult.style.display = 'block';
+                visaResult.innerHTML = '';
+
+                if (visa) {
+                    const typeInfo = getVisaTypeInfo(visa.type);
+                    const color = getTypeColor(visa.type);
+                    const fee = getVisaFeeByType(visa.type);
+                    const parts = [
+                        '<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">',
+                        '<span class="visa-badge" style="background:' + color + ';">' + typeInfo.label + '</span>',
+                        '<strong class="serif" style="font-size:1.15rem;">' + from + ' → ' + to + '</strong>',
+                        '</div>'
+                    ];
+                    if (visa.duration) parts.push('<p class="text-muted mb-1 mt-3" style="font-size:0.95rem;">Duration: ' + visa.duration + '</p>');
+                    if (visa.notes) parts.push('<p class="text-muted mb-1" style="font-size:0.9rem;">' + visa.notes + '</p>');
+                    parts.push('<p class="text-muted mb-0" style="font-size:0.85rem;">' + typeInfo.desc + (fee ? ' • Processing fee from $' + fee : '') + '</p>');
+                    visaResult.innerHTML = parts.join('');
+                } else {
+                    const nearby = getNearbyVisaDestinations(from, to);
+                    const nearbyHtml = nearby.length
+                        ? '<p class="text-muted mt-3 mb-0" style="font-size:0.85rem;">Destinations with visa info for ' + from + ': ' + nearby.slice(0, 6).join(', ') + '</p>'
+                        : '';
+                    visaResult.innerHTML =
+                        '<p class="mb-1">No visa data for <strong>' + from + ' → ' + to + '</strong>.</p>' +
+                        '<p class="text-muted mb-0" style="font-size:0.85rem;">Verify requirements with the embassy.</p>' +
+                        nearbyHtml;
+                }
+                visaResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
             document.getElementById('visa-search-btn').addEventListener('click', performVisaSearch);
