@@ -462,6 +462,7 @@
     <script src="js/hotels.js"></script>
     <script src="js/packages.js"></script>
     <script src="js/duffel.js"></script>
+    <script src="js/visa-data.js"></script>
     <script src="js/main.js"></script>
     <script>
         async function cacheDestinationsFromApi() {
@@ -576,6 +577,7 @@
         const isFlight = searchType === 'flight';
         const isHotel = searchType === 'hotel';
         const isPackage = searchType === 'package';
+        const isVisa = searchType === 'visa';
         let flightOffer = null;
         if (isFlight) {
             try {
@@ -636,6 +638,25 @@
                     document.getElementById('back-to-dest').textContent = '← Back to Search Results';
                 }
             } catch (_) {}
+        }
+
+        // === Visa mode support ===
+        let visaData = null;
+        if (isVisa) {
+            const visaType = params.get('visa_type') || 'VISA_REQUIRED';
+            const visaDest = params.get('visa_dest') || params.get('to') || '';
+            const typeInfo = (typeof getVisaTypeInfo === 'function') ? getVisaTypeInfo(visaType) : { label: visaType };
+            const visaFee = (typeof getVisaFeeByType === 'function') ? getVisaFeeByType(visaType) : 100;
+            visaData = { visaType, visaDest, visaLabel: typeInfo.label, visaFee };
+            Object.assign(dest, {
+                title: 'Visa Processing — ' + (visaDest || 'Destination'),
+                edition: typeInfo.label + ' • ' + (params.get('from') || '') + ' → ' + (params.get('to') || ''),
+                price: visaFee,
+                img: 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&q=80&w=800'
+            });
+            basePrice = dest.price * guests;
+            document.getElementById('back-to-dest').href = 'search-results.html';
+            document.getElementById('back-to-dest').textContent = '← Back to Search Results';
         }
 
         function getExtrasPrice() {
@@ -821,6 +842,25 @@
                 return;
             }
 
+            // Visa mode — skip availability check
+            if (isVisa && visaData) {
+                checkStatus.textContent = 'Visa Processing Ready';
+                checkSection.querySelector('.spinner-border').style.display = 'none';
+                const checkIcon = document.createElement('div');
+                checkIcon.textContent = '🛂';
+                checkIcon.className = 'display-4 mb-3';
+                checkSection.prepend(checkIcon);
+                const msg = document.createElement('p');
+                msg.className = 'text-muted small mt-2';
+                msg.textContent = `${visaData.visaLabel} • ${visaData.visaDest || ''}`;
+                checkSection.appendChild(msg);
+                await new Promise(r => setTimeout(r, 800));
+                checkSection.style.display = 'none';
+                formSection.style.display = 'block';
+                formSection.classList.add('reveal-snap', 'visible');
+                return;
+            }
+
             let available = false;
             let availMessage = '';
             try {
@@ -938,6 +978,16 @@
         const reserveHotel = document.getElementById('reserve-hotel');
         const addMeal = document.getElementById('add-meal');
         const mealSelection = document.getElementById('arrival-meal-selection');
+
+        // Visa mode — no hotel/meal extras
+        if (isVisa) {
+            const reserveHotelWrap = reserveHotel.closest('.form-check') || reserveHotel.closest('div');
+            if (reserveHotelWrap) reserveHotelWrap.style.display = 'none';
+            if (hotelSelectContainer) hotelSelectContainer.style.display = 'none';
+            const addMealWrap = addMeal.closest('.form-check') || addMeal.closest('div');
+            if (addMealWrap) addMealWrap.style.display = 'none';
+            mealSelection.style.display = 'none';
+        }
 
         reserveHotel.addEventListener('change', async function() {
             if (this.checked) {
@@ -1222,6 +1272,36 @@
                             document.getElementById('stripe-error').style.display = 'block';
                         }
                         return;
+                    } else if (isVisa && visaData) {
+                        // === Visa processing flow ===
+                        try {
+                            const ref = 'VS-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                            try {
+                                await api.createVisaBooking({
+                                    guest_name: first + ' ' + last,
+                                    guest_email: email,
+                                    guest_phone: phone,
+                                    guests: parseInt(guests) || 1,
+                                    total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                                    booking_date: travelDate,
+                                    visa_type: visaData.visaType,
+                                    visa_label: visaData.visaLabel,
+                                    from_location: document.getElementById('from-loc').value || '',
+                                    to_location: document.getElementById('to-loc').value || '',
+                                    reference: ref,
+                                    payment_intent: paymentIntent.id,
+                                    extras: getExtrasJSON()
+                                });
+                            } catch (e) {
+                                console.warn('[Visa] Supabase save failed:', e);
+                            }
+                            showSuccess(ref, first, last);
+                        } catch (e) {
+                            console.error('[Visa] Booking error:', e);
+                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('stripe-error').style.display = 'block';
+                        }
+                        return;
                     } else {
                         // === Destination booking flow ===
                         try {
@@ -1323,6 +1403,25 @@
                     });
                 } catch (e) { console.warn(e); }
                 showSuccess(ref, first, last);
+            } else if (isVisa && visaData) {
+                const ref = 'VS-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                try {
+                    await api.createVisaBooking({
+                        guest_name: first + ' ' + last,
+                        guest_email: email,
+                        guest_phone: phone,
+                        guests: parseInt(guests) || 1,
+                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
+                        booking_date: travelDate,
+                        visa_type: visaData.visaType,
+                        visa_label: visaData.visaLabel,
+                        from_location: document.getElementById('from-loc').value || '',
+                        to_location: document.getElementById('to-loc').value || '',
+                        reference: ref,
+                        extras: getExtrasJSON()
+                    });
+                } catch (e) { console.warn(e); }
+                showSuccess(ref, first, last);
             } else {
                 const ref = 'NG-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
                 try {
@@ -1370,6 +1469,10 @@
                 document.getElementById('rec-dest').textContent = `${packageData.name}`;
                 document.getElementById('rec-pkg').textContent = `${packageData.dest}, ${packageData.country} • ${packageData.duration} days • ${packageData.hotelName}`;
                 document.getElementById('rec-date').textContent = `${packageData.nights} nights • ${packageData.type}`;
+            } else if (isVisa && visaData) {
+                document.getElementById('rec-dest').textContent = `Visa Processing — ${visaData.visaDest || ''}`;
+                document.getElementById('rec-pkg').textContent = `${visaData.visaLabel} • ${document.getElementById('to-loc').value || ''}`;
+                document.getElementById('rec-date').textContent = document.getElementById('travel-date').value || new Date().toLocaleDateString();
             } else {
                 document.getElementById('rec-dest').textContent = dest.title;
                 document.getElementById('rec-pkg').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests;
@@ -1377,7 +1480,7 @@
             }
             document.getElementById('rec-total').textContent = document.getElementById('checkout-total').textContent;
             document.getElementById('barcode-num').textContent = ref;
-            document.getElementById('rec-hotel-row').style.display = (isHotel && hotelData) ? 'none' : (isPackage && packageData) ? 'none' : (!isFlight && reserveHotel.checked) ? 'flex' : 'none';
+            document.getElementById('rec-hotel-row').style.display = (isHotel && hotelData) ? 'none' : (isPackage && packageData) ? 'none' : (isVisa && visaData) ? 'none' : (!isFlight && reserveHotel.checked) ? 'flex' : 'none';
 
             // Show extras in receipt
             const extrasRec = document.getElementById('rec-extras');

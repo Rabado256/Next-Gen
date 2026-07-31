@@ -218,3 +218,53 @@ function checkVisa(nationality, destination) {
 function getVisaTypeInfo(typeKey) {
   return VISA_INFO[typeKey] || { label: 'Unknown', badge: 'bg-secondary', desc: 'Check with embassy' };
 }
+
+function getTypeColor(type) {
+  var colors = {
+    VISA_FREE: '#16a34a',
+    VISA_ON_ARRIVAL: '#0891b2',
+    E_VISA: '#2563eb',
+    VISA_REQUIRED: '#dc2626',
+    ETA: '#6b7280'
+  };
+  return colors[type] || '#6b7280';
+}
+
+function getVisaFeeByType(type) {
+  var fees = {
+    VISA_FREE: 30,
+    VISA_ON_ARRIVAL: 75,
+    E_VISA: 100,
+    VISA_REQUIRED: 150,
+    ETA: 60
+  };
+  return fees[type] || 0;
+}
+
+var VISA_REGIONS = {
+  'United States': 'north-america', 'Canada': 'north-america', 'Mexico': 'north-america', 'Costa Rica': 'north-america',
+  'Brazil': 'south-america', 'Argentina': 'south-america', 'Chile': 'south-america', 'Peru': 'south-america',
+  'United Kingdom': 'europe', 'Italy': 'europe', 'France': 'europe', 'Spain': 'europe', 'Germany': 'europe',
+  'Switzerland': 'europe', 'Netherlands': 'europe', 'Portugal': 'europe', 'Greece': 'europe', 'Iceland': 'europe', 'Norway': 'europe',
+  'Nigeria': 'africa', 'South Africa': 'africa', 'Kenya': 'africa', 'Ghana': 'africa', 'Egypt': 'africa',
+  'Morocco': 'africa', 'Mauritius': 'africa', 'Seychelles': 'africa', 'Tanzania': 'africa', 'Mozambique': 'africa',
+  'India': 'asia', 'Japan': 'asia', 'China': 'asia', 'Thailand': 'asia', 'Indonesia': 'asia', 'Singapore': 'asia',
+  'Malaysia': 'asia', 'Maldives': 'asia', 'Nepal': 'asia', 'Sri Lanka': 'asia',
+  'UAE': 'middle-east', 'Turkey': 'middle-east',
+  'Australia': 'oceania', 'New Zealand': 'oceania', 'Fiji': 'oceania', 'French Polynesia': 'oceania',
+  'Antarctica': 'antarctica'
+};
+
+function getNearbyVisaDestinations(nationality, destination) {
+  var region = VISA_REGIONS[destination] || '';
+  var results = [];
+  var prefix = (nationality || '').toLowerCase() + ':';
+  for (var key in VISA_REQUIREMENTS) {
+    if (!key.startsWith(prefix)) continue;
+    var destName = key.substring(prefix.length);
+    var proper = destName.charAt(0).toUpperCase() + destName.slice(1);
+    if (proper.toLowerCase() === (destination || '').toLowerCase()) continue;
+    if (region && VISA_REGIONS[proper] === region) results.push(proper);
+  }
+  return results.sort();
+}

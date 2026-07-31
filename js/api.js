@@ -367,7 +367,7 @@ const api = {
         hotel_city: data.hotel_city || '',
         hotel_country: data.hotel_country || '',
         room_type: data.room_type || '',
-        ...(data.extras ? { extras: data.extras } : {})
+        ...(data.extras ? { extras: data.extras } : {}),
         nights: data.nights || 0,
         rooms: data.rooms || 1,
         check_in: data.check_in || '',
@@ -444,6 +444,38 @@ const api = {
         hotel: data.hotel || '',
         room_type: data.room_type || '',
         includes: data.includes || [],
+        payment_intent: data.payment_intent || '',
+        ...(data.extras ? { extras: data.extras } : {})
+      })
+    }).select().single();
+    if (error) throw new Error(error.message);
+    return result;
+  },
+
+  async createVisaBooking(data) {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const ref = data.reference || 'VS-' + Date.now().toString(36).toUpperCase();
+    const { data: result, error } = await SB.from('bookings').insert({
+      user_id: user.id,
+      guest_name: data.guest_name || '',
+      guest_email: data.guest_email || '',
+      guest_phone: data.guest_phone || '',
+      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
+      guests: parseInt(data.guests) || 1,
+      total: parseFloat(data.total) || 0,
+      total_amount: parseFloat(data.total) || 0,
+      currency: data.currency || 'usd',
+      status: 'confirmed',
+      ref,
+      reference: ref,
+      from_location: data.from_location || '',
+      to_location: data.to_location || '',
+      dest_id: 'Visa',
+      doc_type: 'visa',
+      special_requests: JSON.stringify({
+        visa_type: data.visa_type || '',
+        visa_label: data.visa_label || '',
         payment_intent: data.payment_intent || '',
         ...(data.extras ? { extras: data.extras } : {})
       })

@@ -7,3 +7,4 @@ NUL
 .gstack/
 *.png
 AGENCY/
+.env*

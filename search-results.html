@@ -810,6 +810,7 @@
     <script src="js/packages.js"></script>
     <script src="js/duffel.js"></script>
     <script src="js/mock-flights.js"></script>
+    <script src="js/visa-data.js"></script>
     <script src="js/main.js"></script>
     <script>
         // ===== SMART DOCUMENT DETECTION =====
@@ -1427,6 +1428,61 @@
             const guests = parseInt(pageParams.get('travelers')) || 1;
             const cabinClass = pageParams.get('class') || 'economy';
             const trip = pageParams.get('trip') || 'roundtrip';
+
+            // === Visa gate for this route ===
+            const renderVisaGate = () => {
+                if (typeof checkVisa === 'undefined' || typeof getVisaTypeInfo === 'undefined' || typeof MockFlights === 'undefined') return;
+                const fromAirport = MockFlights.resolveAirport(from);
+                const toAirport = MockFlights.resolveAirport(to);
+                const nationality = fromAirport ? fromAirport.country : srExtractCountry(from);
+                const destination = toAirport ? toAirport.country : srExtractCountry(to);
+                if (!nationality || !destination) return;
+                const visa = checkVisa(nationality, destination);
+                const panel = document.createElement('div');
+                panel.id = 'flight-visa-panel';
+                panel.className = 'mb-4';
+                if (visa) {
+                    const typeInfo = getVisaTypeInfo(visa.type);
+                    const color = getTypeColor(visa.type);
+                    const visaFee = (getVisaFeeByType ? getVisaFeeByType(visa.type) : 0);
+                    panel.innerHTML = `
+                        <div class="border border-dark p-4" style="background:#f0fdf4;">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div>
+                                    <span class="badge rounded-0 px-3 py-2" style="background:${color};color:#fff;">${typeInfo.label}</span>
+                                    <h5 class="serif mt-3 mb-1">Visa Available for ${escapeHtml(destination)}</h5>
+                                    <p class="text-muted small mb-0">${escapeHtml(visa.duration || '')}${visa.notes ? ' • ' + escapeHtml(visa.notes) : ''}${visaFee ? ' • Processing fee $' + visaFee : ''}</p>
+                                </div>
+                                <a href="checkout.html?search_type=visa&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&guests=${guests}&visa_type=${visa.type}&visa_dest=${encodeURIComponent(destination)}" class="btn btn-dark rounded-0 px-4 py-2">Fill Your Info & Pay</a>
+                            </div>
+                        </div>`;
+                } else {
+                    const nearby = getNearbyVisaDestinations(nationality, destination);
+                    const btnList = nearby.map(d => `
+                        <a class="btn btn-outline-dark btn-sm rounded-0 px-3" href="search-results.html?search_type=flight&from=${encodeURIComponent(from)}&to=${encodeURIComponent(d)}&q=${encodeURIComponent(d)}&depart=${encodeURIComponent(depart)}&trip=${encodeURIComponent(trip)}&return=${encodeURIComponent(ret)}&class=${encodeURIComponent(cabinClass)}&travelers=${guests}">${escapeHtml(d)}</a>`).join('');
+                    panel.innerHTML = `
+                        <div class="border border-dark p-4" style="background:#fff8f0;">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div>
+                                    <span class="badge rounded-0 px-3 py-2 mb-3" style="background:#d97706;color:#fff;">Plan B</span>
+                                    <h5 class="serif mb-1">No Visa Info for ${escapeHtml(destination)}</h5>
+                                    <p class="text-muted small mb-3">We couldn't find visa requirements for ${escapeHtml(nationality)} → ${escapeHtml(destination)}. Try one of these nearby destinations instead:</p>
+                                    <div class="d-flex flex-wrap gap-2">${btnList}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    if (!nearby.length) {
+                        panel.innerHTML = `
+                        <div class="border border-dark p-4" style="background:#fff8f0;">
+                            <span class="badge rounded-0 px-3 py-2 mb-3" style="background:#d97706;color:#fff;">Plan B</span>
+                            <h5 class="serif mb-1">No Visa Info for ${escapeHtml(destination)}</h5>
+                            <p class="text-muted small mb-0">We couldn't find visa requirements for ${escapeHtml(nationality)} → ${escapeHtml(destination)} yet. Contact our advisors for help with this destination.</p>
+                        </div>`;
+                    }
+                }
+                resultsGrid.parentNode.insertBefore(panel, resultsGrid);
+            };
+            renderVisaGate();
 
             const renderMock = () => {
                 if (typeof MockFlights === 'undefined') return false;
