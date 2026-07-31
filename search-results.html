@@ -31,35 +31,8 @@
             transition: all 0.3s ease;
         }
 
-        .condensed-search {
-            display: flex;
-            align-items: center;
-            background: #f4f4f4;
-            border-radius: 100px;
-            padding: 0.25rem 0.25rem 0.25rem 1.5rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .condensed-search input {
-            border: none;
-            background: transparent;
-            font-size: 0.9rem;
-            font-weight: 500;
-            outline: none;
-            flex: 1;
-        }
-
-        .condensed-search .search-btn {
-            background: var(--primary-black);
-            color: white;
-            border: none;
-            border-radius: 100px;
-            padding: 0.5rem 1.5rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .results-header-sticky .doc-banner {
+            margin-bottom: 0;
         }
 
         .filter-sidebar {
@@ -359,14 +332,9 @@
     <!-- Page Header (Gap for fixed nav) -->
     <div style="height: 80px;"></div>
 
-    <!-- Sticky Condensed Search Bar -->
-    <header class="results-header-sticky">
+    <!-- Sticky Travel Documents Banner -->
+    <header class="results-header-sticky" id="results-header">
         <div class="container">
-            <div class="condensed-search">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3 opacity-50"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" placeholder="Search destinations, vibes, or experiences..." value="Italy, Mediterranean" id="search-query-input">
-                <button class="search-btn">Search</button>
-            </div>
             <!-- Travel Documents Banner -->
             <div id="search-doc-banner" class="doc-banner" style="display:none;">
                 <div id="search-doc-icon" class="doc-banner-icon unknown">?</div>
@@ -902,16 +870,17 @@
 
         function updateSearchDocBanner() {
           var user = JSON.parse(localStorage.getItem('nextgen_user'));
+          var header = document.getElementById('results-header');
           var banner = document.getElementById('search-doc-banner');
           var icon = document.getElementById('search-doc-icon');
           var title = document.getElementById('search-doc-title');
           var desc = document.getElementById('search-doc-desc');
           if (!banner || !icon || !title || !desc) return;
           // Try to detect user's country from profile or URL
-          var query = (document.getElementById('search-query-input')?.value || '').toLowerCase();
           var params = new URLSearchParams(window.location.search);
           var urlFrom = params.get('from') || '';
           var urlQuery = params.get('q') || '';
+          var query = urlQuery.toLowerCase();
           var userCountry = null;
           if (urlFrom) {
             userCountry = srExtractCountry(urlFrom);
@@ -949,12 +918,12 @@
           } else {
             banner.style.display = 'none';
           }
+          if (header) header.style.display = banner.style.display === 'flex' ? '' : 'none';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             // Smart document detection on search
             updateSearchDocBanner();
-            document.getElementById('search-query-input')?.addEventListener('input', updateSearchDocBanner);
 
             // Availability Check on Explore click
             const overlay = document.getElementById('avail-overlay');
@@ -1037,15 +1006,6 @@
                 const destName = card.querySelector('.result-card-title')?.textContent || '';
                 const destTag = card.querySelector('.result-card-tag')?.textContent || '';
                 checkAvailability(href, destName + ' // ' + destTag);
-            });
-
-            // Also intercept the condensed search button
-            document.querySelector('.condensed-search .search-btn')?.addEventListener('click', (e) => {
-                const input = document.querySelector('.condensed-search input');
-                const query = input ? input.value.trim() : '';
-                if (query) {
-                    window.location.href = 'search-results.html?q=' + encodeURIComponent(query);
-                }
             });
         });
     </script>
