@@ -10,6 +10,25 @@
     <script src="https://js.stripe.com/v3/"></script>
     <!-- Checkout page styles — document detection, booking form, payment summary -->
     <style>
+        /* Checkout is a light page — btn-noir glass styling (white-on-white) is invisible here.
+           Override to solid dark so "Proceed to Payment", "Authorize Payment", and "Back to Home" show. */
+        body.bg-white .btn-noir {
+            background: #111;
+            color: #fff;
+            border: 1px solid #111;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            box-shadow: none;
+        }
+        body.bg-white .btn-noir:hover {
+            background: #000;
+            border-color: #000;
+            box-shadow: none;
+        }
+        body.bg-white .btn-noir:active {
+            background: #222;
+            box-shadow: none;
+        }
         #page-loading {
             position: fixed; inset: 0; z-index: 9998;
             background: #fff;
