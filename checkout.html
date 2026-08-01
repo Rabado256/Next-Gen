@@ -567,6 +567,18 @@
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id') || 'amalfi';
         const guests = parseInt(params.get('guests')) || 1;
+
+        // Effective paying traveler count. When GROUP BOOKING is enabled the
+        // price follows the number of traveler rows added; otherwise it uses
+        // the guest count chosen on the destination page.
+        function getGuests() {
+            const toggle = document.getElementById('group-booking-toggle');
+            if (toggle && toggle.checked) {
+                return Math.max(1, document.querySelectorAll('#traveler-rows .traveler-row').length);
+            }
+            return parseInt(guests) || 1;
+        }
+
         const dest = destData[id] || destData.amalfi;
         let basePrice = dest.price * guests;
         let hotelPrice = 500 * guests;
@@ -691,8 +703,11 @@
             const withMeal = document.getElementById('add-meal')?.checked;
             const mealSelect = document.getElementById('food-preference');
             const selectedMealOption = mealSelect?.options[mealSelect.selectedIndex];
-            mealPrice = withMeal ? parseInt(selectedMealOption?.dataset?.price || 0) * guests : 0;
+            const currentGuests = getGuests();
+            mealPrice = withMeal ? parseInt(selectedMealOption?.dataset?.price || 0) * currentGuests : 0;
             const extrasPrice = getExtrasPrice();
+            basePrice = (isHotel && hotelData) ? dest.price : dest.price * currentGuests;
+            hotelPrice = 500 * currentGuests;
 
             const totalPrice = basePrice + (withHotel ? hotelPrice : 0) + mealPrice + extrasPrice;
             const totalEl = document.getElementById('checkout-total');
@@ -746,18 +761,26 @@
         document.getElementById('checkout-dest-title').textContent = dest.title;
         document.getElementById('checkout-dest-edition').textContent = dest.edition;
 
+        function refreshPriceDisplay() {
+            const priceEl = document.getElementById('checkout-price');
+            if (!priceEl || (isHotel && hotelData)) return;
+            const dispGuests = getGuests();
+            if (isPackage && packageData) {
+                const pp = Math.round(dest.price / dispGuests);
+                priceEl.textContent = `$${pp.toLocaleString()}/person × ${dispGuests} guest${dispGuests === 1 ? '' : 's'}`;
+            } else {
+                priceEl.textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + dispGuests + (dispGuests > 1 ? ' guests' : ' guest');
+            }
+        }
+
         if (isHotel && hotelData) {
             const ppn = typeof CURRENCY !== 'undefined' ? Math.round(hotelData.pricePerNight) : hotelData.pricePerNight;
             document.getElementById('checkout-price').textContent =
                 `${typeof CURRENCY !== 'undefined' ? '$' : '$'}${ppn}/night × ${hotelData.nights} night${hotelData.nights === 1 ? '' : 's'} × ${hotelData.roomsNeeded} room${hotelData.roomsNeeded === 1 ? '' : 's'}`;
             document.getElementById('rec-hotel-row').style.display = 'none';
-        } else if (isPackage && packageData) {
-            const pp = typeof CURRENCY !== 'undefined' ? Math.round(dest.price / guests) : Math.round(dest.price / guests);
-            document.getElementById('checkout-price').textContent =
-                `$${pp.toLocaleString()}/person × ${guests} guest${guests === 1 ? '' : 's'}`;
-            document.getElementById('rec-hotel-row').style.display = 'none';
         } else {
-            document.getElementById('checkout-price').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests + (guests > 1 ? ' guests' : ' guest');
+            refreshPriceDisplay();
+            if (isPackage && packageData) document.getElementById('rec-hotel-row').style.display = 'none';
         }
         // Render travel extras UI
         if (typeof EXTRAS !== 'undefined') {
@@ -785,7 +808,7 @@
         const endDate = params.get('end') || '';
 
         checkDest.textContent = toLoc || dest.title;
-        checkDetails.textContent = `${searchType.toUpperCase()} // ${guests} GUESTS`;
+        checkDetails.textContent = `${searchType.toUpperCase()} // ${getGuests()} GUESTS`;
 
         // Fill from/to locs
         document.getElementById('from-loc').value = fromLoc;
@@ -887,7 +910,7 @@
                     if (hasSpace) {
                         const availTrips = matchingTrips.filter(t => t.available_spots > 0);
                         const totalSpots = availTrips.reduce((s, t) => s + t.available_spots, 0);
-                        available = totalSpots >= (parseInt(guests) || 1);
+                        available = totalSpots >= (getGuests());
                         availMessage = `${availTrips.length} departure(s) available, ${totalSpots} spot(s) open`;
                     } else {
                         available = false;
@@ -1069,7 +1092,7 @@
                     currency: 'usd',
                     guest_name: (document.getElementById('first-name').value || '') + ' ' + (document.getElementById('last-name').value || ''),
                     guest_email: document.getElementById('email')?.value || '',
-                    guests: parseInt(guests) || 1
+                    guests: getGuests()
                 });
                 clientSecret = result.client_secret;
                 paymentIntentId = result.payment_intent_id;
@@ -1185,7 +1208,7 @@
                                     guest_name: first + ' ' + last,
                                     guest_email: email,
                                     guest_phone: phone,
-                                    guests: parseInt(guests) || 1,
+                                    guests: getGuests(),
                                     total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                                     booking_date: travelDate,
                                     from_location: flightOffer.departureAirport || '',
@@ -1222,7 +1245,7 @@
                                     guest_name: first + ' ' + last,
                                     guest_email: email,
                                     guest_phone: phone,
-                                    guests: parseInt(guests) || 1,
+                                    guests: getGuests(),
                                     total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                                     booking_date: travelDate,
                                     hotel_name: hotelData.name,
@@ -1256,7 +1279,7 @@
                                     guest_name: first + ' ' + last,
                                     guest_email: email,
                                     guest_phone: phone,
-                                    guests: parseInt(guests) || 1,
+                                    guests: getGuests(),
                                     total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                                     booking_date: travelDate,
                                     package_name: packageData.name,
@@ -1291,7 +1314,7 @@
                                     guest_name: first + ' ' + last,
                                     guest_email: email,
                                     guest_phone: phone,
-                                    guests: parseInt(guests) || 1,
+                                    guests: getGuests(),
                                     total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                                     booking_date: travelDate,
                                     visa_type: visaData.visaType,
@@ -1322,7 +1345,7 @@
                                 guest_name: first + ' ' + last,
                                 guest_email: email,
                                 guest_phone: phone,
-                                guests: parseInt(guests) || 1,
+                                guests: getGuests(),
                                 total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                                 payment_intent: paymentIntent.id,
                                 travel_date: travelDate,
@@ -1354,7 +1377,7 @@
                         guest_name: first + ' ' + last,
                         guest_email: email,
                         guest_phone: phone,
-                        guests: parseInt(guests) || 1,
+                        guests: getGuests(),
                         total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                         booking_date: travelDate,
                         from_location: flightOffer.departureAirport || '',
@@ -1373,7 +1396,7 @@
                         guest_name: first + ' ' + last,
                         guest_email: email,
                         guest_phone: phone,
-                        guests: parseInt(guests) || 1,
+                        guests: getGuests(),
                         total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                         booking_date: travelDate,
                         hotel_name: hotelData.name,
@@ -1396,7 +1419,7 @@
                         guest_name: first + ' ' + last,
                         guest_email: email,
                         guest_phone: phone,
-                        guests: parseInt(guests) || 1,
+                        guests: getGuests(),
                         total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                         booking_date: travelDate,
                         package_name: packageData.name,
@@ -1420,7 +1443,7 @@
                         guest_name: first + ' ' + last,
                         guest_email: email,
                         guest_phone: phone,
-                        guests: parseInt(guests) || 1,
+                        guests: getGuests(),
                         total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                         booking_date: travelDate,
                         visa_type: visaData.visaType,
@@ -1440,7 +1463,7 @@
                         guest_name: first + ' ' + last,
                         guest_email: email,
                         guest_phone: phone,
-                        guests: parseInt(guests) || 1,
+                        guests: getGuests(),
                         total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
                         travel_date: travelDate,
                         passport: document.getElementById('checkout-passport')?.value || '',
@@ -1485,7 +1508,7 @@
                 document.getElementById('rec-date').textContent = document.getElementById('travel-date').value || new Date().toLocaleDateString();
             } else {
                 document.getElementById('rec-dest').textContent = dest.title;
-                document.getElementById('rec-pkg').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + guests;
+                document.getElementById('rec-pkg').textContent = '$' + Math.round(dest.price).toString() + '.00 × ' + getGuests();
                 document.getElementById('rec-date').textContent = document.getElementById('travel-date').value || new Date().toLocaleDateString();
             }
             document.getElementById('rec-total').textContent = document.getElementById('checkout-total').textContent;
@@ -1515,7 +1538,7 @@
                 dest: dest.title,
                 date: travelDate || new Date().toLocaleDateString(),
                 total: document.getElementById('checkout-total').textContent,
-                guests: guests,
+                guests: getGuests(),
                 hotel: reserveHotel.checked ? 'Yes' : 'No',
                 status: 'confirmed',
                 from_location: document.getElementById('from-loc')?.value || '',
@@ -1819,17 +1842,28 @@
 
         // === Group Booking ===
         let travelerCount = 0;
+        function refreshGroupPricing() {
+            refreshPriceDisplay();
+            updateSummary(document.getElementById('reserve-hotel')?.checked).then(() => {
+                if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
+            });
+        }
         window.addTravelerRow = function() {
             const container = document.getElementById('traveler-rows');
             travelerCount++;
-            const rows = container.querySelectorAll('.traveler-row').length + 1;
             const div = document.createElement('div');
             div.className = 'traveler-row row g-2 mb-2 align-items-center';
             div.innerHTML = '<div class="col-4"><input class="t-first form-control form-control-sm border-dark rounded-0" placeholder="First" required></div>' +
                 '<div class="col-4"><input class="t-last form-control form-control-sm border-dark rounded-0" placeholder="Last" required></div>' +
                 '<div class="col-3"><input class="t-email form-control form-control-sm border-dark rounded-0" placeholder="Email" type="email"></div>' +
-                '<div class="col-1"><button type="button" class="btn btn-outline-danger btn-sm rounded-0 py-0 px-1" onclick="this.parentElement.parentElement.remove()">×</button></div>';
+                '<div class="col-1"><button type="button" class="btn btn-outline-danger btn-sm rounded-0 py-0 px-1" onclick="removeTravelerRow(this)">×</button></div>';
             container.appendChild(div);
+            refreshGroupPricing();
+        };
+        window.removeTravelerRow = function(btn) {
+            const row = btn.closest('.traveler-row');
+            if (row) row.remove();
+            refreshGroupPricing();
         };
         
         // Listen for location changes to update document requirements
@@ -1840,12 +1874,14 @@
         document.getElementById('group-booking-toggle').addEventListener('change', function() {
             document.getElementById('group-travelers').style.display = this.checked ? 'block' : 'none';
             if (this.checked && travelerCount === 0) addTravelerRow();
+            refreshGroupPricing();
         });
     document.getElementById('page-loading').classList.add('hidden');
     if (!renderSuccess) {
         document.getElementById('page-error').classList.add('show');
     }
-    } catch (_) {
+    } catch (err) {
+        console.error('[checkout] load failed:', err);
         document.getElementById('page-loading').classList.add('hidden');
         document.getElementById('page-error').classList.add('show');
     }
