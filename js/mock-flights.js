@@ -9,7 +9,7 @@
 const MockFlights = (() => {
     // [code, city, country]
     const AIRPORTS = [
-        ['LOS', 'Lagos', 'Nigeria'], ['ABV', 'Abuja', 'Nigeria'], ['PHC', 'Port Harcourt', 'Nigeria'],
+        ['LOS', 'Lagos', 'Nigeria'], ['ABV', 'Abuja', 'Nigeria'], ['PHC', 'Port Harcourt', 'Nigeria'], ['KAN', 'Kano', 'Nigeria'],
         ['CPT', 'Cape Town', 'South Africa'], ['JNB', 'Johannesburg', 'South Africa'], ['DUR', 'Durban', 'South Africa'],
         ['NBO', 'Nairobi', 'Kenya'], ['MBA', 'Mombasa', 'Kenya'], ['EBB', 'Kampala', 'Uganda'], ['KGL', 'Kigali', 'Rwanda'],
         ['ACC', 'Accra', 'Ghana'], ['CMN', 'Casablanca', 'Morocco'], ['CAI', 'Cairo', 'Egypt'], ['TUN', 'Tunis', 'Tunisia'],
@@ -217,14 +217,16 @@ const MockFlights = (() => {
         const cityTok = tokens[0] || '';
         const countryTok = tokens.length > 1 ? tokens[tokens.length - 1] : '';
         const hasCountry = countryTok && countryTok !== cityTok;
+        const baseCityTok = cityTok.replace(/\s*(state|province|region|county|city)\b.*$/, '').trim();
 
         const matchesCity = a => {
             const c = a[1].toLowerCase();
-            if (c === cityTok) return true;
+            if (c === cityTok || c === baseCityTok) return true;
             if (cityTok.length >= 3 && c.startsWith(cityTok)) return true;
-            if (cityTok.length >= 3) {
+            if (baseCityTok.length >= 3 && c.startsWith(baseCityTok)) return true;
+            if (baseCityTok.length >= 3) {
                 const words = c.split(/[-\s]+/);
-                return words.some(w => w.startsWith(cityTok));
+                return words.some(w => w.startsWith(baseCityTok));
             }
             return false;
         };

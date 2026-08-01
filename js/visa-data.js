@@ -191,6 +191,23 @@ setVisa('South Africa', 'Brazil', 'VISA_FREE', '90 days', null);
 setVisa('South Africa', 'Singapore', 'VISA_FREE', '30 days', null);
 setVisa('South Africa', 'UAE', 'VISA_FREE', '30 days', null);
 
+// ============ SAUDI ARABIA ============
+setVisa('Saudi Arabia', 'Nigeria', 'E_VISA', '90 days', 'E-Visa available — apply online before travel');
+setVisa('Saudi Arabia', 'Egypt', 'VISA_ON_ARRIVAL', '30 days', '$25 USD visa on arrival');
+setVisa('Saudi Arabia', 'Turkey', 'E_VISA', '90 days', 'E-Visa available');
+setVisa('Saudi Arabia', 'UAE', 'VISA_FREE', '30 days', 'Visa-free for GCC nationals');
+setVisa('Saudi Arabia', 'Italy', 'VISA_REQUIRED', '90 days', 'Schengen visa required');
+setVisa('Saudi Arabia', 'France', 'VISA_REQUIRED', '90 days', 'Schengen visa required');
+setVisa('Saudi Arabia', 'United Kingdom', 'VISA_REQUIRED', null, 'Visa required');
+setVisa('Saudi Arabia', 'United States', 'VISA_REQUIRED', null, 'Visa required');
+setVisa('Saudi Arabia', 'Canada', 'VISA_REQUIRED', null, 'Visa required');
+setVisa('Saudi Arabia', 'Japan', 'VISA_FREE', '90 days', null);
+setVisa('Saudi Arabia', 'India', 'E_VISA', '60 days', 'E-Visa available');
+setVisa('Saudi Arabia', 'Indonesia', 'VISA_FREE', '30 days', null);
+setVisa('Saudi Arabia', 'Kenya', 'ETA', '90 days', 'ETA required');
+setVisa('Saudi Arabia', 'Thailand', 'VISA_FREE', '60 days', null);
+setVisa('Saudi Arabia', 'Ghana', 'VISA_FREE', '90 days', 'ECOWAS member');
+
 // ============ DOMESTIC (same country) ============
 ['United States', 'United Kingdom', 'Canada', 'Australia', 'India', 'Nigeria',
  'South Africa', 'Italy', 'France', 'Spain', 'Germany', 'Japan', 'Brazil',
