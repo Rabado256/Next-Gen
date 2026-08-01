@@ -76,10 +76,11 @@ async function handleAPI(req, res) {
 
   // GET /api/config — expose public configuration to the client
   if (url === '/api/config' && req.method === 'GET') {
-    return json(res, 200, {
+    json(res, 200, {
       stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || '',
       supabase_url: process.env.SUPABASE_URL || ''
     });
+    return true;
   }
 
   // POST /api/create-payment-intent
@@ -116,48 +117,37 @@ async function handleAPI(req, res) {
 
   // POST /api/confirm-booking — saves booking to Supabase after payment
   if (url === '/api/confirm-booking' && req.method === 'POST') {
-    try {
-      const body = await parseBody(req);
-      const { createClient } = supabaseJs;
-      const supabase = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_ANON_KEY
-      );
+    return invokeServerless('confirm-booking.js', 'Booking', req, res);
+  }
 
-      const { data, error } = await supabase.from('bookings').insert({
-        dest_id: body.dest_id,
-        guest_name: body.guest_name,
-        guest_email: body.guest_email,
-        guest_phone: body.guest_phone,
-        guests: body.guests,
-        total_amount: body.total_amount,
-        total: body.total_amount,
-        currency: body.currency || 'usd',
-        status: 'confirmed',
-        payment_id: body.payment_id,
-        booking_date: body.travel_date,
-        passport: body.passport || '',
-        identity_card: body.identity_card || '',
-        special_requests: body.special_requests || '',
-        hotel_reservation: body.hotel_reservation || false,
-        hotel: body.hotel_reservation === true || body.hotel_reservation === 1 || body.hotel_reservation === 'true',
-        from_location: body.from_location || '',
-        to_location: body.to_location || '',
-        travelers: body.travelers || null,
-        reference: body.reference,
-        ref: body.reference
-      }).select('id, reference').single();
-
-      if (error) throw error;
-      json(res, 200, { success: true, booking: data });
-    } catch (e) {
-      console.error('[Booking] confirm error:', e.message);
-      json(res, 500, { error: e.message });
-    }
-    return true;
+  // POST /api/lookup-booking — public booking lookup by reference (guest-safe)
+  if (url === '/api/lookup-booking' && req.method === 'POST') {
+    return invokeServerless('lookup-booking.js', 'Booking', req, res);
   }
 
   return false;
+}
+
+// Shared loader for the Vercel-style serverless handlers in /api
+async function invokeServerless(file, tag, req, res) {
+  try {
+    const body = await parseBody(req);
+    delete require.cache[require.resolve('./api/' + file)];
+    const handler = require('./api/' + file);
+    const { IncomingMessage } = require('http');
+    const mockReq = Object.assign(Object.create(IncomingMessage.prototype), {
+      method: req.method,
+      url: req.url,
+      headers: req.headers,
+      body,
+      async on() { return this; }
+    });
+    await handler(mockReq, res);
+  } catch (e) {
+    console.error('[' + tag + '] ' + file + ' error:', e.message);
+    json(res, 500, { error: e.message });
+  }
+  return true;
 }
 
 const server = http.createServer(async (req, res) => {

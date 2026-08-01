@@ -441,7 +441,7 @@
                                 <h3 class="result-card-title">Amalfi Coast, Italy</h3>
                                 <p class="result-card-meta">June 17 — June 24 // 7 Nights</p>
                                 <div class="result-card-footer">
-                                    <div class="result-price">$2,450 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <div class="result-price">$4,200 <span class="small opacity-50 fw-normal">/ person</span></div>
                                     <span class="btn-explore-sm">Explore</span>
                                 </div>
                             </div>
@@ -457,7 +457,7 @@
                                 <h3 class="result-card-title">Kyoto Ritual, Japan</h3>
                                 <p class="result-card-meta">Oct 12 — Oct 19 // 7 Nights</p>
                                 <div class="result-card-footer">
-                                    <div class="result-price">$3,100 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <div class="result-price">$3,900 <span class="small opacity-50 fw-normal">/ person</span></div>
                                     <span class="btn-explore-sm">Explore</span>
                                 </div>
                             </div>
@@ -617,7 +617,7 @@
                                 <h3 class="result-card-title">Bali, Indonesia</h3>
                                 <p class="result-card-meta">Aug 05 — Aug 12 // 7 Nights</p>
                                 <div class="result-card-footer">
-                                    <div class="result-price">$2,800 <span class="small opacity-50 fw-normal">/ person</span></div>
+                                    <div class="result-price">$3,800 <span class="small opacity-50 fw-normal">/ person</span></div>
                                     <span class="btn-explore-sm">Explore</span>
                                 </div>
                             </div>
@@ -731,7 +731,7 @@
                     <h6>Support</h6>
                     <a href="help.html">FAQ</a>
                     <a href="legal.html">Cancellation Policy</a>
-                    <a href="#">Track Booking</a>
+                    <a href="bookings.html">Track Booking</a>
                     <a href="mailto:curated@nextgentravel.com">24/7 Support</a>
                 </div>
                 <div class="footer-links">
@@ -951,61 +951,81 @@
                 document.body.style.overflow = 'hidden';
                 document.getElementById('avail-checking-dest').textContent = destName || '';
 
-                // Simulate real-time availability check (1.8s)
-                setTimeout(() => {
-                    const available = Math.random() > 0.35; // ~65% chance available
+                // Real availability check against scheduled trips
+                const params = new URLSearchParams(window.location.search);
+                const from = params.get('from') || '';
+                const to = params.get('to') || params.get('q') || '';
+                const depart = params.get('depart') || '';
 
-                    if (available) {
-                        loading.style.display = 'none';
-                        success.style.display = 'flex';
-                        setTimeout(() => {
-                            window.location.href = redirectUrl;
-                        }, 900);
-                    } else {
-                        loading.style.display = 'none';
-                        fail.style.display = 'flex';
+                api.checkTripAvailability(from, to, depart)
+                    .then(tripsWithSpots => {
+                        const available = tripsWithSpots.length > 0;
+                        if (available) {
+                            loading.style.display = 'none';
+                            success.style.display = 'flex';
+                            setTimeout(() => {
+                                window.location.href = redirectUrl;
+                            }, 900);
+                        } else {
+                            loading.style.display = 'none';
+                            fail.style.display = 'flex';
 
-                        // Show today's date
-                        const today = new Date();
-                        document.getElementById('avail-date').textContent =
-                            today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                            // Show today's date
+                            const today = new Date();
+                            document.getElementById('avail-date').textContent =
+                                today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-                        // Generate 3 random alternative dates within 60 days
-                        const altContainer = document.getElementById('avail-alternatives');
-                        altContainer.innerHTML = '';
-                        const usedDates = new Set();
-                        for (let i = 0; i < 3; i++) {
-                            let d;
-                            let dateStr;
-                            do {
-                                d = new Date();
-                                d.setDate(d.getDate() + 3 + Math.floor(Math.random() * 55));
-                                dateStr = d.toISOString().split('T')[0];
-                            } while (usedDates.has(dateStr));
-                            usedDates.add(dateStr);
+                            // Suggest alternative departure dates that do have availability
+                            const altContainer = document.getElementById('avail-alternatives');
+                            altContainer.innerHTML = '';
+                            api.getTrips()
+                                .then(allTrips => {
+                                    const usedDates = new Set();
+                                    let count = 0;
+                                    (allTrips || []).forEach(t => {
+                                        if (count >= 3) return;
+                                        const spots = Math.max(0, (t.max_capacity || 0) - (t.booked_count || 0));
+                                        if (spots <= 0) return;
+                                        if (from && t.from_location && !String(t.from_location).toLowerCase().includes(String(from).toLowerCase())) return;
+                                        if (to && t.to_location && !String(t.to_location).toLowerCase().includes(String(to).toLowerCase())) return;
+                                        if (usedDates.has(t.departure_date)) return;
+                                        usedDates.add(t.departure_date);
+                                        count++;
 
-                            const btn = document.createElement('button');
-                            btn.className = 'btn-alt-date';
-                            btn.textContent = d.toLocaleDateString('en-US', {
-                                weekday: 'short', month: 'short', day: 'numeric'
-                            });
-                            btn.addEventListener('click', () => {
-                                window.location.href = redirectUrl + '&date=' + dateStr;
-                            });
-                            altContainer.appendChild(btn);
+                                        const btn = document.createElement('button');
+                                        btn.className = 'btn-alt-date';
+                                        btn.textContent = new Date(t.departure_date + 'T00:00:00').toLocaleDateString('en-US', {
+                                            weekday: 'short', month: 'short', day: 'numeric'
+                                        });
+                                        btn.addEventListener('click', () => {
+                                            window.location.href = redirectUrl + '&date=' + encodeURIComponent(t.departure_date);
+                                        });
+                                        altContainer.appendChild(btn);
+                                    });
+                                    if (count === 0) {
+                                        const hint = document.createElement('p');
+                                        hint.className = 'text-muted small mb-0';
+                                        hint.textContent = 'No scheduled trips found for this route yet.';
+                                        altContainer.appendChild(hint);
+                                    }
+                                })
+                                .catch(() => {});
+
+                            // Continue anyway
+                            document.getElementById('avail-continue').onclick = () => {
+                                window.location.href = redirectUrl;
+                            };
+                            // Close overlay
+                            document.getElementById('avail-close').onclick = () => {
+                                overlay.style.display = 'none';
+                                document.body.style.overflow = '';
+                            };
                         }
-
-                        // Continue anyway
-                        document.getElementById('avail-continue').onclick = () => {
-                            window.location.href = redirectUrl;
-                        };
-                        // Close overlay
-                        document.getElementById('avail-close').onclick = () => {
-                            overlay.style.display = 'none';
-                            document.body.style.overflow = '';
-                        };
-                    }
-                }, 1800);
+                    })
+                    .catch(() => {
+                        // If the availability check itself fails, let the user through
+                        window.location.href = redirectUrl;
+                    });
             }
 
             // Intercept result card clicks (event delegation for dynamic cards too)
@@ -1043,7 +1063,7 @@
             const vibe = d.vibe || 'romantic';
             const label = vibeLabels[vibe] || 'Curated Escape';
             const img = d.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600&h=400';
-            const price = d.price ? '<span class="currency-price" data-usd="' + (d.price / 2) + '">$' + (d.price / 2).toLocaleString() + '</span> <span class="small opacity-50 fw-normal">/ person</span>' : 'Contact us';
+            const price = d.price ? '<span class="currency-price" data-usd="' + d.price + '">$' + Number(d.price).toLocaleString() + '</span> <span class="small opacity-50 fw-normal">/ person</span>' : 'Contact us';
             return `<div class="col-md-6">
                 <a href="destination.html?id=${encodeURIComponent(escapeHtml(d.id))}" class="result-card">
                     <img src="${escapeHtml(img)}" alt="${escapeHtml(d.title || d.id)}" class="result-card-img">
@@ -1312,122 +1332,7 @@
         })();
 
     } else {
-    // Check for Duffel API results
-    const duffelResults = sessionStorage.getItem('duffel_results');
-    const duffelParams = sessionStorage.getItem('duffel_search_params');
-    
-    if (duffelResults && typeof DuffelAPI !== 'undefined') {
-        // Render real flight results from Duffel API
-        (async () => {
-            const resultsGrid = document.querySelector('#search-results-page .row.g-4');
-            const heading = document.querySelector('#search-results-page .d-flex.justify-content-between.align-items-center.mb-4 .small.text-muted.mb-0');
-            if (!resultsGrid) return;
-            
-            try {
-                const data = JSON.parse(duffelResults);
-                const searchParams = JSON.parse(duffelParams || '{}');
-                const offers = data.data?.offers || [];
-                
-                showFlightHeading(searchParams.from, searchParams.to, searchParams.depart, searchParams.return);
-                
-                if (offers.length === 0) {
-                    heading.textContent = 'No flights found for this route';
-                    resultsGrid.innerHTML = `
-                        <div class="col-12 text-center py-5">
-                            <h4 class="serif mb-3">No flights available</h4>
-                            <p class="text-muted">Try different dates or destinations.</p>
-                            <a href="index.html" class="btn btn-dark rounded-0 px-4 py-2">Search Again</a>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                heading.textContent = `Showing ${offers.length} flight${offers.length === 1 ? '' : 's'} from Duffel`;
-                
-                // Render flight cards
-                resultsGrid.innerHTML = offers.map(offer => {
-                    const formatted = DuffelAPI.formatOfferForDisplay(offer);
-                    return `
-                        <div class="col-md-6">
-                            <div class="result-card flight-card" data-offer-id="${formatted.id}" style="cursor: pointer;">
-                                <div class="result-card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div>
-                                            <span class="result-card-tag">${formatted.airline}</span>
-                                            <h3 class="result-card-title mt-2">${formatted.departureAirport} → ${formatted.arrivalAirport}</h3>
-                                            <p class="result-card-meta mb-0">${formatted.flightNumber}</p>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="result-price" style="font-size: 1.25rem; font-weight: 700;">
-                                                <span class="currency-price" data-usd="${formatted.price}">${formatted.currency === 'USD' ? '$' : '$'}${formatted.price.toLocaleString()}</span>
-                                            </div>
-                                            <small class="text-muted">per person</small>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 0.85rem;">
-                                        <div>
-                                            <strong>${formatted.departure}</strong>
-                                            <span class="text-muted mx-2">${formatted.departureAirport}</span>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="text-muted">${formatted.duration}</div>
-                                            <small>${formatted.stopsText}</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <strong>${formatted.arrival}</strong>
-                                            <span class="text-muted mx-2">${formatted.arrivalAirport}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">${formatted.cabinClass} class</small>
-                                        <span class="btn-explore-sm">Select & Book</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-                // Add click handlers for flight cards
-                resultsGrid.querySelectorAll('.flight-card').forEach(card => {
-                    card.addEventListener('click', () => {
-                        const offerId = card.dataset.offerId;
-                        const offer = offers.find(o => o.id === offerId);
-                        if (offer) {
-                            sessionStorage.setItem('selected_flight_offer', JSON.stringify(offer));
-                            const params = new URLSearchParams(window.location.search);
-                            const checkoutParams = new URLSearchParams({
-                                search_type: 'flight',
-                                from: searchParams.from || '',
-                                to: searchParams.to || '',
-                                start: searchParams.depart || '',
-                                end: searchParams.return || '',
-                                guests: searchParams.guests || '1',
-                                offer_id: offerId,
-                                price: offer.total_amount,
-                                currency: offer.total_currency
-                            });
-                            window.location.href = 'checkout.html?' + checkoutParams.toString();
-                        }
-                    });
-                });
-                
-            } catch (error) {
-                console.error('[NextGen] Failed to render Duffel results:', error);
-                heading.textContent = 'Error loading flight results';
-                resultsGrid.innerHTML = `
-                    <div class="col-12 text-center py-5">
-                        <h4 class="serif mb-3">Error loading results</h4>
-                        <p class="text-muted">${error.message || 'Unknown error'}</p>
-                        <a href="index.html" class="btn btn-dark rounded-0 px-4 py-2">Search Again</a>
-                    </div>
-                `;
-            }
-        })();
-        
-    } else if (pageParams.get('search_type') === 'flight') {
+        if (pageParams.get('search_type') === 'flight') {
         // Flight search: render mock flights, fall back to destination cards
         (async () => {
             const resultsGrid = document.querySelector('#search-results-page .row.g-4');

@@ -261,7 +261,7 @@
                     <p id="confirm-details" class="small mt-2" style="display:none; opacity: 0.8;">
                         Hotel Reservation: <strong id="confirm-hotel"></strong> | Food Preference: <strong id="confirm-food"></strong>
                     </p>
-                    <small>A confirmation email has been sent to <span id="confirm-email"></span>. We'll see you soon.</small>
+                    <small>A confirmation has been recorded for <span id="confirm-email"></span>. Our team will reach out to finalize your journey.</small>
                 </div>
                 <button class="booking-confirm-close" onclick="this.closest('#booking-confirmation').style.display='none'">×</button>
             </div>
@@ -1024,7 +1024,7 @@
                     <h6>Support</h6>
                     <a href="help.html">FAQ</a>
                     <a href="legal.html">Cancellation Policy</a>
-                    <a href="#">Track Booking</a>
+                    <a href="bookings.html">Track Booking</a>
                     <a href="mailto:curated@nextgentravel.com">24/7 Support</a>
                 </div>
                 <div class="footer-links">
@@ -2065,41 +2065,57 @@
             document.body.style.overflow = 'hidden';
             document.getElementById('avail-checking-dest').textContent = destName || '';
 
-            setTimeout(() => {
-                const available = Math.random() > 0.35;
-                if (available) {
-                    loading.style.display = 'none';
-                    success.style.display = 'flex';
-                    setTimeout(() => { window.location.href = redirectUrl; }, 900);
-                } else {
-                    loading.style.display = 'none';
-                    fail.style.display = 'flex';
-                    const today = new Date();
-                    document.getElementById('avail-date').textContent =
-                        today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-                    const altContainer = document.getElementById('avail-alternatives');
-                    altContainer.innerHTML = '';
-                    const usedDates = new Set();
-                    for (let i = 0; i < 3; i++) {
-                        let d, dateStr;
-                        do {
-                            d = new Date(); d.setDate(d.getDate() + 3 + Math.floor(Math.random() * 55));
-                            dateStr = d.toISOString().split('T')[0];
-                        } while (usedDates.has(dateStr));
-                        usedDates.add(dateStr);
-                        const btn = document.createElement('button');
-                        btn.className = 'btn-alt-date';
-                        btn.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                        btn.addEventListener('click', () => { window.location.href = redirectUrl + '&date=' + dateStr; });
-                        altContainer.appendChild(btn);
+            // Real availability check against scheduled trips
+            api.checkTripAvailability('', destName.split(' // ')[0].trim(), '')
+                .then(tripsWithSpots => {
+                    const available = tripsWithSpots.length > 0;
+                    if (available) {
+                        loading.style.display = 'none';
+                        success.style.display = 'flex';
+                        setTimeout(() => { window.location.href = redirectUrl; }, 900);
+                    } else {
+                        loading.style.display = 'none';
+                        fail.style.display = 'flex';
+                        const today = new Date();
+                        document.getElementById('avail-date').textContent =
+                            today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                        const altContainer = document.getElementById('avail-alternatives');
+                        altContainer.innerHTML = '';
+                        api.getTrips()
+                            .then(allTrips => {
+                                const usedDates = new Set();
+                                let count = 0;
+                                (allTrips || []).forEach(t => {
+                                    if (count >= 3) return;
+                                    const spots = Math.max(0, (t.max_capacity || 0) - (t.booked_count || 0));
+                                    if (spots <= 0) return;
+                                    if (usedDates.has(t.departure_date)) return;
+                                    usedDates.add(t.departure_date);
+                                    count++;
+                                    const btn = document.createElement('button');
+                                    btn.className = 'btn-alt-date';
+                                    btn.textContent = new Date(t.departure_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                                    btn.addEventListener('click', () => { window.location.href = redirectUrl + '&date=' + encodeURIComponent(t.departure_date); });
+                                    altContainer.appendChild(btn);
+                                });
+                                if (count === 0) {
+                                    const hint = document.createElement('p');
+                                    hint.className = 'text-muted small mb-0';
+                                    hint.textContent = 'No scheduled trips found for this route yet.';
+                                    altContainer.appendChild(hint);
+                                }
+                            })
+                            .catch(() => {});
+                        document.getElementById('avail-continue').onclick = () => { window.location.href = redirectUrl; };
+                        document.getElementById('avail-close').onclick = () => {
+                            overlay.style.display = 'none';
+                            document.body.style.overflow = '';
+                        };
                     }
-                    document.getElementById('avail-continue').onclick = () => { window.location.href = redirectUrl; };
-                    document.getElementById('avail-close').onclick = () => {
-                        overlay.style.display = 'none';
-                        document.body.style.overflow = '';
-                    };
-                }
-            }, 1800);
+                })
+                .catch(() => {
+                    window.location.href = redirectUrl;
+                });
         }
 
         // Intercept destination card clicks

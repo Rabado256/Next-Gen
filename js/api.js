@@ -277,107 +277,49 @@ const api = {
     return data || [];
   },
 
+  // Save a booking via the serverless endpoint. Guest-safe: works with or
+  // without a session (the service-role key bypasses RLS) and attributes the
+  // booking to a signed-in user via the JWT when present.
+  async saveBooking(bookingType, data) {
+    const res = await fetch('/api/confirm-booking', {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify({ booking_type: bookingType, ...data })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Booking confirmation failed');
+    }
+    const result = await res.json();
+    return result.booking || result;
+  },
+
   // Create a new booking with auto-generated reference code
   async createBooking(bookingData) {
     const { data: { user } } = await SB.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    // Generate unique reference: NXG-<timestamp in base36>
-    const ref = 'NXG-' + Date.now().toString(36).toUpperCase();
-    const { data, error } = await SB.from('bookings').insert({
-      user_id: user.id,
+    return this.saveBooking('general', {
       dest_id: bookingData.dest_id || '',
-      guest_name: bookingData.name || user.email,
+      guest_name: bookingData.name || (user ? user.email : ''),
       guest_email: bookingData.email || '',
-      booking_date: bookingData.date || '',
+      guest_phone: bookingData.phone || '',
+      travel_date: bookingData.date || '',
       guests: parseInt(bookingData.guests) || 1,
-      total: parseFloat(bookingData.total) || 0,
       total_amount: parseFloat(bookingData.total) || 0,
-      currency: 'usd',
-      hotel: bookingData.hotel === 'Yes' || bookingData.hotel === true,
       hotel_reservation: bookingData.hotel === 'Yes' || bookingData.hotel === true,
-      status: 'confirmed',
-      ref,
-      reference: ref,
       from_location: bookingData.from_location || '',
       to_location: bookingData.to_location || '',
       doc_type: bookingData.doc_type || 'unknown'
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return data;
+    });
   },
 
   // Create a flight booking (separate from destination bookings)
   async createFlightBooking(data) {
-    const { data: { user } } = await SB.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    const ref = data.reference || 'FL-' + Date.now().toString(36).toUpperCase();
-    const { data: result, error } = await SB.from('bookings').insert({
-      user_id: user.id,
-      guest_name: data.guest_name || '',
-      guest_email: data.guest_email || '',
-      guest_phone: data.guest_phone || '',
-      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
-      guests: parseInt(data.guests) || 1,
-      total: parseFloat(data.total) || 0,
-      total_amount: parseFloat(data.total) || 0,
-      currency: data.currency || 'usd',
-      status: 'confirmed',
-      ref,
-      reference: ref,
-      from_location: data.from_location || '',
-      to_location: data.to_location || '',
-      dest_id: data.airline || 'Flight',
-      doc_type: 'flight',
-      special_requests: JSON.stringify({
-        flight_number: data.flight_number || '',
-        departure_time: data.departure_time || '',
-        arrival_time: data.arrival_time || '',
-        duration: data.duration || '',
-        offer_id: data.offer_id || '',
-        payment_intent: data.payment_intent || '',
-        duffel_order_id: data.duffel_order_id || '',
-        ...(data.extras ? { extras: data.extras } : {})
-      })
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return result;
+    return this.saveBooking('flight', data);
   },
 
+  // Create a hotel booking (separate from destination bookings)
   async createHotelBooking(data) {
-    const { data: { user } } = await SB.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    const ref = data.reference || 'HT-' + Date.now().toString(36).toUpperCase();
-    const { data: result, error } = await SB.from('bookings').insert({
-      user_id: user.id,
-      guest_name: data.guest_name || '',
-      guest_email: data.guest_email || '',
-      guest_phone: data.guest_phone || '',
-      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
-      guests: parseInt(data.guests) || 1,
-      total: parseFloat(data.total) || 0,
-      total_amount: parseFloat(data.total) || 0,
-      currency: data.currency || 'usd',
-      status: 'confirmed',
-      ref,
-      reference: ref,
-      from_location: data.hotel_city || '',
-      to_location: data.hotel_name || '',
-      dest_id: data.hotel_name || 'Hotel',
-      doc_type: 'hotel',
-      special_requests: JSON.stringify({
-        hotel_city: data.hotel_city || '',
-        hotel_country: data.hotel_country || '',
-        room_type: data.room_type || '',
-        ...(data.extras ? { extras: data.extras } : {}),
-        nights: data.nights || 0,
-        rooms: data.rooms || 1,
-        check_in: data.check_in || '',
-        check_out: data.check_out || '',
-        payment_intent: data.payment_intent || ''
-      })
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return result;
+    return this.saveBooking('hotel', data);
   },
 
   // Stub: get booking invoice URL
@@ -416,73 +358,11 @@ const api = {
   },
 
   async createPackageBooking(data) {
-    const { data: { user } } = await SB.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    const ref = data.reference || 'PK-' + Date.now().toString(36).toUpperCase();
-    const { data: result, error } = await SB.from('bookings').insert({
-      user_id: user.id,
-      guest_name: data.guest_name || '',
-      guest_email: data.guest_email || '',
-      guest_phone: data.guest_phone || '',
-      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
-      guests: parseInt(data.guests) || 1,
-      total: parseFloat(data.total) || 0,
-      total_amount: parseFloat(data.total) || 0,
-      currency: data.currency || 'usd',
-      status: 'confirmed',
-      ref,
-      reference: ref,
-      from_location: data.package_dest || '',
-      to_location: data.package_name || '',
-      dest_id: data.package_name || 'Package',
-      doc_type: 'package',
-      special_requests: JSON.stringify({
-        package_id: data.package_id || '',
-        package_dest: data.package_dest || '',
-        package_country: data.package_country || '',
-        duration: data.duration || 0,
-        nights: data.nights || 0,
-        hotel: data.hotel || '',
-        room_type: data.room_type || '',
-        includes: data.includes || [],
-        payment_intent: data.payment_intent || '',
-        ...(data.extras ? { extras: data.extras } : {})
-      })
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return result;
+    return this.saveBooking('package', data);
   },
 
   async createVisaBooking(data) {
-    const { data: { user } } = await SB.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    const ref = data.reference || 'VS-' + Date.now().toString(36).toUpperCase();
-    const { data: result, error } = await SB.from('bookings').insert({
-      user_id: user.id,
-      guest_name: data.guest_name || '',
-      guest_email: data.guest_email || '',
-      guest_phone: data.guest_phone || '',
-      booking_date: data.booking_date || new Date().toISOString().split('T')[0],
-      guests: parseInt(data.guests) || 1,
-      total: parseFloat(data.total) || 0,
-      total_amount: parseFloat(data.total) || 0,
-      currency: data.currency || 'usd',
-      status: 'confirmed',
-      ref,
-      reference: ref,
-      from_location: data.from_location || '',
-      to_location: data.to_location || '',
-      dest_id: 'Visa',
-      doc_type: 'visa',
-      special_requests: JSON.stringify({
-        visa_type: data.visa_type || '',
-        visa_label: data.visa_label || '',
-        payment_intent: data.payment_intent || '',
-        ...(data.extras ? { extras: data.extras } : {})
-      })
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return result;
+    return this.saveBooking('visa', data);
   },
 
   // ==================== CONTACT FORM ====================
@@ -603,37 +483,27 @@ const api = {
 
   // Confirm booking in Supabase after Stripe payment succeeds
   async confirmPayment(data) {
-    const ref = data.reference || 'NG' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-    const res = await fetch('/api/confirm-booking', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        dest_id: data.dest_id,
-        guest_name: data.guest_name,
-        guest_email: data.guest_email || '',
-        guest_phone: data.guest_phone || '',
-        guests: data.guests,
-        total_amount: data.total,
-        currency: 'usd',
-        payment_id: data.payment_intent || '',
-        travel_date: data.travel_date,
-        passport: data.passport || '',
-        identity_card: data.identity_card || '',
-        special_requests: data.special_requests || '',
-        extras: data.extras || null,
-        hotel_reservation: data.hotel || false,
-        from_location: data.from_location || '',
-        to_location: data.to_location || '',
-        travelers: data.travelers || null,
-        reference: ref
-      })
+    const booking = await this.saveBooking('general', {
+      dest_id: data.dest_id,
+      guest_name: data.guest_name,
+      guest_email: data.guest_email || '',
+      guest_phone: data.guest_phone || '',
+      guests: data.guests,
+      total_amount: data.total,
+      currency: 'usd',
+      payment_id: data.payment_intent || '',
+      travel_date: data.travel_date,
+      passport: data.passport || '',
+      identity_card: data.identity_card || '',
+      special_requests: data.special_requests || '',
+      extras: data.extras || null,
+      hotel_reservation: data.hotel || false,
+      from_location: data.from_location || '',
+      to_location: data.to_location || '',
+      travelers: data.travelers || null,
+      reference: data.reference || ''
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Booking confirmation failed');
-    }
-    const result = await res.json();
-    return { ref: result.booking?.reference || ref, ...result };
+    return { ref: booking.reference, ...booking };
   },
 
   // Cancel a booking by reference — updates status to 'cancelled'
@@ -651,15 +521,19 @@ const api = {
     return data;
   },
 
-  // Fetch a single booking by its reference code (public lookup)
-  async getBookingByRef(ref) {
+  // Fetch a single booking by its reference code (public lookup).
+  // Uses the service-role endpoint so guest bookings (no user_id) are findable.
+  async getBookingByRef(ref, email) {
     if (!ref || ref.trim().length < 3) throw new Error('Invalid reference code');
-    const { data, error } = await SB.from('bookings')
-      .select('*')
-      .eq('reference', ref.trim().toUpperCase())
-      .single();
-    if (error) throw new Error('Booking not found. Please check your reference code.');
-    return data;
+    const res = await fetch('/api/lookup-booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: ref.trim().toUpperCase(), email: email || '' })
+    });
+    let data;
+    try { data = await res.json(); } catch (_) { data = {}; }
+    if (!res.ok) throw new Error(data.error || 'Booking not found. Please check your reference code.');
+    return data.booking;
   },
 
   // Update booking date (modify flow)

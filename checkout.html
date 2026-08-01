@@ -143,17 +143,19 @@
 
                 <div id="step-1" class="border border-dark p-5 reveal-up visible" style="display: none;">
                     <h6 class="tracking-widest mb-4">Reservation Details // 01</h6>
-                    <h1 class="mb-5 italic">GUEST DETAILS</h1>
+                    <h1 class="mb-5 italic" id="booking-form-title">GUEST DETAILS</h1>
                     
                     <form id="checkout-form">
                         <div class="row g-4">
-                            <div class="col-md-6">
-                                <label class="small tracking-widest mb-2">From Where</label>
-                                <input type="text" id="from-loc" class="form-control border-dark rounded-0" list="global-locations" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small tracking-widest mb-2">To Where</label>
-                                <input type="text" id="to-loc" class="form-control border-dark rounded-0" list="global-locations" required>
+                            <div class="travel-booking-fields">
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">From Where</label>
+                                    <input type="text" id="from-loc" class="form-control border-dark rounded-0" list="global-locations" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">To Where</label>
+                                    <input type="text" id="to-loc" class="form-control border-dark rounded-0" list="global-locations" required>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="small tracking-widest mb-2">First Name</label>
@@ -171,17 +173,19 @@
                                 <label class="small tracking-widest mb-2">Phone Number</label>
                                 <input type="tel" id="phone" class="form-control border-dark rounded-0" placeholder="+1 (000) 000-0000" required>
                             </div>
-                            <div class="col-md-6">
-                                <label class="small tracking-widest mb-2">Travel Date</label>
-                                <input type="date" id="travel-date" class="form-control border-dark rounded-0" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small tracking-widest mb-2">Country</label>
-                                <input type="text" id="country" class="form-control border-dark rounded-0" list="global-countries" required placeholder="Select Country">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small tracking-widest mb-2">State / Province</label>
-                                <input type="text" id="state" class="form-control border-dark rounded-0" list="global-states" required placeholder="Select State/Province">
+                            <div class="travel-booking-fields">
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">Travel Date</label>
+                                    <input type="date" id="travel-date" class="form-control border-dark rounded-0" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">Country</label>
+                                    <input type="text" id="country" class="form-control border-dark rounded-0" list="global-countries" required placeholder="Select Country">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">State / Province</label>
+                                    <input type="text" id="state" class="form-control border-dark rounded-0" list="global-states" required placeholder="Select State/Province">
+                                </div>
                             </div>
 
                             <div class="col-12 mt-4">
@@ -190,103 +194,130 @@
                             </div>
 
                             <!-- Travel Documents (Smart Detection) -->
-                            <div id="checkout-document-section" class="col-12 mt-4">
-                                <h6 class="tracking-widest mb-3" style="font-size: 0.75rem;">
-                                    TRAVEL DOCUMENTS
-                                    <span id="doc-required-badge" class="doc-badge-unknown">AUTO-DETECT</span>
-                                </h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="small tracking-widest mb-2">Passport No.</label>
-                                        <input type="text" id="checkout-passport" class="form-control border-dark rounded-0" placeholder="e.g. A0000000" pattern="^[A-Za-z0-9]{5,20}$" title="5-20 alphanumeric characters">
+                            <div class="travel-booking-fields">
+                                <div id="checkout-document-section" class="col-12 mt-4">
+                                    <h6 class="tracking-widest mb-3" style="font-size: 0.75rem;">
+                                        TRAVEL DOCUMENTS
+                                        <span id="doc-required-badge" class="doc-badge-unknown">AUTO-DETECT</span>
+                                    </h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="small tracking-widest mb-2">Passport No.</label>
+                                            <input type="text" id="checkout-passport" class="form-control border-dark rounded-0" placeholder="e.g. A0000000" pattern="^[A-Za-z0-9]{5,20}$" title="5-20 alphanumeric characters">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small tracking-widest mb-2">Identity Card No.</label>
+                                            <input type="text" id="checkout-identity-card" class="form-control border-dark rounded-0" placeholder="e.g. National ID number" pattern="^[A-Za-z0-9\s-]{4,30}$" title="4-30 characters, letters, numbers, spaces, hyphens">
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="small tracking-widest mb-2">Identity Card No.</label>
-                                        <input type="text" id="checkout-identity-card" class="form-control border-dark rounded-0" placeholder="e.g. National ID number" pattern="^[A-Za-z0-9\s-]{4,30}$" title="4-30 characters, letters, numbers, spaces, hyphens">
-                                    </div>
+                                    <p id="doc-hint-text" class="extra-small text-muted mt-2 mb-0 italic opacity-75">Enter the travel document required for your trip.</p>
                                 </div>
-                                <p id="doc-hint-text" class="extra-small text-muted mt-2 mb-0 italic opacity-75">Enter the travel document required for your trip.</p>
                             </div>
 
                             <!-- Group Booking -->
-                            <div class="col-12 mt-4">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input border-dark rounded-0" type="checkbox" id="group-booking-toggle">
-                                    <label class="form-check-label small tracking-widest" for="group-booking-toggle">GROUP BOOKING (MULTIPLE TRAVELERS)</label>
+                            <div class="travel-booking-fields">
+                                <div class="col-12 mt-4">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input border-dark rounded-0" type="checkbox" id="group-booking-toggle">
+                                        <label class="form-check-label small tracking-widest" for="group-booking-toggle">GROUP BOOKING (MULTIPLE TRAVELERS)</label>
+                                    </div>
+                                    <div id="group-travelers" style="display:none;">
+                                        <label class="extra-small tracking-widest mb-2 opacity-50">Traveler Details</label>
+                                        <div id="traveler-rows"></div>
+                                        <button type="button" class="btn btn-outline-dark btn-sm rounded-0 mt-2" onclick="addTravelerRow()">+ Add Traveler</button>
+                                    </div>
                                 </div>
-                                <div id="group-travelers" style="display:none;">
-                                    <label class="extra-small tracking-widest mb-2 opacity-50">Traveler Details</label>
-                                    <div id="traveler-rows"></div>
-                                    <button type="button" class="btn btn-outline-dark btn-sm rounded-0 mt-2" onclick="addTravelerRow()">+ Add Traveler</button>
+
+                                <div class="col-12 mt-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input border-dark rounded-0" type="checkbox" id="reserve-hotel">
+                                        <label class="form-check-label small tracking-widest" for="reserve-hotel">
+                                            RESERVE HOTEL SANCTUARY
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div id="hotel-selection-container" class="col-12 mt-3" style="display: none;">
+                                    <div class="row g-4">
+                                        <div class="col-md-12">
+                                            <label class="small tracking-widest mb-2">PREFERRED HOTEL / RESORT</label>
+                                            <input type="text" id="preferred-hotel" class="form-control border-dark rounded-0" list="global-hotels" placeholder="Search or select a stay...">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input border-dark rounded-0" type="checkbox" id="add-meal">
+                                                <label class="form-check-label small tracking-widest" for="add-meal">
+                                                    PRE-ORDER ARRIVAL MEAL (OPTIONAL)
+                                                </label>
+                                            </div>
+                                            <div id="arrival-meal-selection" style="display: none;">
+                                                <label class="extra-small tracking-widest mb-2 opacity-50">KIND OF FOOD YOU WISH TO EAT</label>
+                                                <select id="food-preference" class="form-select border-dark rounded-0">
+                                                    <option value="local" data-price="75">Local Delicacies — $75</option>
+                                                    <option value="continental" data-price="95">Continental — $95</option>
+                                                    <option value="vegetarian" data-price="85">Vegetarian / Vegan — $85</option>
+                                                    <option value="none" data-price="0">I'll decide upon arrival — Free</option>
+                                                </select>
+                                                <p class="text-muted extra-small mt-2 italic opacity-75">Your selected meal will be ready when you arrive.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Travel Extras Section -->
+                                    <div class="border border-dark p-4 mt-4 reveal-up visible">
+                                        <h6 class="serif mb-1"><i class="bi bi-plus-circle me-2"></i>Travel Extras</h6>
+                                        <p class="small text-muted mb-3">Enhance your journey with these add-ons.</p>
+
+                                        <div class="mb-3">
+                                            <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-shield-check" style="color:#2ecc71;"></i>Travel Insurance</label>
+                                            <div id="extras-insurance"></div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-car-front" style="color:#3498db;"></i>Airport Transfers</label>
+                                            <div id="extras-transfers"></div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-file-earmark-text" style="color:#e67e22;"></i>Visa Services</label>
+                                            <div id="extras-visa"></div>
+                                        </div>
+
+                                        <div>
+                                            <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-star" style="color:#9b59b6;"></i>Experiences</label>
+                                            <div id="extras-experience"></div>
+                                        </div>
+
+                                        <div id="extras-total" class="mt-3 pt-3 border-top small" style="display:none;">
+                                            <div class="d-flex justify-content-between fw-bold">
+                                                <span>Extras Total</span>
+                                                <span id="extras-cost">$0</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-12 mt-4">
-                                <div class="form-check">
-                                    <input class="form-check-input border-dark rounded-0" type="checkbox" id="reserve-hotel">
-                                    <label class="form-check-label small tracking-widest" for="reserve-hotel">
-                                        RESERVE HOTEL SANCTUARY
-                                    </label>
+                            <!-- Hotel-only Reservation Fields -->
+                            <div id="hotel-booking-fields" class="row g-4" style="display: none;">
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">Check-in Date</label>
+                                    <input type="date" id="checkin-date" class="form-control border-dark rounded-0" required>
                                 </div>
-                            </div>
-
-                            <div id="hotel-selection-container" class="col-12 mt-3" style="display: none;">
-                                <div class="row g-4">
-                                    <div class="col-md-12">
-                                        <label class="small tracking-widest mb-2">PREFERRED HOTEL / RESORT</label>
-                                        <input type="text" id="preferred-hotel" class="form-control border-dark rounded-0" list="global-hotels" placeholder="Search or select a stay...">
-                                    </div>
-                                    <div class="col-12">
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input border-dark rounded-0" type="checkbox" id="add-meal">
-                                            <label class="form-check-label small tracking-widest" for="add-meal">
-                                                PRE-ORDER ARRIVAL MEAL (OPTIONAL)
-                                            </label>
-                                        </div>
-                                        <div id="arrival-meal-selection" style="display: none;">
-                                            <label class="extra-small tracking-widest mb-2 opacity-50">KIND OF FOOD YOU WISH TO EAT</label>
-                                            <select id="food-preference" class="form-select border-dark rounded-0">
-                                                <option value="local" data-price="75">Local Delicacies — $75</option>
-                                                <option value="continental" data-price="95">Continental — $95</option>
-                                                <option value="vegetarian" data-price="85">Vegetarian / Vegan — $85</option>
-                                                <option value="none" data-price="0">I'll decide upon arrival — Free</option>
-                                            </select>
-                                            <p class="text-muted extra-small mt-2 italic opacity-75">Your selected meal will be ready when you arrive.</p>
-                                        </div>
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">Check-out Date</label>
+                                    <input type="date" id="checkout-date" class="form-control border-dark rounded-0" required>
                                 </div>
-
-                                <!-- Travel Extras Section -->
-                                <div class="border border-dark p-4 mt-4 reveal-up visible">
-                                    <h6 class="serif mb-1"><i class="bi bi-plus-circle me-2"></i>Travel Extras</h6>
-                                    <p class="small text-muted mb-3">Enhance your journey with these add-ons.</p>
-
-                                    <div class="mb-3">
-                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-shield-check" style="color:#2ecc71;"></i>Travel Insurance</label>
-                                        <div id="extras-insurance"></div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-car-front" style="color:#3498db;"></i>Airport Transfers</label>
-                                        <div id="extras-transfers"></div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-file-earmark-text" style="color:#e67e22;"></i>Visa Services</label>
-                                        <div id="extras-visa"></div>
-                                    </div>
-
-                                    <div>
-                                        <label class="extra-small tracking-widest mb-2 opacity-50 d-flex align-items-center gap-2"><i class="bi bi-star" style="color:#9b59b6;"></i>Experiences</label>
-                                        <div id="extras-experience"></div>
-                                    </div>
-
-                                    <div id="extras-total" class="mt-3 pt-3 border-top small" style="display:none;">
-                                        <div class="d-flex justify-content-between fw-bold">
-                                            <span>Extras Total</span>
-                                            <span id="extras-cost">$0</span>
-                                        </div>
-                                    </div>
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">Number of Guests</label>
+                                    <input type="number" id="hotel-guests" class="form-control border-dark rounded-0" min="1" value="1" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small tracking-widest mb-2">Room</label>
+                                    <input type="text" id="hotel-rooms" class="form-control border-dark rounded-0" readonly>
+                                </div>
+                                <div class="col-12">
+                                    <p id="hotel-stay-summary" class="small text-muted mb-0 italic"></p>
                                 </div>
                             </div>
                         </div>
@@ -314,6 +345,9 @@
                 <div id="payment-step" class="border border-dark p-5 reveal-up" style="display: none;">
                     <h6 class="tracking-widest mb-4">Secure Payment // 02</h6>
                     <h1 class="mb-5 italic">PAYMENT METHOD</h1>
+                    <div id="stripe-test-banner" class="mb-3 p-3 border border-warning bg-warning bg-opacity-10 text-warning-emphasis small" style="display: none;">
+                        <strong>TEST MODE:</strong> Payments are not being processed for real. Use the test card <code class="text-dark">4242 4242 4242 4242</code> — no real charge will occur.
+                    </div>
                     <div id="stripe-payment-element" class="mb-3" style="min-height: 200px;">
                         <!-- Stripe Payment Element will be mounted here -->
                         <div id="stripe-placeholder" class="text-center py-4">
@@ -355,6 +389,10 @@
                     <button onclick="window.print()" class="btn btn-outline-dark mt-4 rounded-0 tracking-widest small">Print Receipt</button>
                     <button id="download-invoice-btn" class="btn btn-outline-dark mt-4 ms-2 rounded-0 tracking-widest small" style="display:none;"><i class="bi bi-download"></i> Download PDF</button>
                     <a href="index.html" class="btn btn-noir mt-4 ms-2 rounded-0 tracking-widest small">Back to Home</a>
+
+                    <div id="db-save-warning" class="mt-4 text-danger small" style="display: none;">
+                        <strong>Attention:</strong> Your payment was processed, but we could not record this booking in our system right now. Please keep your reference code and contact support at <a href="mailto:curated@nextgentravel.com" class="text-danger text-decoration-underline">curated@nextgentravel.com</a> so we can complete your reservation.
+                    </div>
                 </div>
 
             </div>
@@ -426,7 +464,7 @@
                     <h6>Support</h6>
                     <a href="help.html">FAQ</a>
                     <a href="legal.html">Cancellation Policy</a>
-                    <a href="#">Track Booking</a>
+                    <a href="bookings.html">Track Booking</a>
                     <a href="mailto:curated@nextgentravel.com">24/7 Support</a>
                 </div>
                 <div class="footer-links">
@@ -649,6 +687,34 @@
                     basePrice = dest.price;
                     document.getElementById('back-to-dest').href = 'search-results.html';
                     document.getElementById('back-to-dest').textContent = '← Back to Search Results';
+                    if (hotelData) {
+                        const start = hotelData.start || hotelData.checkIn || params.get('start') || '';
+                        const end = hotelData.end || hotelData.checkOut || params.get('end') || '';
+                        document.querySelectorAll('.travel-booking-fields').forEach(el => el.style.display = 'none');
+                        // Hidden general fields would block native form validation
+                        // (they stay `required` in the DOM), so drop `required`
+                        document.querySelectorAll('.travel-booking-fields [required]').forEach(el => el.removeAttribute('required'));
+                        const hotelFields = document.getElementById('hotel-booking-fields');
+                        if (hotelFields) {
+                            hotelFields.style.display = 'flex';
+                            hotelFields.classList.add('row', 'g-4');
+                            const checkIn = document.getElementById('checkin-date');
+                            const checkOut = document.getElementById('checkout-date');
+                            const guestsEl = document.getElementById('hotel-guests');
+                            const roomsEl = document.getElementById('hotel-rooms');
+                            const summaryEl = document.getElementById('hotel-stay-summary');
+                            if (start) checkIn.value = start;
+                            if (end) checkOut.value = end;
+                            const guestsParam = parseInt(params.get('guests'), 10);
+                            guestsEl.value = (guestsParam > 0) ? guestsParam : (hotelData.roomsNeeded || 1);
+                            roomsEl.value = hotelData.roomType || hotelData.name || '';
+                            const nights = hotelData.nights || 1;
+                            const rate = hotelData.pricePerNight || 0;
+                            summaryEl.textContent = `${hotelData.name || 'Hotel'} • ${hotelData.city || ''}${hotelData.country ? ', ' + hotelData.country : ''} • ${nights} night${nights > 1 ? 's' : ''} @ $${rate}/night • Total $${hotelData.total || (rate * nights)}`;
+                        }
+                        const title = document.getElementById('booking-form-title');
+                        if (title) title.textContent = 'HOTEL RESERVATION DETAILS';
+                    }
                 }
             } catch (_) {}
         }
@@ -1088,6 +1154,9 @@
 
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            window._bookingSaveFailed = false;
+            const dbWarn = document.getElementById('db-save-warning');
+            if (dbWarn) dbWarn.style.display = 'none';
             document.getElementById('step-1').style.display = 'none';
             const payStep = document.getElementById('payment-step');
             payStep.style.display = 'block';
@@ -1096,6 +1165,10 @@
 
             // Initialize Stripe and create PaymentIntent
             const stripeKey = await resolveStripeKey();
+            const testBanner = document.getElementById('stripe-test-banner');
+            if (testBanner) {
+                testBanner.style.display = (stripeKey && stripeKey.startsWith('pk_test_')) ? 'block' : 'none';
+            }
             if (!stripeKey || stripeKey.includes('REPLACE_ME')) {
                 document.getElementById('stripe-error').textContent = 'Stripe is not configured. Add your STRIPE_PUBLISHABLE_KEY to config.js and STRIPE_SECRET_KEY to .env.';
                 document.getElementById('stripe-error').style.display = 'block';
@@ -1121,8 +1194,9 @@
                 stripe = Stripe(stripeKey);
                 elements = stripe.elements({ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#000', borderRadius: '0px' } } });
                 const paymentElement = elements.create('payment');
+                const placeholder = document.getElementById('stripe-placeholder');
+                if (placeholder) placeholder.style.display = 'none';
                 paymentElement.mount('#stripe-payment-element');
-                document.getElementById('stripe-placeholder').style.display = 'none';
 
                 paymentElement.on('change', (event) => {
                     const errEl = document.getElementById('stripe-error');
@@ -1153,14 +1227,21 @@
             const last = document.getElementById('last-name').value.trim();
             const email = document.getElementById('email')?.value?.trim() || '';
             const phone = document.getElementById('phone')?.value?.trim() || '';
-            const travelDate = document.getElementById('travel-date').value;
+            const travelDate = isHotel
+                ? (document.getElementById('checkin-date').value || document.getElementById('travel-date').value)
+                : document.getElementById('travel-date').value;
 
-            if (!first || !last || !email || !travelDate) {
+            if (!first || !last || !email || (!travelDate && !isHotel)) {
                 const missing = [];
                 if (!first) missing.push('First Name');
                 if (!last) missing.push('Last Name');
                 if (!email) missing.push('Email');
-                if (!travelDate) missing.push('Travel Date');
+                if (isHotel) {
+                    if (!document.getElementById('checkin-date').value) missing.push('Check-in Date');
+                    if (!document.getElementById('checkout-date').value) missing.push('Check-out Date');
+                } else if (!travelDate) {
+                    missing.push('Travel Date');
+                }
                 alert('Please fill in: ' + missing.join(', '));
                 return;
             }
@@ -1245,7 +1326,7 @@
                                     extras: getExtrasJSON()
                                 });
                             } catch (e) {
-                                console.warn('[Flight] Supabase save failed:', e);
+                                window._bookingSaveFailed = true; console.warn('[Flight] Supabase save failed:', e);
                             }
                             showSuccess(ref, first, last);
                             return;
@@ -1261,28 +1342,31 @@
                         // === Hotel booking flow ===
                         try {
                             const ref = 'HT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                            const checkIn = document.getElementById('checkin-date').value || hotelData.checkIn || startDate || hotelData.start;
+                            const checkOut = document.getElementById('checkout-date').value || hotelData.checkOut || endDate || hotelData.end;
+                            const nights = Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000));
                             try {
                                 await api.createHotelBooking({
                                     guest_name: first + ' ' + last,
                                     guest_email: email,
                                     guest_phone: phone,
-                                    guests: getGuests(),
+                                    guests: parseInt(document.getElementById('hotel-guests').value || hotelData.roomsNeeded || 1, 10),
                                     total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                                    booking_date: travelDate,
+                                    booking_date: checkIn,
                                     hotel_name: hotelData.name,
                                     hotel_city: hotelData.city,
                                     hotel_country: hotelData.country,
                                     room_type: hotelData.roomType,
-                                    nights: hotelData.nights,
+                                    nights: nights,
                                     rooms: hotelData.roomsNeeded,
-                                    check_in: hotelData.checkIn || startDate,
-                                    check_out: hotelData.checkOut || endDate,
+                                    check_in: checkIn,
+                                    check_out: checkOut,
                                     reference: ref,
                                     payment_intent: paymentIntent.id,
                                     extras: getExtrasJSON()
                                 });
                             } catch (e) {
-                                console.warn('[Hotel] Supabase save failed:', e);
+                                window._bookingSaveFailed = true; console.warn('[Hotel] Supabase save failed:', e);
                             }
                             showSuccess(ref, first, last);
                         } catch (e) {
@@ -1317,7 +1401,7 @@
                                     extras: getExtrasJSON()
                                 });
                             } catch (e) {
-                                console.warn('[Package] Supabase save failed:', e);
+                                window._bookingSaveFailed = true; console.warn('[Package] Supabase save failed:', e);
                             }
                             showSuccess(ref, first, last);
                         } catch (e) {
@@ -1347,7 +1431,7 @@
                                     extras: getExtrasJSON()
                                 });
                             } catch (e) {
-                                console.warn('[Visa] Supabase save failed:', e);
+                                window._bookingSaveFailed = true; console.warn('[Visa] Supabase save failed:', e);
                             }
                             showSuccess(ref, first, last);
                         } catch (e) {
@@ -1408,30 +1492,33 @@
                         reference: ref,
                         extras: getExtrasJSON()
                     });
-                } catch (e) { console.warn(e); }
+                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
                 showSuccess(ref, first, last);
             } else if (isHotel && hotelData) {
                 const ref = 'HT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                const checkIn = document.getElementById('checkin-date').value || hotelData.checkIn || startDate || hotelData.start;
+                const checkOut = document.getElementById('checkout-date').value || hotelData.checkOut || endDate || hotelData.end;
+                const nights = Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000));
                 try {
                     await api.createHotelBooking({
                         guest_name: first + ' ' + last,
                         guest_email: email,
                         guest_phone: phone,
-                        guests: getGuests(),
+                        guests: parseInt(document.getElementById('hotel-guests').value || hotelData.roomsNeeded || 1, 10),
                         total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                        booking_date: travelDate,
+                        booking_date: checkIn,
                         hotel_name: hotelData.name,
                         hotel_city: hotelData.city,
                         hotel_country: hotelData.country,
                         room_type: hotelData.roomType,
-                        nights: hotelData.nights,
+                        nights: nights,
                         rooms: hotelData.roomsNeeded,
-                        check_in: hotelData.checkIn || startDate,
-                        check_out: hotelData.checkOut || endDate,
+                        check_in: checkIn,
+                        check_out: checkOut,
                         reference: ref,
                         extras: getExtrasJSON()
                     });
-                } catch (e) { console.warn(e); }
+                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
                 showSuccess(ref, first, last);
             } else if (isPackage && packageData) {
                 const ref = 'PK-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -1455,7 +1542,7 @@
                         reference: ref,
                         extras: getExtrasJSON()
                     });
-                } catch (e) { console.warn(e); }
+                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
                 showSuccess(ref, first, last);
             } else if (isVisa && visaData) {
                 const ref = 'VS-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -1474,7 +1561,7 @@
                         reference: ref,
                         extras: getExtrasJSON()
                     });
-                } catch (e) { console.warn(e); }
+                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
                 showSuccess(ref, first, last);
             } else {
                 const ref = 'NG-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -1497,7 +1584,7 @@
                         reference: ref
                     });
                 } catch (e) {
-                    console.warn('[Booking] Offline save failed:', e);
+                    window._bookingSaveFailed = true; console.warn('[Booking] Offline save failed:', e);
                 }
                 showSuccess(ref, first, last);
             }
@@ -1507,9 +1594,14 @@
             document.getElementById('payment-step').style.display = 'none';
             document.getElementById('success-step').style.display = 'block';
             document.getElementById('success-step').classList.add('reveal-snap', 'visible');
-
             document.getElementById('rec-ref').textContent = ref;
             document.getElementById('rec-name').textContent = first + ' ' + last;
+
+            // Surface DB save failures instead of silently losing bookings
+            const warn = document.getElementById('db-save-warning');
+            if (warn && window._bookingSaveFailed) {
+                warn.style.display = 'block';
+            }
 
             if (isFlight && flightOffer) {
                 document.getElementById('rec-dest').textContent = `${flightOffer.departureAirport} → ${flightOffer.arrivalAirport}`;
@@ -1517,8 +1609,11 @@
                 document.getElementById('rec-date').textContent = `${document.getElementById('travel-date').value || ''} • ${flightOffer.departure} - ${flightOffer.arrival}`;
             } else if (isHotel && hotelData) {
                 document.getElementById('rec-dest').textContent = `${hotelData.name}, ${hotelData.city}`;
-                document.getElementById('rec-pkg').textContent = `${hotelData.roomType} • ${hotelData.nights} night${hotelData.nights === 1 ? '' : 's'} • ${hotelData.roomsNeeded} room${hotelData.roomsNeeded === 1 ? '' : 's'}`;
-                document.getElementById('rec-date').textContent = `${startDate || ''} → ${endDate || ''}`;
+                const rCheckIn = document.getElementById('checkin-date').value || hotelData.checkIn || startDate || hotelData.start;
+                const rCheckOut = document.getElementById('checkout-date').value || hotelData.checkOut || endDate || hotelData.end;
+                const rNights = Math.max(1, Math.round((new Date(rCheckOut) - new Date(rCheckIn)) / 86400000));
+                document.getElementById('rec-pkg').textContent = `${hotelData.roomType} • ${rNights} night${rNights === 1 ? '' : 's'} • ${hotelData.roomsNeeded} room${hotelData.roomsNeeded === 1 ? '' : 's'}`;
+                document.getElementById('rec-date').textContent = `${rCheckIn || ''} → ${rCheckOut || ''}`;
             } else if (isPackage && packageData) {
                 document.getElementById('rec-dest').textContent = `${packageData.name}`;
                 document.getElementById('rec-pkg').textContent = `${packageData.dest}, ${packageData.country} • ${packageData.duration} days • ${packageData.hotelName}`;
@@ -1552,7 +1647,9 @@
             }
 
             // Save to Activity Log
-            const travelDate = document.getElementById('travel-date').value;
+            const travelDate = isHotel
+                ? (document.getElementById('checkin-date').value || document.getElementById('travel-date').value)
+                : document.getElementById('travel-date').value;
             const reservation = {
                 ref: ref,
                 guestName: first + ' ' + last,
