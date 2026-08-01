@@ -594,7 +594,10 @@ const api = {
         }
       })
     });
-    if (!res.ok) throw new Error('Payment intent creation failed');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Payment intent creation failed');
+    }
     return res.json();
   },
 

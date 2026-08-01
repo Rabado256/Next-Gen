@@ -1073,13 +1073,15 @@
         // Stripe state
         let stripe, elements, clientSecret, paymentIntentId;
 
-        // Try to resolve Stripe key from server config endpoint first
+        // Try to resolve Stripe key from server config endpoint first,
+        // falling back to the hardcoded key in config.js
         async function resolveStripeKey() {
-            if (window.__STRIPE_PUBLISHABLE_KEY__) return window.__STRIPE_PUBLISHABLE_KEY__;
             try {
                 const resp = await fetch('/api/config');
-                const cfg = await resp.json();
-                if (cfg.stripe_publishable_key) return cfg.stripe_publishable_key;
+                if (resp.ok) {
+                    const cfg = await resp.json();
+                    if (cfg.stripe_publishable_key) return cfg.stripe_publishable_key;
+                }
             } catch (_) {}
             return window.__STRIPE_PUBLISHABLE_KEY__;
         }
