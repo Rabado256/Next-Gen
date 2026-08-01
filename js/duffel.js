@@ -225,8 +225,9 @@ const DuffelAPI = (() => {
      */
     function formatOfferForDisplay(offer) {
         const segments = offer.slices?.flatMap(slice => slice.segments) || [];
-        const firstSegment = segments[0];
-        const lastSegment = segments[segments.length - 1];
+        const outboundSegments = offer.slices?.[0]?.segments || [];
+        const firstSegment = outboundSegments[0] || segments[0];
+        const lastSegment = outboundSegments[outboundSegments.length - 1] || segments[segments.length - 1];
         
         return {
             id: offer.id,
