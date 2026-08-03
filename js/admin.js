@@ -939,6 +939,412 @@ window.deleteTrip = deleteTrip;
 window.saveTrip = saveTrip;
 window.closeOverlay = closeOverlay;
 
+// ==================== EXCEL DATA EXPORT ====================
+// Exports bookings, users, destinations, trips, contacts, reviews,
+// newsletter subscribers, audit logs and itineraries to .xlsx files.
+
+// Guard against Excel formula injection (values starting with =, +, -, @)
+function excelSafe(v) {
+  if (typeof v === 'string' && /^[=+\-@]/.test(v)) return "'" + v;
+  return v;
+}
+
+// Build a worksheet from header definitions + normalized rows
+function objectToSheet(headerDefs, items) {
+  const aoa = [headerDefs.map(h => h.label)];
+  items.forEach(item => {
+    aoa.push(headerDefs.map(h => {
+      let v = item[h.key];
+      if (v === null || v === undefined) v = '';
+      if (typeof v === 'object') v = JSON.stringify(v);
+      return excelSafe(v);
+    }));
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = headerDefs.map(h => ({ wch: h.wch || 20 }));
+  return ws;
+}
+
+// Write a workbook to the browser as a downloaded .xlsx file
+function downloadWorkbook(wb, filename) {
+  XLSX.writeFile(wb, filename);
+}
+
+// Normalizers — map raw DB rows into friendly, Excel-ready objects
+function normalizeBookings(list) {
+  return (list || []).map(b => ({
+    reference: b.reference || b.ref || '',
+    doc_type: b.doc_type || 'unknown',
+    guest_name: b.guest_name || '',
+    guest_email: b.guest_email || '',
+    guest_phone: b.guest_phone || '',
+    dest_id: b.dest_id || b.destination_id || '',
+    from_location: b.from_location || '',
+    to_location: b.to_location || '',
+    booking_date: b.booking_date || '',
+    guests: b.guests ?? 1,
+    total: b.total_amount != null ? b.total_amount : (b.total != null ? b.total : 0),
+    currency: (b.currency || 'usd').toUpperCase(),
+    hotel_reservation: b.hotel_reservation ? 'Yes' : 'No',
+    passport: b.passport || '',
+    identity_card: b.identity_card || '',
+    special_requests: b.special_requests || '',
+    travelers: Array.isArray(b.travelers) ? b.travelers.map(t => (t && (t.name || t.full_name)) || '').filter(Boolean).join('; ') : '',
+    payment_id: b.payment_id || '',
+    status: b.status || 'confirmed',
+    user_id: b.user_id || '',
+    created_at: b.created_at || ''
+  }));
+}
+
+function normalizeUsers(list) {
+  return (list || []).map(u => ({
+    name: u.name || '',
+    email: u.email || '',
+    passport: u.passport || '',
+    identity_card: u.identity_card || '',
+    country: u.country || '',
+    phone: u.phone || '',
+    emergency: u.emergency || '',
+    emergency_name: u.emergency_name || '',
+    pref_hotel: u.pref_hotel ? 'Yes' : 'No',
+    pref_food: u.pref_food || 'none',
+    role: u.is_admin ? 'Admin' : 'Client',
+    email_verified: u.email_verified ? 'Yes' : 'No',
+    created_at: u.created_at || ''
+  }));
+}
+
+function normalizeDestinations(list) {
+  return (list || []).map(d => ({
+    id: d.id || '',
+    title: d.title || '',
+    edition: d.edition || '',
+    description: d.description || '',
+    price: d.price != null ? d.price : 0,
+    country: d.country || '',
+    vibe: VIBE_LABELS[d.vibe] || d.vibe || '',
+    img: d.img || '',
+    steps: Array.isArray(d.steps) ? d.steps.map((s, i) => `${i + 1}. ${s.title || ''} — ${s.text || ''}`).join('\n') : (d.steps || ''),
+    is_active: d.is_active ? 'Active' : 'Inactive',
+    created_at: d.created_at || ''
+  }));
+}
+
+function normalizeTrips(list) {
+  return (list || []).map(t => ({
+    id: t.id,
+    from_location: t.from_location || '',
+    to_location: t.to_location || '',
+    destination_id: t.destination_id || '',
+    departure_date: t.departure_date || '',
+    departure_time: t.departure_time || '',
+    max_capacity: t.max_capacity || 0,
+    booked_count: t.booked_count || 0,
+    available: Math.max(0, (t.max_capacity || 0) - (t.booked_count || 0)),
+    status: t.status || 'active',
+    created_at: t.created_at || ''
+  }));
+}
+
+function normalizeContacts(list) {
+  return (list || []).map(c => ({
+    id: c.id,
+    name: c.name || '',
+    email: c.email || '',
+    subject: c.subject || '',
+    message: c.message || '',
+    is_read: c.is_read ? 'Read' : 'New',
+    created_at: c.created_at || ''
+  }));
+}
+
+function normalizeReviews(list) {
+  return (list || []).map(r => ({
+    id: r.id,
+    dest_id: r.dest_id || '',
+    user_id: r.user_id || '',
+    rating: r.rating != null ? r.rating + ' / 5' : '',
+    comment: r.comment || '',
+    created_at: r.created_at || ''
+  }));
+}
+
+function normalizeNewsletter(list) {
+  return (list || []).map(s => ({
+    id: s.id,
+    email: s.email || '',
+    created_at: s.created_at || s.date || ''
+  }));
+}
+
+function normalizeLogs(list) {
+  return (list || []).map(l => ({
+    id: l.id,
+    admin_name: l.admin_name || '',
+    admin_id: l.admin_id || '',
+    action: l.action || '',
+    details: l.details || '',
+    ip: l.ip || '',
+    created_at: l.created_at || ''
+  }));
+}
+
+function normalizeItineraries(list) {
+  return (list || []).map(i => ({
+    id: i.id,
+    user_id: i.user_id || '',
+    title: i.title || '',
+    description: i.description || '',
+    days: Array.isArray(i.days) ? i.days.map((d, di) => `Day ${di + 1}: ${d.title || ''} — ${d.text || ''}`).join('\n') : (i.days || ''),
+    created_at: i.created_at || ''
+  }));
+}
+
+function normalizeDocuments(list) {
+  return (list || []).map(u => {
+    const pp = u.passport || '';
+    const ic = u.identity_card || '';
+    const status = pp && ic ? 'Both' : pp && !ic ? 'Passport' : !pp && ic ? 'ID Card' : 'None';
+    return {
+      name: u.name || '',
+      email: u.email || '',
+      passport: pp,
+      identity_card: ic,
+      doc_status: status,
+      created_at: u.created_at || ''
+    };
+  });
+}
+
+// Column definitions (label order + width hint)
+const BOOKING_COLS = [
+  { key: 'reference', label: 'Reference', wch: 18 },
+  { key: 'doc_type', label: 'Type', wch: 10 },
+  { key: 'guest_name', label: 'Guest Name', wch: 22 },
+  { key: 'guest_email', label: 'Email', wch: 28 },
+  { key: 'guest_phone', label: 'Phone', wch: 18 },
+  { key: 'dest_id', label: 'Destination', wch: 16 },
+  { key: 'from_location', label: 'From', wch: 16 },
+  { key: 'to_location', label: 'To', wch: 16 },
+  { key: 'booking_date', label: 'Travel Date', wch: 14 },
+  { key: 'guests', label: 'Guests', wch: 8 },
+  { key: 'total', label: 'Total', wch: 10 },
+  { key: 'currency', label: 'Currency', wch: 8 },
+  { key: 'hotel_reservation', label: 'Hotel', wch: 8 },
+  { key: 'passport', label: 'Passport', wch: 14 },
+  { key: 'identity_card', label: 'ID Card', wch: 14 },
+  { key: 'special_requests', label: 'Special Requests', wch: 30 },
+  { key: 'travelers', label: 'Travelers', wch: 30 },
+  { key: 'payment_id', label: 'Payment ID', wch: 20 },
+  { key: 'status', label: 'Status', wch: 12 },
+  { key: 'user_id', label: 'User ID', wch: 38 },
+  { key: 'created_at', label: 'Created At', wch: 22 }
+];
+const USER_COLS = [
+  { key: 'name', label: 'Name', wch: 22 },
+  { key: 'email', label: 'Email', wch: 28 },
+  { key: 'passport', label: 'Passport', wch: 14 },
+  { key: 'identity_card', label: 'ID Card', wch: 14 },
+  { key: 'country', label: 'Country', wch: 14 },
+  { key: 'phone', label: 'Phone', wch: 16 },
+  { key: 'emergency', label: 'Emergency Contact', wch: 18 },
+  { key: 'emergency_name', label: 'Emergency Name', wch: 18 },
+  { key: 'pref_hotel', label: 'Hotel Preference', wch: 10 },
+  { key: 'pref_food', label: 'Dietary Preference', wch: 14 },
+  { key: 'role', label: 'Role', wch: 10 },
+  { key: 'email_verified', label: 'Email Verified', wch: 12 },
+  { key: 'created_at', label: 'Registered', wch: 22 }
+];
+const DEST_COLS = [
+  { key: 'id', label: 'ID', wch: 14 },
+  { key: 'title', label: 'Title', wch: 24 },
+  { key: 'edition', label: 'Edition', wch: 24 },
+  { key: 'description', label: 'Description', wch: 40 },
+  { key: 'price', label: 'Price (USD)', wch: 12 },
+  { key: 'country', label: 'Country', wch: 14 },
+  { key: 'vibe', label: 'Vibe', wch: 16 },
+  { key: 'img', label: 'Image URL', wch: 40 },
+  { key: 'steps', label: 'Itinerary Steps', wch: 50 },
+  { key: 'is_active', label: 'Active', wch: 10 },
+  { key: 'created_at', label: 'Created At', wch: 22 }
+];
+const TRIP_COLS = [
+  { key: 'id', label: 'ID', wch: 8 },
+  { key: 'from_location', label: 'From', wch: 18 },
+  { key: 'to_location', label: 'To', wch: 18 },
+  { key: 'destination_id', label: 'Destination ID', wch: 14 },
+  { key: 'departure_date', label: 'Departure Date', wch: 14 },
+  { key: 'departure_time', label: 'Departure Time', wch: 12 },
+  { key: 'max_capacity', label: 'Max Capacity', wch: 12 },
+  { key: 'booked_count', label: 'Booked', wch: 8 },
+  { key: 'available', label: 'Available', wch: 10 },
+  { key: 'status', label: 'Status', wch: 10 },
+  { key: 'created_at', label: 'Created At', wch: 22 }
+];
+const CONTACT_COLS = [
+  { key: 'id', label: 'ID', wch: 8 },
+  { key: 'name', label: 'Name', wch: 22 },
+  { key: 'email', label: 'Email', wch: 28 },
+  { key: 'subject', label: 'Subject', wch: 24 },
+  { key: 'message', label: 'Message', wch: 50 },
+  { key: 'is_read', label: 'Status', wch: 10 },
+  { key: 'created_at', label: 'Date', wch: 22 }
+];
+const REVIEW_COLS = [
+  { key: 'id', label: 'ID', wch: 8 },
+  { key: 'dest_id', label: 'Destination', wch: 16 },
+  { key: 'user_id', label: 'User ID', wch: 38 },
+  { key: 'rating', label: 'Rating', wch: 10 },
+  { key: 'comment', label: 'Comment', wch: 50 },
+  { key: 'created_at', label: 'Created At', wch: 22 }
+];
+const NEWSLETTER_COLS = [
+  { key: 'id', label: 'ID', wch: 8 },
+  { key: 'email', label: 'Email', wch: 30 },
+  { key: 'created_at', label: 'Subscribed At', wch: 22 }
+];
+const LOG_COLS = [
+  { key: 'id', label: 'ID', wch: 8 },
+  { key: 'admin_name', label: 'Admin', wch: 20 },
+  { key: 'admin_id', label: 'Admin ID', wch: 38 },
+  { key: 'action', label: 'Action', wch: 24 },
+  { key: 'details', label: 'Details', wch: 50 },
+  { key: 'ip', label: 'IP', wch: 18 },
+  { key: 'created_at', label: 'Date', wch: 22 }
+];
+const ITINERARY_COLS = [
+  { key: 'id', label: 'ID', wch: 8 },
+  { key: 'user_id', label: 'User ID', wch: 38 },
+  { key: 'title', label: 'Title', wch: 28 },
+  { key: 'description', label: 'Description', wch: 40 },
+  { key: 'days', label: 'Days', wch: 50 },
+  { key: 'created_at', label: 'Created At', wch: 22 }
+];
+const DOCUMENT_COLS = [
+  { key: 'name', label: 'Name', wch: 22 },
+  { key: 'email', label: 'Email', wch: 28 },
+  { key: 'passport', label: 'Passport', wch: 14 },
+  { key: 'identity_card', label: 'ID Card', wch: 14 },
+  { key: 'doc_status', label: 'Doc Status', wch: 14 },
+  { key: 'created_at', label: 'Last Updated', wch: 22 }
+];
+
+// Build the "Summary" overview sheet for a full export
+function buildSummarySheet(sets) {
+  const revenue = (sets.bookings || []).reduce((sum, b) =>
+    sum + (parseFloat(b.total_amount) || parseFloat(b.total) || 0), 0);
+  const rows = [
+    ['Metric', 'Count'],
+    ['Bookings', (sets.bookings || []).length],
+    ['Registered Users', (sets.users || []).length],
+    ['Destinations', (sets.destinations || []).length],
+    ['Trips', (sets.trips || []).length],
+    ['Contact Messages', (sets.contacts || []).length],
+    ['Reviews', (sets.reviews || []).length],
+    ['Newsletter Subscribers', (sets.newsletter || []).length],
+    ['Audit Log Entries', (sets.logs || []).length],
+    ['Custom Itineraries', (sets.itineraries || []).length],
+    ['Total Revenue (USD)', Number(revenue.toFixed(2))]
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 30 }, { wch: 16 }];
+  return ws;
+}
+
+// Fetch all datasets for export. Prefers the service-role endpoint (bypasses
+// RLS so every table exports), falls back to direct Supabase queries.
+async function fetchExportData() {
+  try {
+    const token = api.getToken();
+    const res = await fetch('/api/export-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.bookings)) return data;
+    }
+  } catch (_) { /* fall through to direct queries */ }
+
+  const [bookings, users, destinations, trips, contacts, reviews, newsletter, logs, itineraries] = await Promise.all([
+    api.getAllBookings().catch(() => []),
+    api.getAllUsers().catch(() => []),
+    api.getAdminDestinations().catch(() => []),
+    api.getTrips().catch(() => []),
+    api.getContacts().catch(() => []),
+    api.getAllReviews().catch(() => []),
+    api.getNewsletterSubscribers().catch(() => []),
+    api.getAuditLogs().catch(() => []),
+    api.getAllItineraries().catch(() => [])
+  ]);
+  return { bookings, users, destinations, trips, contacts, reviews, newsletter, logs, itineraries };
+}
+
+// Export ALL site data to a single multi-sheet Excel workbook
+async function exportAllData() {
+  if (typeof XLSX === 'undefined') {
+    showToast('Excel library failed to load. Check your connection and try again.', 'error');
+    return;
+  }
+  const btn = document.getElementById('admin-export-btn');
+  const original = btn ? btn.innerHTML : '';
+  if (btn) btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting...';
+  try {
+    const sets = await fetchExportData();
+    const { bookings, users, destinations, trips, contacts, reviews, newsletter, logs, itineraries } = sets;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, buildSummarySheet(sets), 'Summary');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(BOOKING_COLS, normalizeBookings(bookings)), 'Bookings');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(USER_COLS, normalizeUsers(users)), 'Users');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(DEST_COLS, normalizeDestinations(destinations)), 'Destinations');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(TRIP_COLS, normalizeTrips(trips)), 'Trips');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(CONTACT_COLS, normalizeContacts(contacts)), 'Contacts');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(REVIEW_COLS, normalizeReviews(reviews)), 'Reviews');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(NEWSLETTER_COLS, normalizeNewsletter(newsletter)), 'Newsletter');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(LOG_COLS, normalizeLogs(logs)), 'Audit Logs');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(ITINERARY_COLS, normalizeItineraries(itineraries)), 'Itineraries');
+
+    const date = new Date().toISOString().slice(0, 10);
+    downloadWorkbook(wb, 'NextGen-Travel-Full-Export-' + date + '.xlsx');
+    showToast('Full Excel export complete (' + bookings.length + ' bookings, ' + users.length + ' users)');
+  } catch (err) {
+    showToast('Export failed: ' + (err.message || 'unknown error'), 'error');
+  } finally {
+    if (btn) btn.innerHTML = original;
+  }
+}
+
+// Export a single dataset to its own Excel workbook
+async function exportSection(sheetName, cols, normalize, baseName, key) {
+  if (typeof XLSX === 'undefined') {
+    showToast('Excel library failed to load. Check your connection and try again.', 'error');
+    return;
+  }
+  try {
+    const sets = await fetchExportData();
+    const data = sets[key] || [];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, objectToSheet(cols, normalize(data)), sheetName);
+    const date = new Date().toISOString().slice(0, 10);
+    downloadWorkbook(wb, baseName + '-' + date + '.xlsx');
+    showToast(sheetName + ' exported to Excel (' + data.length + ' rows)');
+  } catch (err) {
+    showToast('Export failed: ' + (err.message || 'unknown error'), 'error');
+  }
+}
+
+// Per-section export handlers
+function exportBookings() { return exportSection('Bookings', BOOKING_COLS, normalizeBookings, 'NextGen-Bookings', 'bookings'); }
+function exportDestinations() { return exportSection('Destinations', DEST_COLS, normalizeDestinations, 'NextGen-Destinations', 'destinations'); }
+function exportTrips() { return exportSection('Trips', TRIP_COLS, normalizeTrips, 'NextGen-Trips', 'trips'); }
+function exportUsers() { return exportSection('Users', USER_COLS, normalizeUsers, 'NextGen-Users', 'users'); }
+function exportContacts() { return exportSection('Contacts', CONTACT_COLS, normalizeContacts, 'NextGen-Contacts', 'contacts'); }
+function exportNewsletter() { return exportSection('Newsletter', NEWSLETTER_COLS, normalizeNewsletter, 'NextGen-Newsletter', 'newsletter'); }
+function exportLogs() { return exportSection('Audit Logs', LOG_COLS, normalizeLogs, 'NextGen-AuditLogs', 'logs'); }
+function exportDocuments() { return exportSection('Documents', DOCUMENT_COLS, normalizeDocuments, 'NextGen-Documents', 'users'); }
+
 // Generate trip form HTML (used in overlay)
 function getTripFormHtml(t) {
   return `

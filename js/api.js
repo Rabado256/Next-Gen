@@ -811,4 +811,25 @@ const api = {
     }
   },
 
+  // Get ALL destinations including inactive ones (admin only)
+  async getAdminDestinations() {
+    const { data, error } = await SB.from('destinations').select('*').order('created_at');
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
+  // Get all reviews (admin only)
+  async getAllReviews() {
+    const { data, error } = await SB.from('reviews').select('*').order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
+  // Get all custom itineraries (admin only)
+  async getAllItineraries() {
+    const { data, error } = await SB.from('itineraries').select('*').order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
 };

@@ -125,6 +125,11 @@ async function handleAPI(req, res) {
     return invokeServerless('lookup-booking.js', 'Booking', req, res);
   }
 
+  // POST /api/export-data — admin-only full data export (service-role fetch)
+  if (url === '/api/export-data' && req.method === 'POST') {
+    return invokeServerless('export-data.js', 'Export', req, res);
+  }
+
   return false;
 }
 

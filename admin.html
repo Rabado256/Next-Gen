@@ -451,7 +451,12 @@
                 <button class="admin-mobile-toggle" id="admin-mobile-toggle"><i class="bi bi-list"></i></button>
                 <h1 id="admin-page-title">Dashboard</h1>
             </div>
-            <span class="admin-header-badge" id="admin-header-badge">Admin</span>
+            <div class="d-flex align-items-center gap-2">
+                <button class="admin-btn admin-btn-accent" id="admin-export-btn" onclick="exportAllData()" title="Export all site data to Excel">
+                    <i class="bi bi-file-earmark-excel"></i> Export All Data
+                </button>
+                <span class="admin-header-badge" id="admin-header-badge">Admin</span>
+            </div>
         </div>
 
         <!-- Section: Dashboard -->
@@ -544,7 +549,10 @@
                         <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
-                <span class="small opacity-50" id="bookings-count">0 bookings</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="bookings-count">0 bookings</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportBookings()" title="Export bookings to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -572,7 +580,10 @@
         <div id="section-destinations" class="admin-section">
             <div class="admin-toolbar">
                 <button class="admin-btn admin-btn-accent" onclick="openDestModal()"><i class="bi bi-plus-lg"></i> Add Destination</button>
-                <span class="small opacity-50" id="dest-count">0 destinations</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="dest-count">0 destinations</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportDestinations()" title="Export destinations to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -597,7 +608,10 @@
         <div id="section-trips" class="admin-section">
             <div class="admin-toolbar">
                 <button class="admin-btn admin-btn-accent" onclick="openTripModal()"><i class="bi bi-plus-lg"></i> Add Trip</button>
-                <span class="small opacity-50" id="trips-count">0 trips</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="trips-count">0 trips</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportTrips()" title="Export trips to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -624,7 +638,10 @@
         <div id="section-users" class="admin-section">
             <div class="admin-toolbar">
                 <input type="text" id="users-search" placeholder="Search users..." style="width: 220px;">
-                <span class="small opacity-50" id="users-count">0 users</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="users-count">0 users</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportUsers()" title="Export users to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -648,7 +665,10 @@
         <div id="section-contacts" class="admin-section">
             <div class="admin-toolbar">
                 <input type="text" id="contacts-search" placeholder="Search messages..." style="width: 220px;">
-                <span class="small opacity-50" id="contacts-count">0 messages</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="contacts-count">0 messages</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportContacts()" title="Export contact submissions to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -672,7 +692,10 @@
         <div id="section-newsletter" class="admin-section">
             <div class="admin-toolbar">
                 <input type="text" id="newsletter-search" placeholder="Search subscribers..." style="width: 220px;">
-                <span class="small opacity-50" id="newsletter-count">0 subscribers</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="newsletter-count">0 subscribers</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportNewsletter()" title="Export newsletter subscribers to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -687,7 +710,10 @@
         <!-- Section: Audit Logs -->
         <div id="section-logs" class="admin-section">
             <div class="admin-toolbar">
-                <span class="small opacity-50" id="logs-count">0 entries</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="logs-count">0 entries</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportLogs()" title="Export audit logs to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -712,7 +738,10 @@
                         <option value="none">No Documents</option>
                     </select>
                 </div>
-                <span class="small opacity-50" id="documents-count">0 users</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small opacity-50" id="documents-count">0 users</span>
+                    <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="exportDocuments()" title="Export user documents to Excel"><i class="bi bi-file-earmark-excel"></i> Export</button>
+                </div>
             </div>
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -757,6 +786,7 @@
     <script src="js/supabase-client.js"></script>
 <script src="js/api.js?v=2"></script>
     <script src="js/currency.js"></script>
-    <script src="js/admin.js?v=2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="js/admin.js?v=3"></script>
 </body>
 </html>
