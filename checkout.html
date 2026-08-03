@@ -6,6 +6,7 @@
     <title>Complete Your Booking | NextGen Travel</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/theme.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://js.stripe.com/v3/"></script>
     <!-- Checkout page styles — document detection, booking form, payment summary -->
@@ -503,7 +504,6 @@
                     <a href="legal.html">Privacy Policy</a>
                     <a href="legal.html">Terms of Use</a>
                     <a href="legal.html">Site Map</a>
-                    <a href="admin.html" class="opacity-50">Admin</a>
                 </div>
                 <p class="small opacity-50">&copy; 2026 NextGen Travel. All rights reserved.</p>
             </div>
@@ -804,7 +804,6 @@
                 hotelRow.style.setProperty('display', 'flex', 'important');
                 const hpEl = document.getElementById('hotel-price');
                 hpEl.textContent = typeof CURRENCY !== 'undefined' ? '+' + await CURRENCY.format(hotelPrice) : '+$' + hotelPrice.toLocaleString() + '.00';
-                hpEl.dataset.usd = hotelPrice;
             } else {
                 hotelRow.style.setProperty('display', 'none', 'important');
             }
@@ -814,7 +813,6 @@
                 mealRow.style.setProperty('display', 'flex', 'important');
                 const mpEl = document.getElementById('meal-price');
                 mpEl.textContent = typeof CURRENCY !== 'undefined' ? '+' + await CURRENCY.format(mealPrice) : '+$' + mealPrice.toLocaleString() + '.00';
-                mpEl.dataset.usd = mealPrice;
             } else {
                 mealRow.style.setProperty('display', 'none', 'important');
             }
@@ -877,6 +875,12 @@
         updateSummary(false).then(() => {
             if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
         });
+        // Re-render the full summary instantly whenever the currency changes
+        if (typeof CURRENCY !== 'undefined' && typeof CURRENCY.onChange === 'function') {
+            CURRENCY.onChange(() => {
+                updateSummary(document.getElementById('reserve-hotel')?.checked);
+            });
+        }
         document.getElementById('back-to-dest').href = 'destination.html?id=' + id + '&guests=' + guests;
         document.title = 'Book ' + dest.title + ' | NextGen Travel';
 

@@ -648,6 +648,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         CURRENCY.updateDisplay();
     }
 
+    // ---- 4. Currency change — refresh every price site-wide immediately ----
+    if (typeof CURRENCY !== 'undefined' && typeof CURRENCY.onChange === 'function') {
+        CURRENCY.onChange(() => CURRENCY.updateDisplay());
+    }
+
     // Initial UI sync based on stored session
     updateAuthUI();
 });
