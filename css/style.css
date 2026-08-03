@@ -3843,27 +3843,6 @@ html[data-theme="light"] {
     --brand-night: #f2f4f7;
 }
 
-/* --- Navbar: neutral glass over white --- */
-html[data-theme="light"] .navbar.nav-scrolled {
-    background: rgba(255, 255, 255, 0.92) !important;
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
-}
-html[data-theme="light"] .navbar .navbar-collapse {
-    background: rgba(255, 255, 255, 0.97);
-    border: 1px solid rgba(15, 23, 42, 0.08);
-}
-html[data-theme="light"] .navbar.nav-scrolled .text-white,
-html[data-theme="light"] .navbar.nav-scrolled .navbar-brand {
-    color: var(--comptoir-navy) !important;
-}
-html[data-theme="light"] .navbar.nav-scrolled .navbar-toggler svg {
-    stroke: var(--comptoir-navy) !important;
-}
-html[data-theme="light"] .navbar.nav-scrolled .auth-icon-btn {
-    color: var(--comptoir-navy);
-    border-color: rgba(26, 43, 60, 0.25);
-}
-
 /* --- Footer: neutral light grey --- */
 html[data-theme="light"] .site-footer {
     background: linear-gradient(180deg, #ffffff 0%, #eef1f5 100%);
@@ -4004,40 +3983,3 @@ html[data-theme="light"] .auth-form .form-control::placeholder {
     color: rgba(26, 43, 60, 0.35);
 }
 
-/* --- Inspiration detail hero: dark -> light --- */
-html[data-theme="light"] .inspire-hero {
-    background: linear-gradient(135deg, #ffffff 0%, #eef1f5 100%);
-}
-html[data-theme="light"] .inspire-hero img {
-    opacity: 0.35;
-}
-html[data-theme="light"] .inspire-hero-overlay {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.75) 100%);
-}
-html[data-theme="light"] .inspire-hero-content {
-    color: var(--comptoir-navy);
-}
-html[data-theme="light"] .inspire-hero-content h6 {
-    color: rgba(26, 43, 60, 0.5);
-}
-
-/* --- Subpage heroes (blog / contact / help / legal): dark -> light --- */
-html[data-theme="light"] .blog-hero,
-html[data-theme="light"] .contact-hero,
-html[data-theme="light"] .help-hero,
-html[data-theme="light"] .legal-hero {
-    background: linear-gradient(180deg, #ffffff 0%, #eef1f5 100%);
-    color: var(--comptoir-navy);
-}
-html[data-theme="light"] .blog-hero .text-white,
-html[data-theme="light"] .contact-hero .text-white,
-html[data-theme="light"] .help-hero .text-white,
-html[data-theme="light"] .legal-hero .text-white {
-    color: var(--comptoir-navy) !important;
-}
-html[data-theme="light"] .blog-hero .opacity-50,
-html[data-theme="light"] .contact-hero .opacity-50,
-html[data-theme="light"] .help-hero .opacity-50,
-html[data-theme="light"] .legal-hero .opacity-50 {
-    color: rgba(26, 43, 60, 0.5);
-}
