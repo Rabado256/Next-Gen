@@ -12,6 +12,11 @@
         .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; padding: 2rem; }
         .result-card { background: #111; border: 1px solid #222; padding: 3rem; text-align: center; width: 100%; max-width: 420px; }
         .result-card .icon { font-size: 3rem; margin-bottom: 1rem; }
+        /* Light theme */
+        html[data-theme="light"] .auth-page { background: #eef1f5; }
+        html[data-theme="light"] .result-card { background: #ffffff; border-color: rgba(26,43,60,0.1); box-shadow: 0 24px 80px rgba(15,23,42,0.12); }
+        html[data-theme="light"] .result-card .text-white { color: var(--comptoir-navy) !important; }
+        html[data-theme="light"] .result-card .opacity-50 { color: rgba(26,43,60,0.5); }
     </style>
 </head>
 <body>
