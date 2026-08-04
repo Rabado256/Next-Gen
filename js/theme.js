@@ -66,7 +66,12 @@
     var target = document.querySelector('.navbar .navbar-collapse .ms-auto') ||
                  document.querySelector('.navbar .navbar-collapse') ||
                  document.querySelector('.navbar');
-    if (!target) return;
+    if (!target) {
+      var btn = buildButton();
+      btn.classList.add('theme-toggle-float');
+      document.body.appendChild(btn);
+      return;
+    }
     target.insertBefore(buildButton(), target.firstElementChild);
   }
 

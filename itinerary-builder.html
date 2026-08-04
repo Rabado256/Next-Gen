@@ -38,6 +38,23 @@
         @media (max-width: 768px) { .builder-header { text-align: center; } }
         .login-prompt { text-align: center; padding: 4rem 2rem; }
         .login-prompt h3 { font-family: 'Playfair Display', serif; color: white; }
+        @media (max-width: 768px) { .builder-header { text-align: center; } }
+
+        /* Day (light) mode — swap the builder tokens to a neutral light surface */
+        html[data-theme="light"] {
+            --admin-bg: #f2f4f7;
+            --admin-card: #ffffff;
+            --admin-border: #e5e7eb;
+            --admin-accent: #b9834f;
+            --admin-text: #1a2b3c;
+            --admin-muted: #64748b;
+        }
+        html[data-theme="light"] body { color: var(--admin-text); }
+        html[data-theme="light"] .builder-input { color: var(--admin-text); }
+        html[data-theme="light"] .builder-input::placeholder { color: var(--admin-muted); }
+        html[data-theme="light"] .day-card-header h5,
+        html[data-theme="light"] .login-prompt h3 { color: var(--admin-text); }
+        html[data-theme="light"] .btn-outline:hover { color: var(--admin-text); }
     </style>
 </head>
 <body>

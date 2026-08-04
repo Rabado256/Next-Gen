@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile | NextGen Travel</title>
+    <script src="js/theme.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
@@ -35,6 +36,27 @@
             .sidebar-mobile { position: fixed; inset: 0; z-index: 50; transform: translateX(-100%); transition: transform 0.3s ease; }
             .sidebar-mobile.open { transform: translateX(0); }
         }
+
+        /* Night mode — adopt the shared dark theme across the Tailwind dashboard */
+        html[data-theme="dark"] body { background-color: #0a0c10 !important; }
+        html[data-theme="dark"] .bg-white,
+        html[data-theme="dark"] .bg-gray-50,
+        html[data-theme="dark"] .bg-gray-100 {
+            background-color: #14171c !important;
+        }
+        html[data-theme="dark"] .border-gray-100,
+        html[data-theme="dark"] .border-gray-200 {
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html[data-theme="dark"] .text-gray-700 { color: #e8ecf1 !important; }
+        html[data-theme="dark"] .text-gray-500 { color: #d1d5db !important; }
+        html[data-theme="dark"] .text-gray-400 { color: #9ca3af !important; }
+        html[data-theme="dark"] .field-label { color: #9ca3af !important; }
+        html[data-theme="dark"] .field-value { color: #e5e7eb !important; }
+        html[data-theme="dark"] .hover\:bg-gray-100:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
+        html[data-theme="dark"] .focus\:bg-white:focus { background-color: #1c2026 !important; }
+        html[data-theme="dark"] .shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important; }
+        html[data-theme="dark"] #sidebar { background-color: #0f172a !important; }
     </style>
 </head>
 <body class="bg-gray-50 antialiased">

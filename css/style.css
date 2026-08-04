@@ -294,8 +294,9 @@ h2, h3, .serif {
 
 .dest-gallery {
     padding: 8rem 0;
-    background: var(--primary-white);
+    background: var(--brand-night);
     position: relative;
+    transition: background 0.6s ease, color 0.6s ease;
 }
 
 .dest-gallery-header {
@@ -310,7 +311,8 @@ h2, h3, .serif {
     text-transform: uppercase;
     letter-spacing: 0.1em;
     line-height: 1;
-    color: var(--primary-black);
+    color: #ffffff;
+    transition: color 0.6s ease;
 }
 
 /* Wrappers to anchor the fixed glass arrows outside the scroll containers */
@@ -969,8 +971,21 @@ h2, h3, .serif {
 /* ==========================================
    MAP SECTION DEFAULT
    ========================================== */
+.sanctuary-section {
+    background: var(--brand-night-2);
+    padding: 6rem 0;
+    transition: background 0.6s ease, color 0.6s ease;
+}
+
+.sanctuary-section .display-3 {
+    color: #ffffff;
+    transition: color 0.6s ease;
+}
+
 #world-map {
     height: 500px;
+    border: 1px solid var(--glass-border);
+    transition: border-color 0.6s ease;
 }
 
 /* ==========================================
@@ -3066,16 +3081,28 @@ h2, h3, .serif {
 }
 
 /* Guest Reviews */
+.sanctuary-reviews {
+    background: var(--brand-night-2);
+    transition: background 0.6s ease, color 0.6s ease;
+}
+
+.sanctuary-reviews .serif.italic {
+    color: #ffffff;
+    transition: color 0.6s ease;
+}
+
 .review-card {
-    background: #fdfdfd;
+    background: rgba(255, 255, 255, 0.05);
     padding: 2.5rem;
-    border: 1px solid rgba(0,0,0,0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.6s ease, border-color 0.6s ease;
 }
 
 .review-stars {
-    color: #000;
+    color: #d4a373;
     font-size: 0.8rem;
     margin-bottom: 1rem;
+    transition: color 0.6s ease;
 }
 
 .review-text {
@@ -3083,13 +3110,16 @@ h2, h3, .serif {
     font-size: 0.95rem;
     line-height: 1.8;
     margin-bottom: 1.5rem;
+    color: rgba(255, 255, 255, 0.78);
+    transition: color 0.6s ease;
 }
 
 .review-author {
     font-size: 0.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    opacity: 0.5;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color 0.6s ease;
 }
 
 /* Floating Concierge */
@@ -3315,6 +3345,58 @@ h2, h3, .serif {
     opacity: 1;
     filter: brightness(1.1);
     transform: scale(1.05);
+}
+
+/* Partner Bar heading */
+.partner-bar-head {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.partner-heading {
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--comptoir-text);
+    opacity: 0.55;
+    margin: 0;
+}
+
+/* Partner Bar marquee */
+.partner-marquee {
+    overflow: hidden;
+    cursor: grab;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+
+.partner-marquee-track {
+    display: flex;
+    align-items: center;
+    gap: 5.5rem;
+    width: max-content;
+    padding: 0.5rem 0;
+    animation: partner-scroll 32s linear infinite;
+}
+
+.partner-marquee:hover .partner-marquee-track {
+    animation-play-state: paused;
+}
+
+.partner-marquee .partner-logo {
+    margin: 0;
+}
+
+@keyframes partner-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .partner-marquee-track {
+        animation: none;
+    }
 }
 
 /* User Avatar & Profile */
@@ -3981,5 +4063,309 @@ html[data-theme="light"] .auth-form .form-control:focus {
 }
 html[data-theme="light"] .auth-form .form-control::placeholder {
     color: rgba(26, 43, 60, 0.35);
+}
+
+/* --- Destinations gallery + Our Sanctuaries: day surfaces --- */
+html[data-theme="light"] .dest-gallery {
+    background: var(--primary-white);
+}
+html[data-theme="light"] .dest-gallery-title {
+    color: var(--primary-black);
+}
+html[data-theme="light"] .sanctuary-section {
+    background: var(--primary-white);
+}
+html[data-theme="light"] .sanctuary-section .display-3 {
+    color: var(--comptoir-navy);
+}
+html[data-theme="light"] #world-map {
+    border-color: var(--primary-black);
+}
+html[data-theme="light"] .sanctuary-reviews {
+    background: var(--primary-white);
+}
+html[data-theme="light"] .sanctuary-reviews .serif.italic {
+    color: var(--comptoir-navy);
+}
+html[data-theme="light"] .review-card {
+    background: #fdfdfd;
+    border-color: rgba(0, 0, 0, 0.05);
+}
+html[data-theme="light"] .review-stars {
+    color: #000;
+}
+html[data-theme="light"] .review-text {
+    color: var(--comptoir-text);
+}
+html[data-theme="light"] .review-author {
+    color: inherit;
+    opacity: 0.5;
+}
+
+/* ============================================
+   NIGHT (DARK) THEME — GLOBAL ADOPTION
+   html[data-theme="dark"] is the site default,
+   applied by js/theme.js before first paint.
+   ============================================ */
+html[data-theme="dark"] {
+    --comptoir-navy: #e8ecf1;
+    --comptoir-text: rgba(235, 238, 242, 0.85);
+    color-scheme: dark;
+}
+
+/* --- Body --- */
+html[data-theme="dark"] body {
+    background-color: var(--brand-night);
+    color: var(--comptoir-text);
+}
+html[data-theme="light"] body {
+    background-color: var(--comptoir-white);
+}
+
+/* --- Headings + display text --- */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] .serif,
+html[data-theme="dark"] .display-1,
+html[data-theme="dark"] .display-2,
+html[data-theme="dark"] .display-3,
+html[data-theme="dark"] .display-4,
+html[data-theme="dark"] .display-5,
+html[data-theme="dark"] .display-6,
+html[data-theme="dark"] .display-font {
+    color: #e8ecf1;
+}
+
+/* --- Bootstrap text helpers --- */
+html[data-theme="dark"] .text-black,
+html[data-theme="dark"] .text-dark,
+html[data-theme="dark"] .text-body {
+    color: #e8ecf1 !important;
+}
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .text-secondary,
+html[data-theme="dark"] .text-body-secondary {
+    color: rgba(235, 238, 242, 0.55) !important;
+}
+html[data-theme="dark"] .text-black-50 {
+    color: rgba(235, 238, 242, 0.55) !important;
+}
+html[data-theme="dark"] .text-white-50 {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+html[data-theme="dark"] .border-dark,
+html[data-theme="dark"] .border-black,
+html[data-theme="dark"] .border-1 {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+html[data-theme="dark"] .border-top,
+html[data-theme="dark"] .border-bottom {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+html[data-theme="dark"] hr {
+    border-color: rgba(255, 255, 255, 0.12);
+    opacity: 1;
+}
+
+/* --- Cards / lists / tables / dropdowns --- */
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .list-group,
+html[data-theme="dark"] .list-group-item,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .table {
+    background-color: var(--brand-night-2);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: inherit;
+}
+html[data-theme="dark"] .card-header,
+html[data-theme="dark"] .card-footer,
+html[data-theme="dark"] .table > thead th,
+html[data-theme="dark"] .table > tfoot th,
+html[data-theme="dark"] .list-group-item {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: inherit;
+}
+html[data-theme="dark"] .dropdown-menu .dropdown-item {
+    color: #e8ecf1;
+}
+html[data-theme="dark"] .dropdown-menu .dropdown-item:hover,
+html[data-theme="dark"] .dropdown-menu .dropdown-item:focus {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+html[data-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #e8ecf1;
+}
+html[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* --- Forms --- */
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select,
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="email"],
+html[data-theme="dark"] input[type="password"],
+html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] input[type="search"],
+html[data-theme="dark"] input[type="tel"],
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e8ecf1;
+}
+html[data-theme="dark"] .form-control::placeholder,
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+    color: rgba(235, 238, 242, 0.45);
+}
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] .form-select:focus,
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] textarea:focus {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+}
+html[data-theme="dark"] .form-check-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* --- Modals --- */
+html[data-theme="dark"] .modal-content {
+    background-color: var(--brand-night-2);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+html[data-theme="dark"] .modal-header,
+html[data-theme="dark"] .modal-footer {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+html[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* --- Alerts --- */
+html[data-theme="dark"] .alert-info,
+html[data-theme="dark"] .alert-primary,
+html[data-theme="dark"] .alert-secondary,
+html[data-theme="dark"] .alert-light {
+    background-color: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.35);
+    color: #dbeafe;
+}
+html[data-theme="dark"] .alert-warning,
+html[data-theme="dark"] .alert-danger,
+html[data-theme="dark"] .alert-success {
+    background-color: rgba(234, 179, 8, 0.12);
+    border-color: rgba(234, 179, 8, 0.35);
+    color: #fde68a;
+}
+
+/* --- Hardcoded white/light surfaces (inner pages) --- */
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-light {
+    background-color: var(--brand-night-2) !important;
+}
+html[data-theme="dark"] .blog-section,
+html[data-theme="dark"] .contact-section,
+html[data-theme="dark"] .help-section,
+html[data-theme="dark"] .legal-section,
+html[data-theme="dark"] .profile-section,
+html[data-theme="dark"] .lookup-section,
+html[data-theme="dark"] .booking-card,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .result-card,
+html[data-theme="dark"] .result-card-img-wrap,
+html[data-theme="dark"] .hotel-amenity,
+html[data-theme="dark"] .flight-airline-logo,
+html[data-theme="dark"] .btn-alt-date,
+html[data-theme="dark"] .avail-modal,
+html[data-theme="dark"] .doc-banner,
+html[data-theme="dark"] .contact-info-card,
+html[data-theme="dark"] .partner-bar,
+html[data-theme="dark"] .results-header-sticky {
+    background-color: var(--brand-night-2) !important;
+}
+html[data-theme="dark"] .results-header-sticky {
+    background: rgba(10, 12, 16, 0.92) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .filter-title {
+    color: rgba(235, 238, 242, 0.5);
+}
+html[data-theme="dark"] .filter-option {
+    color: #e8ecf1;
+}
+
+/* --- Surfaces that set light backgrounds inline (need !important) --- */
+html[data-theme="dark"] .stats-widget,
+html[data-theme="dark"] #api-settings-modal .modal-content,
+html[data-theme="dark"] #page-loading {
+    background: var(--brand-night-2) !important;
+}
+html[data-theme="dark"] .stats-widget {
+    color: #e8ecf1 !important;
+}
+html[data-theme="dark"] #page-loading .loading-spinner,
+html[data-theme="dark"] .avail-spinner {
+    border-color: rgba(255, 255, 255, 0.15);
+    border-top-color: #ffffff;
+}
+
+/* --- Destination page: requirements panel + doc badge (inline styles) --- */
+html[data-theme="dark"] .dest-req-section {
+    background: var(--brand-night-2) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+html[data-theme="dark"] .dest-req-section .doc-badge-unknown {
+    background: rgba(234, 179, 8, 0.2) !important;
+    color: #fcd34d !important;
+}
+html[data-theme="dark"] .dest-req-section select {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Search results: light scrolled navbar -> dark in night --- */
+html[data-theme="dark"] .navbar.nav-scrolled {
+    background: rgba(13, 16, 20, 0.88) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .navbar.nav-scrolled .text-white,
+html[data-theme="dark"] .navbar.nav-scrolled .navbar-brand,
+html[data-theme="dark"] .navbar.nav-scrolled .btn-outline-light {
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+}
+
+/* --- Light navbars (profile / bookings) -> dark in night --- */
+html[data-theme="dark"] .navbar-light.bg-white {
+    background: rgba(10, 12, 16, 0.96) !important;
+}
+html[data-theme="dark"] .navbar-light.bg-white .navbar-collapse {
+    background: rgba(10, 12, 16, 0.96);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+html[data-theme="dark"] .navbar-light.bg-white .navbar-brand,
+html[data-theme="dark"] .navbar-light.bg-white .navbar-toggler,
+html[data-theme="dark"] .navbar-light.bg-white .nav-link {
+    color: #e8ecf1 !important;
+}
+
+/* --- Floating theme toggle (pages without a navbar) --- */
+.theme-toggle-float {
+    position: fixed;
+    top: 1.1rem;
+    right: 1.1rem;
+    z-index: 2200;
 }
 
