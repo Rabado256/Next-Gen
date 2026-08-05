@@ -25,14 +25,14 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 | Design approved? | Needs revision | Client feedback required |
 | Hotels required? | Optional (flights compulsory) | Flight-first MVP |
 | API budget | Free tier only | Amadeus 10K req/month |
-| Business model | Direct booking | Need Stripe payments |
+| Business model | Direct booking | Need Paystack payments (client's region) |
 
 ### Scope Decisions
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | MVP scope | Flights + payments + users + admin | Core business needs |
 | Hotels | Phase 2 (after MVP launch) | Optional, adds complexity |
-| Payment processor | Stripe | No upfront cost, 2.9% + $0.30/txn |
+| Payment processor | Paystack | African-first, NGN pricing, no setup cost |
 | API provider | Amadeus (free tier) | 10,000 requests/month |
 | Hosting | Vercel/Netlify (free tier) | Zero upfront cost |
 | Monetization | Direct booking revenue | Client processes payments |
@@ -40,9 +40,9 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 ### Architecture Decisions
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Booking model | Direct booking via Stripe | Client requirement |
+| Booking model | Direct booking via Paystack | Client requirement |
 | Flight data | **Duffel API** (NOT Amadeus — deprecated July 17, 2026) | Duffel has free test mode + $1/order starter plan |
-| Payment processor | Stripe | No upfront cost, 2.9% + $0.30/txn |
+| Payment processor | Paystack | African-first, NGN pricing, no setup cost |
 | User accounts | Supabase Auth | Already integrated |
 | Admin auth | Server-side API routes | Security requirement |
 | State management | Vanilla JS (no framework) | Keep existing stack |
@@ -82,7 +82,7 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 
 ### Missing (Required for MVP) ❌
 - Real flight data (Amadeus API integration)
-- Stripe payment processing
+- Paystack payment processing
 - Booking state machine (pending → confirmed → completed)
 - User booking history
 - Admin CRUD operations
@@ -109,7 +109,7 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 
 ### Phase 3: Booking + Payments (Week 5-8)
 - [ ] Implement booking state machine in Supabase
-- [ ] Integrate Stripe for payment processing
+- [x] Integrate Paystack for payment processing (code wired; live keys pending)
 - [ ] Build booking confirmation flow
 - [ ] Add booking receipts/invoices
 - [ ] Implement cancellation/refund logic
@@ -139,7 +139,7 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 
 | Component | Current | New (Required) |
 |-----------|---------|----------------|
-| Payment | None | Stripe.js |
+| Payment | None | Paystack pop-up |
 | Flight data | Mock | **Duffel API** |
 | Email | None | SendGrid/Resend (optional) |
 | Hosting | Local dev | Vercel/Netlify |
@@ -154,10 +154,11 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 | 2026-07-26 | Activate plan mode | CEO review to set direction |
 | 2026-07-26 | Client project, 3-6 months | Real business engagement |
 | 2026-07-26 | Flights only MVP, hotels Phase 2 | Scope reduction for timeline |
-| 2026-07-26 | Direct booking via Stripe | Client requirement |
+| 2026-07-26 | Direct booking via Paystack | Client requirement |
 | 2026-07-26 | **Duffel API (NOT Amadeus)** | Amadeus Self-Service deprecated July 17, 2026 |
 | 2026-07-26 | No build system | Keep existing stack simple |
 | 2026-07-26 | Duffel API integrated | Phase 2 flight search complete |
+| 2026-08-05 | Stripe → Paystack (NGN pop-up) | Client region needs Paystack; live keys pending |
 
 ---
 
@@ -181,7 +182,7 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 | Server-side admin auth weak | Admin dashboard accessible | Implement proper RLS |
 | Duffel free tier limits | Can't handle traffic spikes | Cache aggressively |
 | Client revision requests | Timeline slip | Lock design early |
-| Stripe fees eat margins | Low profit per booking | Price accordingly |
+| Paystack fees eat margins | Low profit per booking | Price accordingly |
 
 ---
 

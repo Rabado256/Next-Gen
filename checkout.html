@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="js/theme.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
     <!-- Checkout page styles — document detection, booking form, payment summary -->
     <style>
         /* Checkout is a light page — btn-noir glass styling (white-on-white) is invisible here.
@@ -364,18 +364,16 @@
                 <div id="payment-step" class="border border-dark p-5 reveal-up" style="display: none;">
                     <h6 class="tracking-widest mb-4">Secure Payment // 02</h6>
                     <h1 class="mb-5 italic">PAYMENT METHOD</h1>
-                    <div id="stripe-test-banner" class="mb-3 p-3 border border-warning bg-warning bg-opacity-10 text-warning-emphasis small" style="display: none;">
-                        <strong>TEST MODE:</strong> Payments are not being processed for real. Use the test card <code class="text-dark">4242 4242 4242 4242</code> — no real charge will occur.
+                    <div id="paystack-test-banner" class="mb-3 p-3 border border-warning bg-warning bg-opacity-10 text-warning-emphasis small" style="display: none;">
+                        <strong>TEST MODE:</strong> Payments are not being processed for real. Use the test card <code class="text-dark">4084 0840 8408 4081</code> — no real charge will occur.
                     </div>
-                    <div id="stripe-payment-element" class="mb-3" style="min-height: 200px;">
-                        <!-- Stripe Payment Element will be mounted here -->
-                        <div id="stripe-placeholder" class="text-center py-4">
-                            <div class="loading-spinner mx-auto mb-3"></div>
-                            <p class="small text-muted">Loading secure payment form...</p>
-                        </div>
+                    <div id="paystack-charge-box" class="mb-3 p-4 border text-center">
+                        <p class="small text-muted mb-2">You'll pay in <strong>Nigerian Naira (NGN)</strong>.</p>
+                        <h3 class="serif mb-0" id="paystack-charge-amount">—</h3>
+                        <p class="extra-small text-muted mt-2 mb-0 italic opacity-75">After clicking <em>Authorize Payment</em> you'll complete the payment securely in the Paystack pop-up (card, bank transfer, or USSD).</p>
                     </div>
-                    <div id="stripe-error" class="text-danger small mt-2" style="display:none;"></div>
-                    <p class="extra-small text-muted mt-3 mb-0 italic opacity-75">Powered by Stripe. Your payment details are encrypted and secure.</p>
+                    <div id="paystack-error" class="text-danger small mt-2" style="display:none;"></div>
+                    <p class="extra-small text-muted mt-3 mb-0 italic opacity-75">Powered by Paystack. Your payment details are encrypted and secure.</p>
                     <button id="confirm-payment" class="btn btn-noir w-100 mt-4 py-3 rounded-0">Authorize Payment</button>
                 </div>
 
@@ -1158,20 +1156,35 @@
             }
         });
 
-        // Stripe state
-        let stripe, elements, clientSecret, paymentIntentId;
+        // Paystack state
+        let paystackKey = null;
 
-        // Try to resolve Stripe key from server config endpoint first,
+        // Try to resolve Paystack key from server config endpoint first,
         // falling back to the hardcoded key in config.js
-        async function resolveStripeKey() {
+        async function resolvePaystackKey() {
             try {
                 const resp = await fetch('/api/config');
                 if (resp.ok) {
                     const cfg = await resp.json();
-                    if (cfg.stripe_publishable_key) return cfg.stripe_publishable_key;
+                    if (cfg.paystack_public_key) return cfg.paystack_public_key;
                 }
             } catch (_) {}
-            return window.__STRIPE_PUBLISHABLE_KEY__;
+            return window.__PAYSTACK_PUBLIC_KEY__;
+        }
+
+        // Convert the USD order total to the NGN amount Paystack charges (in kobo).
+        // Rate comes from the live currency API with a sensible fallback.
+        async function usdToNgnKobo(usdAmount) {
+            let rate = 1540;
+            try {
+                const rates = typeof CURRENCY !== 'undefined' ? await CURRENCY.getRates() : null;
+                if (rates && rates.NGN) rate = rates.NGN;
+            } catch (_) {}
+            return Math.max(50, Math.round((parseFloat(usdAmount) || 0) * rate * 100));
+        }
+
+        function formatNGN(amount) {
+            return '₦' + Number(amount).toLocaleString('en-NG', { maximumFractionDigits: 2 });
         }
 
         document.getElementById('checkout-form').addEventListener('submit', async function(e) {
@@ -1185,51 +1198,25 @@
             payStep.classList.add('reveal-snap', 'visible');
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // Initialize Stripe and create PaymentIntent
-            const stripeKey = await resolveStripeKey();
-            const testBanner = document.getElementById('stripe-test-banner');
+            // Resolve Paystack key and show the NGN charge amount
+            paystackKey = await resolvePaystackKey();
+            const testBanner = document.getElementById('paystack-test-banner');
             if (testBanner) {
-                testBanner.style.display = (stripeKey && stripeKey.startsWith('pk_test_')) ? 'block' : 'none';
+                testBanner.style.display = (paystackKey && paystackKey.startsWith('pk_test_')) ? 'block' : 'none';
             }
-            if (!stripeKey || stripeKey.includes('REPLACE_ME')) {
-                document.getElementById('stripe-error').textContent = 'Stripe is not configured. Add your STRIPE_PUBLISHABLE_KEY to config.js and STRIPE_SECRET_KEY to .env.';
-                document.getElementById('stripe-error').style.display = 'block';
-                document.getElementById('confirm-payment').disabled = true;
-                document.getElementById('confirm-payment').textContent = 'Payment Unavailable';
-                return;
+            const totalEl = document.getElementById('checkout-total');
+            const totalAmount = parseFloat(totalEl.dataset.usd) || dest.price || 4200;
+            const chargeAmountEl = document.getElementById('paystack-charge-amount');
+            if (chargeAmountEl) chargeAmountEl.textContent = formatNGN((await usdToNgnKobo(totalAmount)) / 100);
+            const errEl = document.getElementById('paystack-error');
+            if (!paystackKey || paystackKey.includes('REPLACE_ME') || paystackKey.includes('xxxx')) {
+                errEl.textContent = 'Paystack is not configured yet — bookings will be saved without a live charge. Add your PAYSTACK_PUBLIC_KEY to js/config.js when ready.';
+                errEl.style.display = 'block';
+            } else {
+                errEl.style.display = 'none';
             }
-
-            try {
-                const totalEl = document.getElementById('checkout-total');
-                const totalAmount = parseFloat(totalEl.dataset.usd) || dest.price || 4200;
-                const result = await api.createPaymentIntent({
-                    destination_id: id,
-                    total_amount: totalAmount,
-                    currency: 'usd',
-                    guest_name: (document.getElementById('first-name').value || '') + ' ' + (document.getElementById('last-name').value || ''),
-                    guest_email: document.getElementById('email')?.value || '',
-                    guests: getGuests()
-                });
-                clientSecret = result.client_secret;
-                paymentIntentId = result.payment_intent_id;
-
-                stripe = Stripe(stripeKey);
-                elements = stripe.elements({ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#000', borderRadius: '0px' } } });
-                const paymentElement = elements.create('payment');
-                const placeholder = document.getElementById('stripe-placeholder');
-                if (placeholder) placeholder.style.display = 'none';
-                paymentElement.mount('#stripe-payment-element');
-
-                paymentElement.on('change', (event) => {
-                    const errEl = document.getElementById('stripe-error');
-                    if (event.error) { errEl.textContent = event.error.message; errEl.style.display = 'block'; }
-                    else { errEl.style.display = 'none'; }
-                });
-            } catch (err) {
-                console.error('[Stripe] Init failed:', err);
-                document.getElementById('stripe-error').textContent = 'Failed to initialize payment: ' + err.message;
-                document.getElementById('stripe-error').style.display = 'block';
-            }
+            document.getElementById('confirm-payment').disabled = false;
+            document.getElementById('confirm-payment').textContent = 'Authorize Payment';
         });
 
         async function collectTravelers() {
@@ -1272,26 +1259,64 @@
             btn.disabled = true;
             btn.textContent = 'Processing...';
 
-            // If Stripe is configured, confirm payment via Stripe
-            if (stripe && elements && clientSecret) {
-                const { error, paymentIntent } = await stripe.confirmPayment({
-                    elements,
-                    confirmParams: {
-                        return_url: window.location.origin + '/checkout.html?payment=success',
-                        payment_method_data: { billing_details: { name: first + ' ' + last, email: email, phone: phone } }
+            // Paystack pop-up flow — charge in NGN, then verify server-side
+            if (paystackKey && typeof PaystackPop !== 'undefined') {
+                const totalAmount = parseFloat(document.getElementById('checkout-total').dataset.usd) || dest.price || 4200;
+                const amountKobo = await usdToNgnKobo(totalAmount);
+                const payRef = 'PS-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+                const popup = PaystackPop.setup({
+                    key: paystackKey,
+                    email: email,
+                    amount: amountKobo,
+                    currency: 'NGN',
+                    ref: payRef,
+                    metadata: {
+                        custom_fields: [
+                            { display_name: 'Destination', variable_name: 'destination', value: dest.title || '' },
+                            { display_name: 'Guest', variable_name: 'guest', value: first + ' ' + last }
+                        ]
                     },
-                    redirect: 'if_required'
+                    callback: async function(response) {
+                        btn.textContent = 'Verifying payment...';
+                        try {
+                            const verified = await api.paystackVerify(response.reference);
+                            if (!verified || verified.verified !== true) {
+                                throw new Error('Payment was not successful' + (verified && verified.status ? ' (status: ' + verified.status + ')' : '') + '.');
+                            }
+                            await completeBooking(first, last, email, phone, travelDate, verified.reference || response.reference);
+                        } catch (err) {
+                            console.error('[Paystack] Verify failed:', err);
+                            document.getElementById('paystack-error').textContent = 'Payment verification failed: ' + err.message;
+                            document.getElementById('paystack-error').style.display = 'block';
+                        }
+                        btn.disabled = false;
+                        btn.textContent = 'Authorize Payment';
+                    },
+                    onClose: function() {
+                        btn.disabled = false;
+                        btn.textContent = 'Authorize Payment';
+                    }
                 });
+                popup.openIframe();
+                return;
+            }
 
-                if (error) {
-                    document.getElementById('stripe-error').textContent = error.message;
-                    document.getElementById('stripe-error').style.display = 'block';
-                    btn.disabled = false;
-                    btn.textContent = 'Authorize Payment';
-                    return;
-                }
+            // Fallback: Paystack not configured — save the booking without a live charge
+            try {
+                await completeBooking(first, last, email, phone, travelDate, '');
+            } catch (err) {
+                console.error('[Paystack] Offline booking failed:', err);
+                document.getElementById('paystack-error').textContent = 'Booking failed: ' + err.message;
+                document.getElementById('paystack-error').style.display = 'block';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Authorize Payment';
+        });
 
-                if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Save the booking after payment is verified (paymentRef is the Paystack
+        // reference; empty string means no live payment in fallback mode)
+        async function completeBooking(first, last, email, phone, travelDate, paymentRef) {
+            const btn = document.getElementById('confirm-payment');
                     if (isFlight && flightOffer) {
                         // === Flight booking flow ===
                         btn.textContent = 'Booking Flight...';
@@ -1343,7 +1368,7 @@
                                     arrival_time: flightOffer.arrival || '',
                                     duration: flightOffer.duration || '',
                                     reference: ref,
-                                    payment_intent: paymentIntent.id,
+                                    payment_intent: paymentRef || '',
                                     duffel_order_id: duffelOrderId,
                                     extras: getExtrasJSON()
                                 });
@@ -1354,8 +1379,8 @@
                             return;
                         } catch (e) {
                             console.error('[Flight] Booking error:', e);
-                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
-                            document.getElementById('stripe-error').style.display = 'block';
+                            document.getElementById('paystack-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('paystack-error').style.display = 'block';
                             btn.disabled = false;
                             btn.textContent = 'Authorize Payment';
                             return;
@@ -1384,7 +1409,7 @@
                                     check_in: checkIn,
                                     check_out: checkOut,
                                     reference: ref,
-                                    payment_intent: paymentIntent.id,
+                                    payment_intent: paymentRef || '',
                                     extras: getExtrasJSON()
                                 });
                             } catch (e) {
@@ -1393,8 +1418,8 @@
                             showSuccess(ref, first, last);
                         } catch (e) {
                             console.error('[Hotel] Booking error:', e);
-                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
-                            document.getElementById('stripe-error').style.display = 'block';
+                            document.getElementById('paystack-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('paystack-error').style.display = 'block';
                         }
                         return;
                     } else if (isPackage && packageData) {
@@ -1419,7 +1444,7 @@
                                     room_type: packageData.roomType,
                                     includes: packageData.includes,
                                     reference: ref,
-                                    payment_intent: paymentIntent.id,
+                                    payment_intent: paymentRef || '',
                                     extras: getExtrasJSON()
                                 });
                             } catch (e) {
@@ -1428,8 +1453,8 @@
                             showSuccess(ref, first, last);
                         } catch (e) {
                             console.error('[Package] Booking error:', e);
-                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
-                            document.getElementById('stripe-error').style.display = 'block';
+                            document.getElementById('paystack-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('paystack-error').style.display = 'block';
                         }
                         return;
                     } else if (isVisa && visaData) {
@@ -1449,7 +1474,7 @@
                                     from_location: document.getElementById('from-loc').value || '',
                                     to_location: document.getElementById('to-loc').value || '',
                                     reference: ref,
-                                    payment_intent: paymentIntent.id,
+                                    payment_intent: paymentRef || '',
                                     extras: getExtrasJSON()
                                 });
                             } catch (e) {
@@ -1458,8 +1483,8 @@
                             showSuccess(ref, first, last);
                         } catch (e) {
                             console.error('[Visa] Booking error:', e);
-                            document.getElementById('stripe-error').textContent = 'Booking failed: ' + e.message;
-                            document.getElementById('stripe-error').style.display = 'block';
+                            document.getElementById('paystack-error').textContent = 'Booking failed: ' + e.message;
+                            document.getElementById('paystack-error').style.display = 'block';
                         }
                         return;
                     } else {
@@ -1474,7 +1499,7 @@
                                 guest_phone: phone,
                                 guests: getGuests(),
                                 total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                                payment_intent: paymentIntent.id,
+                                payment_intent: paymentRef || '',
                                 travel_date: travelDate,
                                 passport: document.getElementById('checkout-passport')?.value || '',
                                 identity_card: document.getElementById('checkout-identity-card')?.value || '',
@@ -1489,128 +1514,11 @@
                             showSuccess(result.ref || ref, first, last);
                         } catch (e) {
                             console.error('[Booking] Save failed after payment:', e);
-                            showSuccess(paymentIntent.id.slice(-8).toUpperCase(), first, last);
+                            showSuccess((paymentRef || '').slice(-8).toUpperCase() || ref, first, last);
                         }
                         return;
                     }
-                }
             }
-
-            // Fallback: no Stripe configured
-            if (isFlight && flightOffer) {
-                const ref = 'FL-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-                try {
-                    await api.createFlightBooking({
-                        guest_name: first + ' ' + last,
-                        guest_email: email,
-                        guest_phone: phone,
-                        guests: getGuests(),
-                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                        booking_date: travelDate,
-                        from_location: flightOffer.departureAirport || '',
-                        to_location: flightOffer.arrivalAirport || '',
-                        airline: flightOffer.airline || '',
-                        flight_number: flightOffer.flightNumber || '',
-                        reference: ref,
-                        extras: getExtrasJSON()
-                    });
-                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
-                showSuccess(ref, first, last);
-            } else if (isHotel && hotelData) {
-                const ref = 'HT-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-                const checkIn = document.getElementById('checkin-date').value || hotelData.checkIn || startDate || hotelData.start;
-                const checkOut = document.getElementById('checkout-date').value || hotelData.checkOut || endDate || hotelData.end;
-                const nights = Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000));
-                try {
-                    await api.createHotelBooking({
-                        guest_name: first + ' ' + last,
-                        guest_email: email,
-                        guest_phone: phone,
-                        guests: parseInt(document.getElementById('hotel-guests').value || hotelData.roomsNeeded || 1, 10),
-                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                        booking_date: checkIn,
-                        hotel_name: hotelData.name,
-                        hotel_city: hotelData.city,
-                        hotel_country: hotelData.country,
-                        room_type: hotelData.roomType,
-                        nights: nights,
-                        rooms: hotelData.roomsNeeded,
-                        check_in: checkIn,
-                        check_out: checkOut,
-                        reference: ref,
-                        extras: getExtrasJSON()
-                    });
-                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
-                showSuccess(ref, first, last);
-            } else if (isPackage && packageData) {
-                const ref = 'PK-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-                try {
-                    await api.createPackageBooking({
-                        guest_name: first + ' ' + last,
-                        guest_email: email,
-                        guest_phone: phone,
-                        guests: getGuests(),
-                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                        booking_date: travelDate,
-                        package_name: packageData.name,
-                        package_dest: packageData.dest,
-                        package_country: packageData.country,
-                        package_id: packageData.id,
-                        duration: packageData.duration,
-                        nights: packageData.nights,
-                        hotel: packageData.hotelName,
-                        room_type: packageData.roomType,
-                        includes: packageData.includes,
-                        reference: ref,
-                        extras: getExtrasJSON()
-                    });
-                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
-                showSuccess(ref, first, last);
-            } else if (isVisa && visaData) {
-                const ref = 'VS-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-                try {
-                    await api.createVisaBooking({
-                        guest_name: first + ' ' + last,
-                        guest_email: email,
-                        guest_phone: phone,
-                        guests: getGuests(),
-                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                        booking_date: travelDate,
-                        visa_type: visaData.visaType,
-                        visa_label: visaData.visaLabel,
-                        from_location: document.getElementById('from-loc').value || '',
-                        to_location: document.getElementById('to-loc').value || '',
-                        reference: ref,
-                        extras: getExtrasJSON()
-                    });
-                } catch (e) { window._bookingSaveFailed = true; console.warn(e); }
-                showSuccess(ref, first, last);
-            } else {
-                const ref = 'NG-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
-                try {
-                    await api.confirmPayment({
-                        dest_id: id,
-                        guest_name: first + ' ' + last,
-                        guest_email: email,
-                        guest_phone: phone,
-                        guests: getGuests(),
-                        total: parseFloat((document.getElementById('checkout-total').dataset.usd || '0')),
-                        travel_date: travelDate,
-                        passport: document.getElementById('checkout-passport')?.value || '',
-                        identity_card: document.getElementById('checkout-identity-card')?.value || '',
-                        special_requests: document.getElementById('special-requests').value,
-                        extras: getExtrasJSON(),
-                        hotel: reserveHotel.checked ? 1 : 0,
-                        from_location: document.getElementById('from-loc').value,
-                        to_location: document.getElementById('to-loc').value,
-                        reference: ref
-                    });
-                } catch (e) {
-                    window._bookingSaveFailed = true; console.warn('[Booking] Offline save failed:', e);
-                }
-                showSuccess(ref, first, last);
-            }
-        });
 
         function showSuccess(ref, first, last) {
             document.getElementById('payment-step').style.display = 'none';

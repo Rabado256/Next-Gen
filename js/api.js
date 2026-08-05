@@ -456,32 +456,23 @@ const api = {
     if (error) throw new Error(error.message);
   },
 
-  // ==================== PAYMENTS (stub) ====================
+  // ==================== PAYMENTS (Paystack) ====================
 
-  // Create a Stripe PaymentIntent via our server
-  async createPaymentIntent(data) {
-    const res = await fetch('/api/create-payment-intent', {
+  // Verify a Paystack transaction by its reference (server-side, secret key)
+  async paystackVerify(reference) {
+    const res = await fetch('/api/paystack-verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        amount: Math.round((parseFloat(String(data.total_amount).replace(/[^0-9.]/g, '')) || 0) * 100),
-        currency: data.currency || 'usd',
-        metadata: {
-          dest_id: data.destination_id,
-          guest_name: data.guest_name,
-          guest_email: data.guest_email,
-          guests: String(data.guests || 1)
-        }
-      })
+      body: JSON.stringify({ reference })
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Payment intent creation failed');
+      throw new Error(err.error || 'Payment verification failed');
     }
     return res.json();
   },
 
-  // Confirm booking in Supabase after Stripe payment succeeds
+  // Confirm booking in Supabase after Paystack payment succeeds
   async confirmPayment(data) {
     const booking = await this.saveBooking('general', {
       dest_id: data.dest_id,

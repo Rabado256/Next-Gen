@@ -6,9 +6,9 @@ Complete explanation of the site so you can defend any decision with specifics.
 
 ## 1. The Elevator Pitch
 
-NextGen Travel is a **premium travel booking platform** — a client project, not a portfolio piece. It's a full ecosystem: a curated visual homepage, multi-mode search (flights / hotels / packages / destinations), a multi-step checkout with real Stripe payments, full user accounts, a "track your booking" lookup, an admin dashboard, and a custom itinerary builder. The design philosophy is **"zero noise"** — no pop-ups, no countdown timers, no hidden fees — replacing booking anxiety with calm, editorial, image-led design.
+NextGen Travel is a **premium travel booking platform** — a client project, not a portfolio piece. It's a full ecosystem: a curated visual homepage, multi-mode search (flights / hotels / packages / destinations), a multi-step checkout with real Paystack payments, full user accounts, a "track your booking" lookup, an admin dashboard, and a custom itinerary builder. The design philosophy is **"zero noise"** — no pop-ups, no countdown timers, no hidden fees — replacing booking anxiety with calm, editorial, image-led design.
 
-**Tech stack:** Vanilla JS (ES6+) + Bootstrap 5.3 + CSS custom properties, **Supabase** (Postgres, Auth, RLS) as the backend, **Stripe** for payments, **Leaflet.js** for the world map, **Vercel serverless functions** for anything that needs a secret key. No build system, no framework — deliberately kept simple.
+**Tech stack:** Vanilla JS (ES6+) + Bootstrap 5.3 + CSS custom properties, **Supabase** (Postgres, Auth, RLS) as the backend, **Paystack** for payments (NGN pop-up), **Leaflet.js** for the world map, **Vercel serverless functions** for anything that needs a secret key. No build system, no framework — deliberately kept simple.
 
 ---
 
@@ -21,12 +21,12 @@ Browser (static HTML + JS)
    │        auth, destinations, bookings, reviews, itineraries,
    │        trips, contacts, newsletter, profiles, audit_logs
    │
-   ├──→ /api/create-payment-intent   (Vercel fn, uses STRIPE_SECRET_KEY)
+   ├──→ /api/paystack-verify         (Vercel fn, uses PAYSTACK_SECRET_KEY)
    ├──→ /api/confirm-booking         (Vercel fn, uses SUPABASE_SERVICE_ROLE_KEY)
    └──→ /api/lookup-booking          (Vercel fn, service-role lookup)
 ```
 
-The key design decision: **the browser never touches any secret key.** Everything secret lives in `api/*.js` serverless functions (deployed on Vercel, see `vercel.json`), which read from `.env`. The frontend only has the Supabase **anon** key and the Stripe **publishable** key — both are safe to expose by design.
+The key design decision: **the browser never touches any secret key.** Everything secret lives in `api/*.js` serverless functions (deployed on Vercel, see `vercel.json`), which read from `.env`. The frontend only has the Supabase **anon** key and the Paystack **public** key — both are safe to expose by design.
 
 Two dev modes:
 - `npm start` → `server.js` (Node http server that serves static files AND proxies the same `/api/*` serverless handlers locally)
@@ -69,14 +69,14 @@ URL params drive everything: `?from&to&depart&ret&trip&cabin&search_type`. Three
 A pure-logic classifier shared across 4 pages, with a **unit test suite** (`tests/document-detection.test.js`, run via `npm test`). It extracts a country from free text in priority order: exact country match → "City, Country" comma split → city→country map → word-boundary regex → destination-title map. Then: same country on both ends = **domestic → ID card**, different = **international → passport**. If origin is empty, it falls back to the signed-in user's profile country. Visa requirements come from `js/visa-data.js`.
 
 ### c) Checkout & Payments (`checkout.html`)
-Two-step flow: traveler details → Stripe Payment Element. On submit:
-1. `resolveStripeKey()` fetches `/api/config` (falls back to the hardcoded publishable key).
-2. `api.createPaymentIntent()` → Vercel fn creates a Stripe PaymentIntent from the **server** (never trust client-side price alone — the amount is re-derived from the order summary, though prices are also recomputed in `updateSummary`).
-3. `stripe.confirmPayment()` with `redirect: 'if_required'`.
+Two-step flow: traveler details → Paystack pop-up. On submit:
+1. `resolvePaystackKey()` fetches `/api/config` (falls back to the hardcoded public key in `js/config.js`).
+2. The USD order total is converted to NGN via live rates (`usdToNgnKobo()`), then `PaystackPop.setup({ key, email, amount, currency: 'NGN', ref })` opens the Paystack pop-up (amount in kobo).
+3. On success Paystack returns a reference; `api.paystackVerify(reference)` → `/api/paystack-verify` (Vercel fn) re-verifies the charge server-side with the **secret** key before any booking is saved.
 4. On success, one of **five** booking branches runs (flight / hotel / package / visa / destination), each generating its own reference prefix (`FL-`, `HT-`, `PK-`, `VS-`, `NG-`).
 5. Booking is persisted via `/api/confirm-booking`, then `showSuccess()` shows the confirmation with the reference code.
 
-**Resilience you can defend:** if Stripe isn't configured it shows a clear "Payment Unavailable" message and falls back to saving an offline booking reference (the `// Fallback: no Stripe configured` block). If the DB save fails after a successful payment, the user still gets their reference plus a visible warning banner (`db-save-warning`) — a charge is never silently lost. A `pk_test_` key triggers a visible **TEST MODE banner** so no one mistakes test payments for real ones.
+**Resilience you can defend:** if Paystack isn't configured it shows a clear notice and falls back to saving an offline booking reference (the `// Fallback: Paystack not configured` block). If the DB save fails after a successful payment, the user still gets their reference plus a visible warning banner (`db-save-warning`) — a charge is never silently lost. A `pk_test_` key triggers a visible **TEST MODE banner** so no one mistakes test payments for real ones.
 
 ### d) Guest-safe bookings (the newest piece)
 `/api/confirm-booking` uses the **service-role key** (server-only), so *guests* can book without an account — bookings are attributed by `guest_email`, and a signed-in user's `sub` is decoded from their JWT (signature deliberately *not* verified, since Supabase issued it — this only affects attribution, not authorization). `lookup-booking.js` lets anyone look up a booking by reference **+ optional email check** so a random code alone can't pull someone's booking. There's also a schema-diff tolerance loop: if the live DB is missing a column, it strips it and retries rather than losing the booking.
@@ -96,7 +96,7 @@ Gate = `profiles.is_admin` (checked via the auth session, backed by RLS so the a
 
 ## 5. Common "gotcha" questions — ready answers
 
-- **"Is this real or a mock?"** — The booking, auth, payment (Stripe test mode), and DB layers are real and production-wired. Flight *search* is deterministic mock data by design (free tier), with a real Duffel API client ready if a token is supplied. Hotel and package data are curated static datasets. This is a defensible MVP scope choice, not an accident.
+- **"Is this real or a mock?"** — The booking, auth, payment (Paystack test mode), and DB layers are real and production-wired. Flight *search* is deterministic mock data by design (free tier), with a real Duffel API client ready if a token is supplied. Hotel and package data are curated static datasets. This is a defensible MVP scope choice, not an accident.
 - **"Why expose the anon key?"** — The Supabase anon key is meant to be public; it's locked down by RLS. The *service-role* key (which bypasses RLS) never leaves the serverless functions.
 - **"Why mock flights instead of live?"** — Duffel's free tier is limited and token-gated; mocks keep the entire flow (search → select → checkout → pay → book → email) testable end-to-end without burning API quota.
 - **"Is the admin safe?"** — Yes, two layers: client checks `is_admin`, server enforces it via RLS policies (`is_admin()` SECURITY DEFINER). An attacker with the anon key still can't insert/modify destinations or read other users' data.

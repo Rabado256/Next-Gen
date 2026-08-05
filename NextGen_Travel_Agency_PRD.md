@@ -107,12 +107,12 @@ The entry point feels like an elegant digital travel magazine.
 - **Multi-Step Form:**
   1. Traveler Details: Name, email, guest count, passport/ID card, hotel preference
   2. Trip Selection: From/To locations, departure date, document type
-  3. Payment: Stripe Payment Element with card fields
+  3. Payment: Paystack pop-up (charges in NGN, USD→NGN auto-conversion)
 - **Order Summary Sidebar:** Sticky card with destination image, dates, guest count, hotel add-on, total.
 - **Smart Document Detection:** Real-time analysis of From/To locations with live badge and animated toast notification.
 - **Location Autocomplete:** Comprehensive city/country/destination lookup (50+ destinations, 50+ cities, 50+ countries).
 - **Dynamic Pricing:** Per-person base price + optional hotel add-on, real-time calculation.
-- **Stripe Integration:** Real Stripe.js v3 with Payment Element, `confirmPayment()` flow, fallback to offline booking reference if unconfigured.
+- **Paystack Integration:** Real Paystack pop-up (`js.paystack.co/v1/inline.js`), charges in NGN with live USD→NGN conversion, server-side verification (`/api/paystack-verify`), fallback to offline booking reference if unconfigured.
 - **Confirmation Screen:** Booking reference, itinerary summary, download option.
 
 ### 4.6. Authentication System
@@ -178,7 +178,7 @@ Full-featured dark-themed admin panel:
 - **Interactivity:** Vanilla JavaScript (ES6+), 724 lines in `main.js`.
 - **Backend & Database:** Supabase (PostgreSQL, Auth, RLS, REST API).
 - **Mapping:** Leaflet.js with Esri World Street Map tiles.
-- **Payments:** Stripe.js v3 with Payment Element, conditional real/fallback.
+- **Payments:** Paystack inline pop-up, NGN charges, conditional real/fallback.
 - **Flight Search:** Duffel API client (`js/duffel.js`) with user-configurable API token.
 - **Geolocation:** REST Countries API for country datalists and document detection.
 - **Icons:** Bootstrap Icons library.
@@ -190,7 +190,7 @@ Full-featured dark-themed admin panel:
 | :--- | :--- |
 | `profiles` | Extends auth.users with name, passport, identity_card, emergency contact, preferences, admin flag |
 | `destinations` | Travel packages with id, title, edition, description, price, country, vibe, image, itinerary steps (JSONB) |
-| `bookings` | Booking records with user_id, dest_id, guest info, dates, total, hotel, status, reference, plus Stripe columns |
+| `bookings` | Booking records with user_id, dest_id, guest info, dates, total, hotel, status, reference, plus payment columns |
 | `contacts` | Contact form submissions with name, email, subject, message, read status |
 | `reviews` | User reviews with rating (1-5), comment, linked to destination and user |
 | `itineraries` | Custom user-built itineraries with title, description, days (JSONB) |

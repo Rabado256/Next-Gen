@@ -94,7 +94,7 @@ Even though the visitor just sees pretty pages, several systems work together:
 - **The maps** use **Leaflet**, a free map tool (like the maps you see on weather sites).
 - **Photos** come from Unsplash, a free stock photo library.
 - **The database** is called **Supabase**. This is where all the real-world data lives — user accounts, bookings, newsletter signups. Think of it as a giant, secure filing cabinet in the cloud. It also handles logins.
-- **Payments** are handled by **Stripe**, the same company that powers card payments on thousands of online shops.
+- **Payments** are handled by **Paystack**, a payment service trusted across Africa. When someone books a trip, a secure payment window opens, the charge is made in Nigerian Naira (₦), and the site converts the price from US dollars automatically.
 - **Flight data** is meant to come from a real flight information service called **Duffel**, so searches can show real airlines and prices. (Some parts use sample/demo data while the site is being built.)
 - **The site is hosted on Vercel**, a service that keeps websites running on the internet so anyone can visit them.
 

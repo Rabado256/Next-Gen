@@ -7,7 +7,7 @@ module.exports = function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.statusCode = 200;
   res.end(JSON.stringify({
-    stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    paystack_public_key: process.env.PAYSTACK_PUBLIC_KEY || '',
     supabase_url: process.env.SUPABASE_URL || ''
   }));
 };

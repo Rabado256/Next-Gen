@@ -3,7 +3,6 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const supabaseJs = require('@supabase/supabase-js');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -77,42 +76,15 @@ async function handleAPI(req, res) {
   // GET /api/config — expose public configuration to the client
   if (url === '/api/config' && req.method === 'GET') {
     json(res, 200, {
-      stripe_publishable_key: process.env.STRIPE_PUBLISHABLE_KEY || '',
+      paystack_public_key: process.env.PAYSTACK_PUBLIC_KEY || '',
       supabase_url: process.env.SUPABASE_URL || ''
     });
     return true;
   }
 
-  // POST /api/create-payment-intent
-  if (url === '/api/create-payment-intent' && req.method === 'POST') {
-    try {
-      const body = await parseBody(req);
-      const { amount, currency, metadata } = body;
-
-      if (!amount || amount <= 0) {
-        return json(res, 400, { error: 'Invalid amount' });
-      }
-
-      if (!process.env.STRIPE_SECRET_KEY) {
-        return json(res, 503, { error: 'Stripe not configured. Add your STRIPE_SECRET_KEY to .env' });
-      }
-
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount),
-        currency: currency || 'usd',
-        metadata: metadata || {},
-        automatic_payment_methods: { enabled: true }
-      });
-
-      json(res, 200, {
-        client_secret: paymentIntent.client_secret,
-        payment_intent_id: paymentIntent.id
-      });
-    } catch (e) {
-      console.error('[Stripe] createPaymentIntent error:', e.message);
-      json(res, 500, { error: e.message });
-    }
-    return true;
+  // POST /api/paystack-verify — verify a Paystack transaction by reference
+  if (url === '/api/paystack-verify' && req.method === 'POST') {
+    return invokeServerless('paystack-verify.js', 'Paystack', req, res);
   }
 
   // POST /api/confirm-booking — saves booking to Supabase after payment
@@ -193,5 +165,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
-  console.log(`API endpoints: POST /api/create-payment-intent, POST /api/confirm-booking`);
+  console.log(`API endpoints: POST /api/paystack-verify, POST /api/confirm-booking`);
 });

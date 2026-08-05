@@ -9,4 +9,4 @@ window.__SUPABASE_CONFIG__ = {
   anonKey: 'YOUR_ANON_KEY_HERE'
 };
 
-window.__STRIPE_PUBLISHABLE_KEY__ = 'pk_test_...'; // ← Get one at https://dashboard.stripe.com/apikeys
+window.__PAYSTACK_PUBLIC_KEY__ = 'pk_test_...'; // ← Get one at https://dashboard.paystack.com/#/settings/developers

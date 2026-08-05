@@ -1,10 +1,11 @@
 -- ============================================================
 -- NextGen Travel — Bookings Table Migration
--- Adds Stripe payment fields to existing bookings table
+-- Adds payment fields to existing bookings table
+-- (payment_id stores the Paystack transaction reference)
 -- Run this in Supabase SQL Editor
 -- ============================================================
 
--- Add Stripe payment columns (safe — ignores if already exist)
+-- Add payment columns (safe — ignores if already exist)
 DO $$ BEGIN
   ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_id TEXT DEFAULT '';
 EXCEPTION WHEN duplicate_column THEN null; END $$;
