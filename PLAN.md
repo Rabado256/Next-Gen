@@ -108,16 +108,16 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 - [x] Add loading states and error handling
 
 ### Phase 3: Booking + Payments (Week 5-8)
-- [x] Implement booking state machine in Supabase (migration pending apply)
+- [x] Implement booking state machine in Supabase (applied + verified live)
 - [x] Integrate Paystack for payment processing (code wired; live keys pending)
 - [x] Build booking confirmation flow
 - [x] Add booking receipts/invoices
-- [ ] Implement cancellation/refund logic (cancel path done; refunds pending live keys)
+- [x] Implement cancellation/refund logic (cancel verified live; refunds pending live keys)
 
 ### Phase 4: User Accounts (Week 9-10)
 - [x] Fix logout functionality
 - [x] Add booking history page
-- [x] Implement saved searches (migration pending apply)
+- [x] Implement saved searches (applied + verified live)
 - [x] Add user profile management
 
 ### Phase 5: Admin Dashboard (Week 11-12)
@@ -127,16 +127,15 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 - [ ] Add analytics dashboard (core stats present; charts pending)
 
 ### Phase 6: Launch Prep (Week 13-16)
-- [x] QA testing (all features) — 103 tests pass, all pages crawl 200
+- [x] QA testing (all features) — 103 tests pass, all pages crawl 200, live E2E 7/7
 - [ ] Performance optimization (Lighthouse pending)
 - [x] Security audit (CSO-style; rate limiting + admin gate + PII masking done)
 - [ ] Deploy to production
 - [ ] Monitor and fix issues
 
-**Blocked before launch:** apply the two Supabase migrations via Dashboard → SQL Editor
-(`supabase-migrations/2026-08-06-booking-state-machine.sql`,
-`supabase-migrations/2026-08-07-saved-searches.sql`), then re-test state machine
-and saved searches against the live DB.
+**Status:** Both migrations applied to the live DB and verified (schema columns,
+RPCs, tables). Remaining for launch: live Paystack keys, platform rate limiting,
+GitHub remote + deploy, Lighthouse pass.
 
 ---
 
