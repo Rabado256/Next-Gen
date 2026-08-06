@@ -77,7 +77,8 @@ async function handleAPI(req, res) {
   if (url === '/api/config' && req.method === 'GET') {
     json(res, 200, {
       paystack_public_key: process.env.PAYSTACK_PUBLIC_KEY || '',
-      supabase_url: process.env.SUPABASE_URL || ''
+      supabase_url: process.env.SUPABASE_URL || '',
+      supabase_anon_key: process.env.SUPABASE_ANON_KEY || ''
     });
     return true;
   }

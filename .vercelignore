@@ -1,0 +1,17 @@
+.git
+node_modules
+.env
+.env.*
+.vercel
+js/config.js
+js/config.example.js
+tests
+scripts
+supabase-migrations
+migrations
+*.sql
+*.md
+*.log
+test-*.js
+create-admin.js
+AGENCY

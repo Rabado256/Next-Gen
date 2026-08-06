@@ -8,6 +8,7 @@ module.exports = function handler(req, res) {
   res.statusCode = 200;
   res.end(JSON.stringify({
     paystack_public_key: process.env.PAYSTACK_PUBLIC_KEY || '',
-    supabase_url: process.env.SUPABASE_URL || ''
+    supabase_url: process.env.SUPABASE_URL || '',
+    supabase_anon_key: process.env.SUPABASE_ANON_KEY || ''
   }));
 };
