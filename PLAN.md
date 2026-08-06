@@ -1,8 +1,8 @@
 # PLAN.md — NextGen Travel Agency
 
 **Created:** 2026-07-26
-**Status:** Active (plan mode)
-**Last reviewed:** 2026-07-26 (CEO Review Round 5)
+**Status:** Implementation complete — launch prep in progress (migrations to apply)
+**Last reviewed:** 2026-08-06 (CSO security audit + Phase 6 QA)
 
 ---
 
@@ -94,44 +94,49 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 ## Implementation Roadmap
 
 ### Phase 1: Design Revision (Week 1-2)
-- [ ] Present current design to client
-- [ ] Collect feedback and revision requests
-- [ ] Implement design changes
-- [ ] Get client sign-off
+- [x] Present current design to client
+- [x] Collect feedback and revision requests
+- [x] Implement design changes
+- [x] Get client sign-off
 
 ### Phase 2: Flight Search (Week 3-4)
 - [x] Sign up for Duffel API (app.duffel.com)
 - [x] Create `js/duffel.js` — API client with OAuth2 auth
 - [x] Wire search form to Duffel `/air/offer_requests` endpoint
 - [x] Display real flight results on search-results.html
-- [ ] Add Supabase cache for search results (reduce API calls)
-- [ ] Add loading states and error handling
+- [x] Add Supabase cache for search results (reduce API calls)
+- [x] Add loading states and error handling
 
 ### Phase 3: Booking + Payments (Week 5-8)
-- [ ] Implement booking state machine in Supabase
+- [x] Implement booking state machine in Supabase (migration pending apply)
 - [x] Integrate Paystack for payment processing (code wired; live keys pending)
-- [ ] Build booking confirmation flow
-- [ ] Add booking receipts/invoices
-- [ ] Implement cancellation/refund logic
+- [x] Build booking confirmation flow
+- [x] Add booking receipts/invoices
+- [ ] Implement cancellation/refund logic (cancel path done; refunds pending live keys)
 
 ### Phase 4: User Accounts (Week 9-10)
-- [ ] Fix logout functionality
-- [ ] Add booking history page
-- [ ] Implement saved searches
-- [ ] Add user profile management
+- [x] Fix logout functionality
+- [x] Add booking history page
+- [x] Implement saved searches (migration pending apply)
+- [x] Add user profile management
 
 ### Phase 5: Admin Dashboard (Week 11-12)
-- [ ] Move admin auth to server-side
-- [ ] Implement CRUD for destinations
-- [ ] Add booking management (view, status updates)
-- [ ] Add analytics dashboard
+- [x] Move admin auth to server-side
+- [x] Implement CRUD for destinations
+- [x] Add booking management (view, status updates)
+- [ ] Add analytics dashboard (core stats present; charts pending)
 
 ### Phase 6: Launch Prep (Week 13-16)
-- [ ] QA testing (all features)
-- [ ] Performance optimization
-- [ ] Security audit
+- [x] QA testing (all features) — 103 tests pass, all pages crawl 200
+- [ ] Performance optimization (Lighthouse pending)
+- [x] Security audit (CSO-style; rate limiting + admin gate + PII masking done)
 - [ ] Deploy to production
 - [ ] Monitor and fix issues
+
+**Blocked before launch:** apply the two Supabase migrations via Dashboard → SQL Editor
+(`supabase-migrations/2026-08-06-booking-state-machine.sql`,
+`supabase-migrations/2026-08-07-saved-searches.sql`), then re-test state machine
+and saved searches against the live DB.
 
 ---
 
@@ -159,6 +164,9 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 | 2026-07-26 | No build system | Keep existing stack simple |
 | 2026-07-26 | Duffel API integrated | Phase 2 flight search complete |
 | 2026-08-05 | Stripe → Paystack (NGN pop-up) | Client region needs Paystack; live keys pending |
+| 2026-08-06 | Booking state machine + receipts + saved searches shipped | Phases 3-5 code-complete; migrations pending SQL Editor |
+| 2026-08-06 | Security hardening (CSO audit) | Fixed admin JWT bypass; gated auto-complete job; PII masking; rate limiting |
+| 2026-08-06 | Rate limiting on public ref endpoints | In-memory sliding window (30/min/IP) + platform-level limits recommended |
 
 ---
 
@@ -178,9 +186,11 @@ A modern, premium travel agency platform for a client who needs direct flight bo
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | No remote origin configured | Cannot deploy or collaborate | Set up GitHub remote |
+| Migrations not applied to live DB | State machine + saved searches fail | Run both migrations in Supabase SQL Editor before launch |
 | .env credentials in version control | Security risk | Rotate keys, add to gitignore |
-| Server-side admin auth weak | Admin dashboard accessible | Implement proper RLS |
-| Duffel free tier limits | Can't handle traffic spikes | Cache aggressively |
+| Server-side admin auth weak | Admin dashboard accessible | Fixed: /api/admin-verify gated via RLS (verified JWT) |
+| Duffel free tier limits | Can't handle traffic spikes | Cache aggressively (6h Supabase cache) |
+| Ref-code lookup brute force | PII exposure | Masked PII + rate limiting (30/min/IP) |
 | Client revision requests | Timeline slip | Lock design early |
 | Paystack fees eat margins | Low profit per booking | Price accordingly |
 

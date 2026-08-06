@@ -169,6 +169,17 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  // Public endpoint keyed by booking reference — rate limit to blunt brute-force.
+  const { allow } = require('./_rate-limit');
+  const { allowed, retryAfter } = allow(req);
+  if (!allowed) {
+    res.setHeader('Content-Type', 'application/json');
+    res.statusCode = 429;
+    res.setHeader('Retry-After', String(retryAfter));
+    res.end(JSON.stringify({ error: 'Too many requests. Please try again shortly.' }));
+    return;
+  }
+
   try {
     const body = req.method === 'POST' ? await readBody(req) : {};
     const query = queryParams(req);

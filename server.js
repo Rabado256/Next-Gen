@@ -132,6 +132,7 @@ async function invokeServerless(file, tag, req, res) {
       url: req.url,
       headers: req.headers,
       body,
+      socket: { remoteAddress: (req.socket && req.socket.remoteAddress) || '127.0.0.1' },
       async on() { return this; }
     });
     await handler(mockReq, res);

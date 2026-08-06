@@ -34,9 +34,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');  if (req.method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
     return;
@@ -44,6 +42,16 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.statusCode = 405;
     res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+
+  // Public endpoint keyed by booking reference — rate limit to blunt brute-force.
+  const { allow } = require('./_rate-limit');
+  const { allowed, retryAfter } = allow(req);
+  if (!allowed) {
+    res.statusCode = 429;
+    res.setHeader('Retry-After', String(retryAfter));
+    res.end(JSON.stringify({ error: 'Too many requests. Please try again shortly.' }));
     return;
   }
 
@@ -103,3 +111,6 @@ module.exports = async function handler(req, res) {
     res.end(JSON.stringify({ error: e.message }));
   }
 };
+
+module.exports.maskValue = maskValue;
+module.exports.maskEmail = maskEmail;
