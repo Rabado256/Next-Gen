@@ -405,6 +405,7 @@
                     </div>
                     <button onclick="window.print()" class="btn btn-outline-dark mt-4 rounded-0 tracking-widest small">Print Receipt</button>
                     <button id="download-invoice-btn" class="btn btn-outline-dark mt-4 ms-2 rounded-0 tracking-widest small" style="display:none;"><i class="bi bi-download"></i> Download PDF</button>
+                    <a id="view-receipt-btn" href="#" target="_blank" class="btn btn-outline-dark mt-4 ms-2 rounded-0 tracking-widest small" style="display:none;"><i class="bi bi-receipt"></i> View Receipt</a>
                     <a href="index.html" class="btn btn-noir mt-4 ms-2 rounded-0 tracking-widest small">Back to Home</a>
 
                     <div id="db-save-warning" class="mt-4 text-danger small" style="display: none;">
@@ -1597,20 +1598,20 @@
             activities.unshift(reservation);
             localStorage.setItem('nextgen_activities', JSON.stringify(activities));
 
-            // Show download PDF button
+            // Show download PDF button — opens the printable receipt page in a
+            // new tab, where the guest can save it as a PDF via the browser.
             const dlBtn = document.getElementById('download-invoice-btn');
             dlBtn.style.display = 'inline-block';
-            dlBtn.onclick = async () => {
-                try {
-                    const blob = await api.downloadInvoice(ref);
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = 'nextgen-invoice-' + ref + '.pdf'; a.click();
-                    URL.revokeObjectURL(url);
-                } catch (_) {
-                    window.print();
-                }
+            dlBtn.onclick = () => {
+                api.downloadInvoice(ref);
             };
+
+            // Show live receipt link (server-rendered from the booking record)
+            const viewBtn = document.getElementById('view-receipt-btn');
+            if (viewBtn) {
+                viewBtn.href = api.invoiceUrl(ref);
+                viewBtn.style.display = 'inline-block';
+            }
 
             // Update "Back to Home" link so confirmation banner shows on index.html
             const addMeal = document.getElementById('add-meal');

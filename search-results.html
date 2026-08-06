@@ -223,6 +223,44 @@
             }
         }
 
+        /* Flight search loading skeleton + error state */
+        .flight-skeleton-line {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e6e6e6 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: flight-shimmer 1.3s ease-in-out infinite;
+            border-radius: 4px;
+        }
+        @keyframes flight-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .flight-error {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            border: 1px dashed #ccc;
+            background: #fafafa;
+            border-radius: 12px;
+        }
+        .flight-error i {
+            font-size: 2.5rem;
+            color: #ccc;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        .flight-cached-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+            color: rgba(0,0,0,0.45);
+            background: #f5f5f5;
+            border: 1px solid #eee;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            margin-bottom: 1.25rem;
+        }
+
         /* Availability Check Overlay */
         .avail-overlay {
             position: fixed;
@@ -420,15 +458,18 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <p class="small text-muted mb-0">Showing 18 curated escapes</p>
-                    <div class="dropdown">
-                        <button class="btn btn-link text-black text-decoration-none small dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
-                            Sort by: Featured
-                        </button>
-                        <ul id="sort-dropdown-menu" class="dropdown-menu dropdown-menu-end rounded-0 border-0 shadow-sm">
-                            <li><a class="dropdown-item small" href="#" data-sort="price-asc">Price: Low to High</a></li>
-                            <li><a class="dropdown-item small" href="#" data-sort="price-desc">Price: High to Low</a></li>
-                            <li><a class="dropdown-item small" href="#" data-sort="name">Name: A to Z</a></li>
-                        </ul>
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="save-search-btn" class="btn btn-outline-dark btn-sm rounded-0 px-3" style="font-size:0.7rem;" title="Save these search criteria to your profile"><i class="bi bi-bookmark me-1"></i>Save Search</button>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-black text-decoration-none small dropdown-toggle p-0" type="button" data-bs-toggle="dropdown">
+                                Sort by: Featured
+                            </button>
+                            <ul id="sort-dropdown-menu" class="dropdown-menu dropdown-menu-end rounded-0 border-0 shadow-sm">
+                                <li><a class="dropdown-item small" href="#" data-sort="price-asc">Price: Low to High</a></li>
+                                <li><a class="dropdown-item small" href="#" data-sort="price-desc">Price: High to Low</a></li>
+                                <li><a class="dropdown-item small" href="#" data-sort="name">Name: A to Z</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -1404,15 +1445,59 @@
             };
             renderVisaGate();
 
-            const renderMock = () => {
-                if (typeof MockFlights === 'undefined') return false;
-                const offers = MockFlights.generateOffers({ from, to, depart, ret, cabinClass, trip });
-                if (!offers || offers.length === 0) return false;
+            const cachedNote = document.createElement('div');
+            cachedNote.id = 'flight-cached-note';
+            cachedNote.className = 'flight-cached-note';
+            cachedNote.style.display = 'none';
+            resultsGrid.parentNode.insertBefore(cachedNote, resultsGrid);
 
+            const showFlightLoading = () => {
+                if (heading) heading.textContent = 'Searching for the best fares…';
+                let skeleton = '';
+                for (let i = 0; i < 6; i++) {
+                    skeleton += `
+                        <div class="col-md-6">
+                            <div class="result-card">
+                                <div class="result-card-img-wrap" style="height:96px;"><div class="flight-skeleton-line" style="height:100%;"></div></div>
+                                <div class="result-card-body">
+                                    <div class="flight-skeleton-line" style="width:40%;height:12px;margin-bottom:12px;"></div>
+                                    <div class="flight-skeleton-line" style="width:70%;height:22px;margin-bottom:16px;"></div>
+                                    <div class="flight-skeleton-line" style="width:55%;height:12px;margin-bottom:10px;"></div>
+                                    <div class="flight-skeleton-line" style="width:80%;height:12px;margin-bottom:18px;"></div>
+                                    <div class="d-flex justify-content-between">
+                                        <div class="flight-skeleton-line" style="width:30%;height:16px;"></div>
+                                        <div class="flight-skeleton-line" style="width:22%;height:16px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+                resultsGrid.innerHTML = skeleton;
+            };
+
+            const showFlightError = (message) => {
+                if (heading) heading.textContent = 'Flights unavailable';
+                resultsGrid.innerHTML = `
+                    <div class="col-12">
+                        <div class="flight-error">
+                            <i class="bi bi-airplane"></i>
+                            <h4 class="serif mb-3">We couldn't load flights</h4>
+                            <p class="text-muted mb-1">${escapeHtml(message || 'Please try again in a moment.')}</p>
+                            <p class="small text-muted mb-4">Live results are unavailable right now.</p>
+                            <button class="btn btn-dark rounded-0 px-4 py-2" onclick="location.reload()">Retry</button>
+                        </div>
+                    </div>`;
+            };
+
+            const renderFlightOffers = (offers, source) => {
                 if (heading) {
                     const cheapest = Math.round(Math.min(...offers.map(o => parseFloat(o.total_amount))));
                     heading.textContent = `Showing ${offers.length} flights ${to ? 'to "' + escapeHtml(to) + '"' : ''} — from $${cheapest.toLocaleString()}`;
                 }
+                cachedNote.style.display = source === 'cached' ? 'inline-flex' : 'none';
+                cachedNote.innerHTML = source === 'cached'
+                    ? '<i class="bi bi-clock-history"></i> Showing cached results — refreshed automatically every 6 hours.'
+                    : '';
 
                 resultsGrid.innerHTML = offers.map(offer => {
                     const formatted = DuffelAPI.formatOfferForDisplay(offer);
@@ -1486,10 +1571,49 @@
                         window.location.href = 'checkout.html?' + checkoutParams.toString();
                     });
                 });
-                return true;
             };
 
-            if (renderMock()) return;
+            // Try the live Duffel search (with Supabase cache) when configured
+            let liveOffers = null;
+            let liveSource = null;
+            if (typeof DuffelAPI !== 'undefined' && DuffelAPI.isConfigured()) {
+                showFlightLoading();
+                const origin = (typeof MockFlights !== 'undefined')
+                    ? MockFlights.resolveAirport(from)
+                    : { code: (from.match(/\(([A-Z]{3})\)/) || ['', ''])[1] || from.toUpperCase().slice(0, 3) };
+                const dest = (typeof MockFlights !== 'undefined')
+                    ? MockFlights.resolveAirport(to)
+                    : { code: (to.match(/\(([A-Z]{3})\)/) || ['', ''])[1] || to.toUpperCase().slice(0, 3) };
+                const slices = [{ origin: origin.code || 'AAA', destination: dest.code || 'BBB', departureDate: depart }];
+                if (trip === 'roundtrip' && ret) {
+                    slices.push({ origin: dest.code || 'BBB', destination: origin.code || 'AAA', departureDate: ret });
+                }
+                try {
+                    const res = await DuffelAPI.searchFlights({ slices, passengers: [{ type: 'adult' }], cabinClass, maxConnections: 1 });
+                    const body = res && res.data;
+                    const list = body && Array.isArray(body.offers) ? body.offers : (Array.isArray(body) ? body : null);
+                    if (list && list.length) {
+                        liveOffers = list;
+                        liveSource = res.cached ? 'cached' : 'live';
+                    }
+                } catch (liveErr) {
+                    console.warn('[Flights] Live search failed, falling back to mock:', liveErr && liveErr.message);
+                }
+            }
+
+            if (liveOffers && liveOffers.length) {
+                renderFlightOffers(liveOffers, liveSource);
+                return;
+            }
+
+            // Fallback: generated mock flights keep the demo experience intact
+            if (typeof MockFlights !== 'undefined') {
+                const mockOffers = MockFlights.generateOffers({ from, to, depart, ret, cabinClass, trip });
+                if (mockOffers && mockOffers.length) {
+                    renderFlightOffers(mockOffers, 'mock');
+                    return;
+                }
+            }
 
             // Fallback: show destination cards filtered by destination
             showFlightHeading(pageParams.get('from'), pageParams.get('to'), depart, ret);
@@ -1626,6 +1750,47 @@
         })();
     }
     }
+
+    // Save search + toast helpers
+    function srShowToast(message, type) {
+        const container = document.getElementById('toast-container') || (() => {
+            const c = document.createElement('div');
+            c.id = 'toast-container';
+            c.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;';
+            document.body.appendChild(c);
+            return c;
+        })();
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-' + (type === 'danger' ? 'danger' : 'success') + ' alert-dismissible fade show';
+        toast.style.cssText = 'min-width:280px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);font-size:0.85rem;';
+        toast.innerHTML = message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    document.getElementById('save-search-btn').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        btn.disabled = true;
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const searchType = params.get('search_type') || 'destination';
+            const criteria = {};
+            params.forEach((value, key) => { criteria[key] = value; });
+            await api.saveSearch(searchType, criteria);
+            btn.innerHTML = '<i class="bi bi-bookmark-check me-1"></i>Saved';
+            btn.classList.remove('btn-outline-dark');
+            btn.classList.add('btn-dark');
+            srShowToast('Search saved to your profile.');
+        } catch (err) {
+            srShowToast(err.message, 'danger');
+            if (err.message && err.message.toLowerCase().includes('sign in')) {
+                const modalEl = document.getElementById('auth-modal');
+                if (modalEl && typeof bootstrap !== 'undefined') new bootstrap.Modal(modalEl).show();
+            }
+        } finally {
+            btn.disabled = false;
+        }
+    });
 
     // Currency conversion for any data-usd elements rendered above
     if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();

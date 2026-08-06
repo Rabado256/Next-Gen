@@ -38,6 +38,7 @@
         .status-confirmed { background: #d4edda; color: #155724; }
         .status-pending { background: #fff3cd; color: #856404; }
         .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-completed { background: #e2e8f0; color: #334155; }
         .empty-state {
             text-align: center;
             padding: 6rem 2rem;
@@ -304,6 +305,13 @@
     };
     const FALLBACK_IMG = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=600';
 
+    function statusClassFor(status) {
+        if (status === 'confirmed') return 'status-confirmed';
+        if (status === 'pending') return 'status-pending';
+        if (status === 'completed') return 'status-completed';
+        return 'status-cancelled';
+    }
+
     async function loadBookings() {
         const token = api.getToken();
         if (!token) {
@@ -325,13 +333,14 @@
         grid.innerHTML = bookings.map(b => {
             const img = DEST_IMAGES[b.dest_id] || FALLBACK_IMG;
             const status = (b.status || 'confirmed').toLowerCase();
-            const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'pending' ? 'status-pending' : 'status-cancelled';
+            const statusClass = statusClassFor(status);
             const date = b.booking_date || b.created_at?.split('T')[0] || '—';
             const amount = b.total_amount || b.total || 0;
             const ref = b.reference || b.ref || '—';
             const docType = b.doc_type || 'destination';
             const docBadgeClass = docType === 'flight' ? 'doc-flight' : docType === 'hotel' ? 'doc-hotel' : docType === 'package' ? 'doc-package' : 'doc-destination';
-            const isCancellable = status !== 'cancelled';
+            const isCancellable = status !== 'cancelled' && status !== 'completed';
+            const hasRef = ref !== '—';
             return `<div class="booking-card">
                 <div class="row g-0">
                     <div class="col-md-4">
@@ -359,6 +368,7 @@
                             </div>
                             <div class="d-flex gap-2 mt-3 flex-wrap">
                                 <a href="destination.html?id=${encodeURIComponent(b.dest_id || '')}" class="btn btn-outline-dark btn-sm rounded-0 px-3" style="font-size: 0.7rem;">View</a>
+                                ${hasRef ? `<a href="${api.invoiceUrl(ref)}" target="_blank" class="btn btn-outline-dark btn-sm rounded-0 px-3" style="font-size: 0.7rem;"><i class="bi bi-receipt me-1"></i>Receipt</a>` : ''}
                                 ${isCancellable ? `<button class="btn btn-outline-secondary btn-sm rounded-0 px-3 modify-date-btn" data-ref="${ref}" data-date="${date}" style="font-size: 0.7rem;"><i class="bi bi-calendar me-1"></i>Modify</button>` : ''}
                                 ${isCancellable ? `<button class="btn btn-outline-danger btn-sm rounded-0 px-3 cancel-booking-btn" data-ref="${ref}" style="font-size: 0.7rem;"><i class="bi bi-x-circle me-1"></i>Cancel</button>` : ''}
                             </div>
@@ -403,11 +413,12 @@
         try {
             const b = await api.getBookingByRef(ref);
             const status = (b.status || 'confirmed').toLowerCase();
-            const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'pending' ? 'status-pending' : 'status-cancelled';
+            const statusClass = statusClassFor(status);
             const date = b.booking_date || b.created_at?.split('T')[0] || '—';
             const amount = b.total_amount || b.total || 0;
             const docType = b.doc_type || 'destination';
             const docBadgeClass = docType === 'flight' ? 'doc-flight' : docType === 'hotel' ? 'doc-hotel' : docType === 'package' ? 'doc-package' : 'doc-destination';
+            const bookingRef = b.reference || b.ref || ref;
             resultDiv.innerHTML = `<div class="card border-0 bg-light rounded-3">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
@@ -415,7 +426,7 @@
                             <span class="booking-status ${statusClass}">${status}</span>
                             <span class="doc-badge ${docBadgeClass} ms-1">${docType}</span>
                             <h6 class="serif mt-2 mb-1">${b.to_location || (b.dest_id || 'Destination')}</h6>
-                            <p class="small text-muted mb-0">Ref: ${b.reference || b.ref || ref}</p>
+                            <p class="small text-muted mb-0">Ref: ${bookingRef}</p>
                         </div>
                         <h5 class="mb-0 text-nowrap ms-3"><span class="currency-price" data-usd="${amount}">$${Number(amount).toLocaleString()}</span></h5>
                     </div>
@@ -423,6 +434,9 @@
                         <span><i class="bi bi-calendar3 me-1"></i>${date}</span>
                         <span><i class="bi bi-people me-1"></i>${b.guests || 1} guest${(b.guests || 1) > 1 ? 's' : ''}</span>
                         ${(() => { try { const sr = JSON.parse(b.special_requests || '{}'); if (sr.extras && sr.extras.length) { return '<span><i class="bi bi-plus-circle me-1"></i>' + sr.extras.map(e => e.name || e.id).join(', ') + '</span>'; } return ''; } catch(_) { return ''; } })()}
+                    </div>
+                    <div class="mt-3">
+                        <a href="${api.invoiceUrl(bookingRef)}" target="_blank" class="btn btn-outline-dark btn-sm rounded-0 px-3" style="font-size: 0.7rem;"><i class="bi bi-receipt me-1"></i>View Receipt</a>
                     </div>
                 </div>
             </div>`;

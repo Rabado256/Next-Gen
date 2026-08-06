@@ -99,6 +99,7 @@ function escapeHtml(str) {
 
 function buildBookingRow(type, b) {
   const amount = parseFloat(b.total_amount) || parseFloat(b.total) || 0;
+  const nowIso = new Date().toISOString();
   const base = {
     dest_id: b.dest_id || '',
     guest_name: b.guest_name || '',
@@ -110,6 +111,11 @@ function buildBookingRow(type, b) {
     total_amount: amount,
     currency: b.currency || 'usd',
     status: 'confirmed',
+    // State machine: every booking starts confirmed (it was created after
+    // payment or as a valid booking). Timestamps/history are stripped by the
+    // insert retry loop if the live schema predates the state machine.
+    confirmed_at: nowIso,
+    status_history: JSON.stringify([{ status: 'confirmed', at: nowIso }]),
     payment_id: b.payment_id || b.payment_intent || '',
     from_location: b.from_location || '',
     to_location: b.to_location || b.dest_id || '',

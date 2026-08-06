@@ -156,7 +156,14 @@ const api = {
   // Sign out — clears Supabase session and local data
   async logout() {
     await SB.auth.signOut().catch(() => {});
-    this.clearToken();
+    // Belt-and-braces: wipe any Supabase-persisted session tokens so a page
+    // reload immediately after logout can't silently restore the session.
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('sb-') || key === 'nextgen_token')) {
+        localStorage.removeItem(key);
+      }
+    }
     localStorage.removeItem('nextgen_user');
     localStorage.removeItem('nextgen_activities');
     localStorage.removeItem('nextgen_wishlist');
@@ -266,6 +273,39 @@ const api = {
     if (error) throw new Error(error.message);
   },
 
+  // ==================== SAVED SEARCHES ====================
+
+  // Save the current search criteria for the signed-in user
+  async saveSearch(searchType, params) {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Please sign in to save a search');
+    const { data, error } = await SB.from('saved_searches').insert({
+      user_id: user.id,
+      search_type: searchType,
+      params
+    }).select().single();
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  // List the signed-in user's saved searches, newest first
+  async getSavedSearches() {
+    const { data: { user } } = await SB.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data, error } = await SB.from('saved_searches')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+
+  // Remove a saved search by id (RLS ensures ownership)
+  async deleteSavedSearch(id) {
+    const { error } = await SB.from('saved_searches').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  },
+
   // ==================== BOOKINGS ====================
 
   // Get all bookings for the currently authenticated user
@@ -322,16 +362,13 @@ const api = {
     return this.saveBooking('hotel', data);
   },
 
-  // Stub: get booking invoice URL
-  getBookingInvoice(id) { return '/api/bookings/' + id + '/invoice'; },
-  // Stub: download booking invoice as blob
-  async downloadInvoice(id) {
-    const token = this.getToken();
-    const headers = {};
-    if (token) headers['Authorization'] = 'Bearer ' + token;
-    const res = await fetch('/api/bookings/' + id + '/invoice', { headers });
-    if (!res.ok) throw new Error('Invoice download failed');
-    return res.blob();
+  // Stub: get booking invoice URL (printable receipt page)
+  getBookingInvoice(ref) { return '/api/invoice?reference=' + encodeURIComponent(ref); },
+  invoiceUrl(ref) { return this.getBookingInvoice(ref); },
+  // Download the booking receipt by opening the printable page (save-as-PDF)
+  async downloadInvoice(ref) {
+    window.open(this.getBookingInvoice(ref), '_blank');
+    return null;
   },
 
   // ==================== REVIEWS ====================
@@ -501,15 +538,28 @@ const api = {
   async cancelBooking(ref) {
     const { data: { user } } = await SB.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-    const { data, error } = await SB.from('bookings')
-      .update({ status: 'cancelled' })
-      .eq('reference', ref)
-      .eq('user_id', user.id)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error('Booking not found');
-    return data;
+    // Prefer the server-side RPC: ownership-checked and records the state
+    // transition in status_history. Falls back to a direct update for
+    // databases that predate the cancel_booking function.
+    try {
+      const { data, error } = await SB.rpc('cancel_booking', { p_ref: ref });
+      if (error) throw error;
+      if (data && data.error) throw new Error(data.error);
+      return data;
+    } catch (rpcErr) {
+      if (String(rpcErr.message).toLowerCase().includes('could not find the function')) {
+        const { data, error } = await SB.from('bookings')
+          .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+          .eq('reference', ref)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        if (error) throw new Error(error.message);
+        if (!data) throw new Error('Booking not found');
+        return data;
+      }
+      throw rpcErr;
+    }
   },
 
   // Fetch a single booking by its reference code (public lookup).
@@ -768,10 +818,55 @@ const api = {
     return data || [];
   },
 
-  // Update the status of a booking (confirmed / pending / cancelled)
+  // Update the status of a booking (confirmed / pending / cancelled / completed)
+  // Records the transition in status_history and stamps the matching timestamp.
   async updateBookingStatus(id, status) {
-    const { error } = await SB.from('bookings').update({ status }).eq('id', id);
+    const { data: current, error: fetchErr } = await SB.from('bookings')
+      .select('status_history')
+      .eq('id', id)
+      .maybeSingle();
+    if (fetchErr) throw new Error(fetchErr.message);
+
+    const updates = { status };
+    if (status === 'confirmed') updates.confirmed_at = new Date().toISOString();
+    if (status === 'completed') updates.completed_at = new Date().toISOString();
+    if (status === 'cancelled') updates.cancelled_at = new Date().toISOString();
+    if (current) {
+      const history = Array.isArray(current.status_history) ? current.status_history : [];
+      updates.status_history = [...history, { status, at: new Date().toISOString() }];
+    }
+
+    const { error } = await SB.from('bookings').update(updates).eq('id', id);
     if (error) throw new Error(error.message);
+  },
+
+  // Server-side admin verification — the DB is the source of truth for is_admin
+  async adminVerify() {
+    const res = await fetch('/api/admin-verify', {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify({})
+    });
+    let data;
+    try { data = await res.json(); } catch (_) { data = {}; }
+    if (!res.ok) throw new Error(data.error || 'Verification failed');
+    return data;
+  },
+
+  // Auto-complete bookings whose travel date has passed (server-side transition)
+  async completeExpiredBookings() {
+    try {
+      const res = await fetch('/api/complete-bookings', {
+        method: 'POST',
+        headers: this.headers(),
+        body: JSON.stringify({})
+      });
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return data.completed || 0;
+    } catch (_) {
+      return 0;
+    }
   },
 
   // Delete a booking (admin only)

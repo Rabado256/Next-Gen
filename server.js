@@ -102,6 +102,21 @@ async function handleAPI(req, res) {
     return invokeServerless('export-data.js', 'Export', req, res);
   }
 
+  // POST /api/complete-bookings — auto-complete bookings past their travel date
+  if (url === '/api/complete-bookings' && req.method === 'POST') {
+    return invokeServerless('complete-bookings.js', 'Complete', req, res);
+  }
+
+  // GET|POST /api/invoice — printable receipt/confirmation page for a booking
+  if (url === '/api/invoice' && (req.method === 'GET' || req.method === 'POST')) {
+    return invokeServerless('invoice.js', 'Invoice', req, res);
+  }
+
+  // POST /api/admin-verify — server-side admin authorization check
+  if (url === '/api/admin-verify' && req.method === 'POST') {
+    return invokeServerless('admin-verify.js', 'AdminVerify', req, res);
+  }
+
   return false;
 }
 

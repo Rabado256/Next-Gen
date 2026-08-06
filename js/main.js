@@ -475,10 +475,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Logout
-    document.getElementById('pfl-btn-logout')?.addEventListener('click', () => {
-        api.logout();
-        window.location.reload();
+    // Logout — await the session teardown before leaving the page, otherwise
+    // the reload can race ahead of Supabase clearing its persisted session and
+    // the user gets logged straight back in.
+    document.getElementById('pfl-btn-logout')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const btn = e.currentTarget;
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing out...';
+        try {
+            await api.logout();
+        } catch (_) { /* session teardown is best-effort; local storage is cleared regardless */ }
+        window.location.href = 'index.html';
+        if (btn) { btn.disabled = false; btn.innerHTML = original; }
     });
 
     // Auth tab switching (Login / Signup)

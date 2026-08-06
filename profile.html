@@ -236,6 +236,18 @@
                 </form>
             </div>
 
+            <!-- Saved Searches -->
+            <div class="profile-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="serif mb-0"><i class="bi bi-bookmark me-2"></i>Saved Searches</h5>
+                    <a href="search-results.html" class="small text-decoration-underline">+ New search</a>
+                </div>
+                <p class="small text-muted mb-3">Search criteria you saved while browsing. Re-run any search with one click.</p>
+                <div id="saved-searches-list">
+                    <p class="small text-muted mb-0">Loading...</p>
+                </div>
+            </div>
+
             <!-- Account Actions -->
             <div class="profile-section">
                 <h5 class="serif mb-4"><i class="bi bi-shield-lock me-2"></i>Account</h5>
@@ -422,6 +434,52 @@
             const wishlist = JSON.parse(localStorage.getItem('nextgen_wishlist') || '[]');
             document.getElementById('stat-wishlist').textContent = wishlist.length;
         } catch (_) {}
+
+        // Load saved searches
+        await loadSavedSearches();
+    }
+
+    async function loadSavedSearches() {
+        const listEl = document.getElementById('saved-searches-list');
+        try {
+            const searches = await api.getSavedSearches();
+            if (!searches || searches.length === 0) {
+                listEl.innerHTML = '<p class="small text-muted mb-0">No saved searches yet. Use the "Save Search" button on the results page to store one here.</p>';
+                return;
+            }
+            listEl.innerHTML = searches.map(s => {
+                const p = s.params || {};
+                const typeLabel = (s.search_type || 'destination').toUpperCase();
+                const where = p.to || p.q || p.dest || p.from || '—';
+                const savedDate = s.created_at ? new Date(s.created_at).toLocaleDateString() : '';
+                const query = new URLSearchParams(p).toString();
+                return `<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom py-3" style="border-color:rgba(0,0,0,0.06)!important;">
+                    <div>
+                        <div class="small fw-bold">${escapeHtml(typeLabel)} — ${escapeHtml(where)}</div>
+                        <div class="small text-muted text-truncate" style="max-width:420px;">${escapeHtml(query)}</div>
+                        <small class="text-muted opacity-75">Saved ${escapeHtml(savedDate)}</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="search-results.html?${escapeHtml(query)}" class="btn btn-outline-dark btn-sm rounded-0 px-3" style="font-size:0.7rem;">Open</a>
+                        <button class="btn btn-outline-danger btn-sm rounded-0 px-3 delete-saved-btn" data-id="${s.id}" style="font-size:0.7rem;" title="Remove"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            listEl.querySelectorAll('.delete-saved-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    try {
+                        await api.deleteSavedSearch(btn.dataset.id);
+                        showToast('Search removed');
+                        await loadSavedSearches();
+                    } catch (err) {
+                        showToast(err.message, 'danger');
+                    }
+                });
+            });
+        } catch (err) {
+            listEl.innerHTML = '<p class="small text-muted mb-0">Could not load saved searches.</p>';
+        }
     }
 
     // Personal info form

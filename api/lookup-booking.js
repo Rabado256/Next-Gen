@@ -1,5 +1,22 @@
 require('dotenv').config();
 
+// Mask sensitive PII so a booking can't be pulled in full by a reference code
+// alone. Only a supplied matching email unlocks the raw values.
+function maskValue(v) {
+  const s = String(v || '');
+  if (!s) return '';
+  if (s.length <= 4) return '****';
+  return s.slice(0, 2) + '*'.repeat(s.length - 4) + s.slice(-2);
+}
+function maskEmail(e) {
+  const s = String(e || '').trim();
+  const at = s.indexOf('@');
+  if (at <= 0) return maskValue(s);
+  const local = s.slice(0, at);
+  const shown = local.length <= 2 ? local.charAt(0) : local.slice(0, 2);
+  return shown + '***' + s.slice(at);
+}
+
 function readBody(req) {
   if (req.body && typeof req.body === 'object') return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
@@ -66,8 +83,20 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // Full PII only when the caller proves ownership by supplying the matching
+    // booking email. Otherwise mask passport, ID card, phone and email.
+    const isOwner = !!(body.email && data.guest_email &&
+      String(data.guest_email).trim().toLowerCase() === String(body.email).trim().toLowerCase());
+    const booking = isOwner ? data : {
+      ...data,
+      guest_email: maskEmail(data.guest_email),
+      guest_phone: maskValue(data.guest_phone),
+      passport: maskValue(data.passport),
+      identity_card: maskValue(data.identity_card)
+    };
+
     res.statusCode = 200;
-    res.end(JSON.stringify({ success: true, booking: data }));
+    res.end(JSON.stringify({ success: true, booking }));
   } catch (e) {
     console.error('[Booking] lookup error:', e.message);
     res.statusCode = 500;

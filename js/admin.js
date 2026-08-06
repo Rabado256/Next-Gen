@@ -7,18 +7,26 @@
 // Human-readable labels for destination vibe categories
 const VIBE_LABELS = { romantic: 'Romantic', adventure: 'Adventure', solo: 'Solo Silence', solitude: 'Solitude', family: 'Family Heritage' };
 
-// Auto-restore admin session on page load
+// Auto-restore admin session on page load.
+// Access is gated server-side via /api/admin-verify so a forged is_admin flag
+// in localStorage can never grant admin access.
 (async () => {
   const token = api.getToken();
   if (token) {
     try {
-      const user = JSON.parse(localStorage.getItem('nextgen_user'));
-      if (user && user.is_admin) {
+      const res = await api.adminVerify();
+      if (res && res.is_admin) {
+        const local = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+        localStorage.setItem('nextgen_user', JSON.stringify({ ...local, ...res.user, is_admin: true }));
         document.getElementById('admin-login-screen').style.display = 'none';
         document.getElementById('admin-wrapper').style.display = 'flex';
         loadAllData();
+      } else {
+        api.clearToken();
+        localStorage.removeItem('nextgen_user');
       }
     } catch (_) {
+      // Endpoint unreachable — stay locked out rather than trusting local state
       api.clearToken();
       localStorage.removeItem('nextgen_user');
     }
@@ -89,7 +97,8 @@ function getDocBadgeForBooking(b) {
 
 // ==================== AUTHENTICATION ====================
 
-// Admin login form submission
+// Admin login form submission — credentials are validated client-side, then
+// the admin claim is re-verified server-side via /api/admin-verify.
 document.getElementById('admin-login-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('admin-email').value.trim();
@@ -102,6 +111,15 @@ document.getElementById('admin-login-form')?.addEventListener('submit', async (e
       errorEl.style.display = 'block';
       return;
     }
+    // Re-verify server-side before unlocking the dashboard
+    const verified = await api.adminVerify();
+    if (!verified || !verified.is_admin) {
+      errorEl.textContent = 'Admin access could not be verified. Please try again.';
+      errorEl.style.display = 'block';
+      await api.logout().catch(() => {});
+      return;
+    }
+    localStorage.setItem('nextgen_user', JSON.stringify({ ...(data.user || {}), ...(verified.user || {}), is_admin: true }));
     errorEl.style.display = 'none';
     document.getElementById('admin-login-screen').style.display = 'none';
     document.getElementById('admin-wrapper').style.display = 'flex';
@@ -113,9 +131,9 @@ document.getElementById('admin-login-form')?.addEventListener('submit', async (e
 });
 
 // Admin logout handler
-document.getElementById('admin-logout-btn')?.addEventListener('click', () => {
+document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
   if (!confirm('Logout of admin suite?')) return;
-  api.logout();
+  await api.logout();
   document.getElementById('admin-login-screen').style.display = 'flex';
   document.getElementById('admin-wrapper').style.display = 'none';
   document.getElementById('admin-password').value = '';
@@ -316,6 +334,8 @@ function renderAdminCharts(stats) {
 
 // ==================== BOOKINGS MANAGEMENT ====================
 async function renderBookings() {
+  // Auto-complete past bookings (server-side, fire-and-forget)
+  api.completeExpiredBookings();
   const search = (document.getElementById('bookings-search').value || '').toLowerCase();
   const filter = document.getElementById('bookings-filter-status').value;
   try {
@@ -354,10 +374,12 @@ async function renderBookings() {
           <select class="status-select" data-id="${escapeHtml(b.id)}" style="background: var(--admin-card); border: 1px solid var(--admin-border); color: white; padding: 0.25rem 0.5rem; font-size: 0.7rem; border-radius: 4px;">
             <option value="confirmed" ${(b.status || 'confirmed') === 'confirmed' ? 'selected' : ''}>Confirmed</option>
             <option value="pending" ${(b.status || 'confirmed') === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="completed" ${(b.status || 'confirmed') === 'completed' ? 'selected' : ''}>Completed</option>
             <option value="cancelled" ${(b.status || 'confirmed') === 'cancelled' ? 'selected' : ''}>Cancelled</option>
           </select>
         </td>
         <td>
+          <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="viewBookingDetail('${escapeHtml(b.id)}')" title="View details"><i class="bi bi-eye"></i></button>
           <button class="admin-btn admin-btn-danger admin-btn-sm" onclick="deleteBooking('${escapeHtml(b.id)}')" title="Delete"><i class="bi bi-trash"></i></button>
         </td>
       </tr>`).join('');
@@ -383,6 +405,57 @@ async function deleteBooking(id) {
     await api.deleteBooking(id);
     showToast('Booking deleted');
     renderBookings();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// Show a full booking detail overlay (reads the latest row directly)
+async function viewBookingDetail(id) {
+  try {
+    const { data: b, error } = await SB.from('bookings').select('*').eq('id', id).single();
+    if (error) throw new Error(error.message);
+
+    const sr = (() => { try { return JSON.parse(b.special_requests || '{}'); } catch (_) { return {}; } })();
+    const extras = Array.isArray(sr.extras) && sr.extras.length
+      ? sr.extras.map(e => `<span class="status-badge" style="background:rgba(217,119,6,0.12);color:#d97706;">${escapeHtml(e.name || e.id)}</span>`).join(' ')
+      : '—';
+    const history = Array.isArray(b.status_history) && b.status_history.length
+      ? b.status_history.map(h =>
+          `<div class="mb-1 small"><span class="status-badge ${h.status === 'cancelled' ? 'status-cancelled' : 'status-confirmed'}" style="text-transform:capitalize;">${escapeHtml(h.status)}</span> <span style="opacity:.6;">${new Date(h.at).toLocaleString()}</span></div>`
+        ).join('')
+      : '<div class="small" style="opacity:.5;">No state history recorded.</div>';
+
+    const rows = [
+      ['Reference', b.reference || b.ref || '—'],
+      ['Guest', b.guest_name || '—'],
+      ['Email', b.guest_email || '—'],
+      ['Phone', b.guest_phone || '—'],
+      ['Route', `${b.from_location || '—'} → ${b.to_location || b.dest_id || '—'}`],
+      ['Date', b.booking_date || '—'],
+      ['Guests', b.guests || 1],
+      ['Total', `$${Number(b.total_amount || b.total || 0).toLocaleString()}`],
+      ['Status', b.status || 'confirmed'],
+      ['Doc type', b.doc_type || 'unknown'],
+      ['Payment ID', b.payment_id || '—'],
+      ['Created', b.created_at ? new Date(b.created_at).toLocaleString() : '—'],
+      ['Extras', extras]
+    ];
+
+    openOverlay('Booking Details — ' + escapeHtml(b.reference || b.id), `
+      <table class="admin-table" style="font-size:0.8rem;">
+        <tbody>
+          ${rows.map(([k, v]) => `<tr><td style="width:140px;opacity:.6;">${escapeHtml(k)}</td><td>${v}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <h6 class="mt-4 mb-2" style="opacity:.7;">Status History</h6>
+      ${history}
+      ${sr.flight_number ? '<p class="small mt-3 mb-0" style="opacity:.6;">Flight: ' + escapeHtml(sr.flight_number) + '</p>' : ''}
+      <div class="mt-4">
+        <a href="/api/invoice?reference=${encodeURIComponent(b.reference || '')}" target="_blank" class="admin-btn admin-btn-outline admin-btn-sm">Open Receipt</a>
+        <button class="admin-btn admin-btn-outline admin-btn-sm" onclick="closeOverlay()">Close</button>
+      </div>
+    `);
   } catch (err) {
     showToast(err.message, 'error');
   }

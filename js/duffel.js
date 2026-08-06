@@ -74,21 +74,96 @@ const DuffelAPI = (() => {
     }
     
     /**
-     * Search for flights
-     * @param {Object} searchParams - Search parameters
-     * @param {Array} searchParams.slices - Flight slices (origin, destination, date)
-     * @param {Array} searchParams.passengers - Passenger types
-     * @param {string} searchParams.cabinClass - Cabin class (economy, business, etc.)
-     * @param {number} searchParams.maxConnections - Max connections (0 = direct)
+     * ── Flight search cache ─────────────────────────────────────────────
+     * Cache live offer responses in Supabase (flight_caches) keyed by a hash
+     * of the search params, so repeat searches skip the Duffel API. A small
+     * in-memory cache avoids duplicate fetches within the same session.
      */
-    async function searchFlights(searchParams) {
+    const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+    const memoryCache = {};
+
+    function flightCacheKey(searchParams) {
         const {
             slices,
             passengers = [{ type: 'adult' }],
             cabinClass = 'economy',
             maxConnections = 1
         } = searchParams;
-        
+        return 'duffel:' + JSON.stringify({
+            slices: (slices || []).map(s => [s.origin, s.destination, s.departureDate]),
+            passengers,
+            cabinClass,
+            maxConnections
+        });
+    }
+
+    function cacheDb() {
+        return (typeof window !== 'undefined' && window.supabaseClient) ? window.supabaseClient : null;
+    }
+
+    async function readCache(key, ttlMs) {
+        const mem = memoryCache[key];
+        if (mem && (Date.now() - mem.at) < ttlMs) return mem.payload;
+
+        try {
+            const sb = cacheDb();
+            if (!sb) return null;
+            const cutoff = new Date(Date.now() - ttlMs).toISOString();
+            const { data, error } = await sb.from('flight_caches')
+                .select('payload')
+                .eq('cache_key', key)
+                .gte('created_at', cutoff)
+                .maybeSingle();
+            if (error) {
+                console.warn('[Duffel] cache read failed:', error.message);
+                return null;
+            }
+            if (data && data.payload) {
+                memoryCache[key] = { at: Date.now(), payload: data.payload };
+                return data.payload;
+            }
+        } catch (_) { }
+        return null;
+    }
+
+    async function writeCache(key, payload) {
+        memoryCache[key] = { at: Date.now(), payload };
+        try {
+            const sb = cacheDb();
+            if (!sb) return;
+            await sb.from('flight_caches').upsert(
+                { cache_key: key, payload, created_at: new Date().toISOString() },
+                { onConflict: 'cache_key' }
+            );
+        } catch (e) {
+            console.warn('[Duffel] cache write failed:', e.message);
+        }
+    }
+
+    /**
+     * Search for flights
+     * @param {Object} searchParams - Search parameters
+     * @param {Array} searchParams.slices - Flight slices (origin, destination, date)
+     * @param {Array} searchParams.passengers - Passenger types
+     * @param {string} searchParams.cabinClass - Cabin class (economy, business, etc.)
+     * @param {number} searchParams.maxConnections - Max connections (0 = direct)
+     * @returns {Promise} Duffel response with a `cached` flag attached
+     */
+    async function searchFlights(searchParams) {
+        const key = flightCacheKey(searchParams);
+
+        try {
+            const cached = await readCache(key, CACHE_TTL_MS);
+            if (cached) return Object.assign({ cached: true, cache_key: key }, JSON.parse(JSON.stringify(cached)));
+        } catch (_) { }
+
+        const {
+            slices,
+            passengers = [{ type: 'adult' }],
+            cabinClass = 'economy',
+            maxConnections = 1
+        } = searchParams;
+
         const body = {
             data: {
                 slices: slices.map(slice => ({
@@ -104,11 +179,24 @@ const DuffelAPI = (() => {
                 max_connections: maxConnections
             }
         };
-        
-        return await request('/air/offer_requests?return_offers=true', {
-            method: 'POST',
-            body: JSON.stringify(body)
-        });
+
+        let result;
+        try {
+            result = await request('/air/offer_requests?return_offers=true', {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+        } catch (liveErr) {
+            // Live call failed — fall back to any cached copy, even stale
+            try {
+                const stale = await readCache(key, Number.MAX_SAFE_INTEGER);
+                if (stale) return Object.assign({ cached: true, cache_key: key }, JSON.parse(JSON.stringify(stale)));
+            } catch (_) { }
+            throw liveErr;
+        }
+
+        writeCache(key, result);
+        return Object.assign({ cached: false, cache_key: key }, result);
     }
     
     /**
