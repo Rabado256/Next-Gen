@@ -76,7 +76,7 @@ PAYSTACK_SECRET_KEY=sk_test_your_secret_key_here
 PAYSTACK_PUBLIC_KEY=pk_test_your_public_key_here
 ```
 
-### b) Frontend fallback in `js/firebase-config.js`
+### b) Frontend fallback in `js/supabase-config.js`
 
 The public key is also hardcoded as a fallback so the page works even when `/api/config`
 is unreachable:
@@ -85,7 +85,7 @@ is unreachable:
 window.__PAYSTACK_PUBLIC_KEY__ = 'pk_test_your_public_key_here';
 ```
 
-Keep `js/firebase-config.js` and the `.env` public key in sync. The secret key is **never** put
+Keep `js/supabase-config.js` and the `.env` public key in sync. The secret key is **never** put
 in frontend files.
 
 ### c) Production (Vercel)
@@ -166,7 +166,7 @@ production with real bookings.
 1. In Paystack go to **Settings → Business** and complete your real business details and
    bank account; switch the dashboard from **Test** to **Live**.
 2. Copy the live keys (`sk_live_...` / `pk_live_...`) from the Developers page.
-3. Update `.env`, `js/firebase-config.js`, and the Vercel Environment Variables with the live keys.
+3. Update `.env`, `js/supabase-config.js`, and the Vercel Environment Variables with the live keys.
 4. Redeploy and make a small real purchase to confirm.
 5. Confirm the TEST MODE banner no longer shows (it only appears for `pk_test_` keys).
 
@@ -181,7 +181,7 @@ production with real bookings.
 | `api/paystack-verify.js` | Serverless function that verifies a reference with Paystack |
 | `api/config.js` | Serves the public key to the frontend |
 | `server.js` | Local dev server hosting `/api/config` + `/api/paystack-verify` |
-| `js/firebase-config.js` | Frontend public-key fallback |
+| `js/supabase-config.js` | Frontend public-key fallback |
 | `.env` / `.env.example` | Local secret + public key placeholders |
 | `vercel.json` | Vercel routing (functions auto-served under `/api/*`) |
 
@@ -191,7 +191,7 @@ production with real bookings.
 
 | Symptom | Likely cause / fix |
 |---------|--------------------|
-| Payment step says "Paystack is not configured yet" | Public key missing/placeholder. Set `PAYSTACK_PUBLIC_KEY` in `.env`, `js/firebase-config.js`, and Vercel. |
+| Payment step says "Paystack is not configured yet" | Public key missing/placeholder. Set `PAYSTACK_PUBLIC_KEY` in `.env`, `js/supabase-config.js`, and Vercel. |
 | "Paystack verification failed" after paying | Server couldn't reach Paystack or reference not found — check `PAYSTACK_SECRET_KEY` is set and the reference string is intact. |
 | Booking saved but no charge | You are in fallback mode (no secret/public key), or `pk_test_` key with a test card — check the TEST MODE banner. |
 | Amount in NGN looks wrong | Live rate fetch failed, so the ₦1,540 fallback was used. Compare with the USD total on the summary. |
