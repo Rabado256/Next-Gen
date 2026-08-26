@@ -8,6 +8,7 @@
 // References to the globally initialized Firebase clients
 const auth = window.auth;
 const db = window.db;
+const fbReady = !!db && !!auth && typeof auth.onAuthStateChanged === 'function' && auth.onAuthStateChanged !== Function.prototype.onAuthStateChanged;
 
 // HTML-escape a string to prevent XSS injection
 function escapeHtml(str) {
@@ -71,6 +72,7 @@ async function buildUserData(user) {
     is_admin: false,
     email_verified: !!user.emailVerified
   };
+  if (!db) return fallback;
   try {
     const doc = await db.collection('profiles').doc(user.uid).get();
     const profile = docToObj(doc);
@@ -274,12 +276,14 @@ const api = {
 
   // Fetch all active destinations
   async getDestinations() {
+    if (!db) return [];
     const qs = await db.collection('destinations').where('is_active', '==', true).get();
     return sortBy(qsToArray(qs), 'created_at', false);
   },
 
   // Fetch a single destination by ID (slug)
   async getDestination(id) {
+    if (!db) return null;
     const doc = await db.collection('destinations').doc(id).get();
     return docToObj(doc);
   },
@@ -424,6 +428,7 @@ const api = {
 
   // Get all reviews for a destination
   async getReviews(destId) {
+    if (!db) return [];
     const qs = await db.collection('reviews').where('dest_id', '==', destId).get();
     return sortBy(qsToArray(qs), 'created_at', true);
   },

@@ -4,24 +4,26 @@
    connection (compat build loaded from CDN).
    ============================================ */
 
-// Read credentials from js/firebase-config.js (gitignored, never committed)
-const cfg = window.__FIREBASE_CONFIG__;
+// Read credentials from js/firebase-config.js (gitignored) or /api/config (Vercel env vars)
+var cfg = window.__FIREBASE_CONFIG__;
 if (!cfg || !cfg.apiKey || cfg.apiKey.includes('YOUR_')) {
   console.warn(
-    '%c[Firebase]%c Fill in the Firebase credentials in js/firebase-config.js.',
+    '%c[Firebase]%c Firebase credentials not loaded — dynamic features disabled.',
     'color:#FFA611;font-weight:bold',
     'color:inherit'
   );
+  // Set empty stubs so downstream code doesn't crash
+  window.auth = { onAuthStateChanged: function(){}, currentUser: null };
+  window.db = null;
+  window.firebaseClient = null;
+} else if (typeof firebase !== 'undefined') {
+  window.firebaseApp = firebase.initializeApp(cfg);
+  window.auth = firebase.auth();
+  window.db = firebase.firestore();
+  window.firebaseClient = firebase;
+} else {
+  console.warn('[Firebase] SDK failed to load from CDN.');
+  window.auth = { onAuthStateChanged: function(){}, currentUser: null };
+  window.db = null;
+  window.firebaseClient = null;
 }
-
-if (typeof firebase === 'undefined') {
-  throw new Error('Firebase SDK failed to load — check that the firebase-compat scripts are included before this file');
-}
-
-// Create and expose the Firebase app, Auth and Firestore globally
-window.firebaseApp = firebase.initializeApp(cfg || {});
-window.auth = firebase.auth();
-window.db = firebase.firestore();
-
-// Shared globals consumed across the app: window.auth, window.db, window.firebaseApp.
-window.firebaseClient = firebase;
