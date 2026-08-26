@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { getFirestore, userIdFromRequest } = require('../firebase-admin');
 
 function readBody(req) {
   // Support a pre-parsed body (e.g. when invoked from server.js in dev)
@@ -12,41 +13,6 @@ function readBody(req) {
     });
     req.on('error', reject);
   });
-}
-
-// Decode the `sub` (user id) from a Supabase access token JWT without verifying
-// the signature — the token was issued by Supabase and the signature is only
-// used here to attribute the booking to an account when one is signed in.
-// Guests (no token) still get a persisted booking linked via guest_email.
-function jwtSub(token) {
-  try {
-    const parts = String(token || '').split('.');
-    if (parts.length !== 3) return null;
-    let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    while (payload.length % 4 !== 0) payload += '=';
-    const data = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
-    return data && data.sub ? data.sub : null;
-  } catch (_) {
-    return null;
-  }
-}
-
-// Extract the names of missing columns from a PostgREST "column does not exist"
-// error so the insert can be retried without them. Handles both error formats:
-//   "Could not find the '<col>' column of '<table>' in the schema cache"
-//   "column <table>.<col> does not exist"
-function missingColumns(message) {
-  if (!message) return [];
-  const names = new Set();
-  const patterns = [
-    /Could not find the '([a-zA-Z_][a-zA-Z0-9_]*)' column/g,
-    /column [a-zA-Z_][a-zA-Z0-9_]*\.([a-zA-Z_][a-zA-Z0-9_]*)/g
-  ];
-  patterns.forEach(re => {
-    let m;
-    while ((m = re.exec(message))) names.add(m[1]);
-  });
-  return Array.from(names);
 }
 
 // Best-effort confirmation email via Resend's REST API. No-op unless
@@ -112,15 +78,15 @@ function buildBookingRow(type, b) {
     currency: b.currency || 'usd',
     status: 'confirmed',
     // State machine: every booking starts confirmed (it was created after
-    // payment or as a valid booking). Timestamps/history are stripped by the
-    // insert retry loop if the live schema predates the state machine.
+    // payment or as a valid booking).
     confirmed_at: nowIso,
-    status_history: JSON.stringify([{ status: 'confirmed', at: nowIso }]),
+    status_history: [{ status: 'confirmed', at: nowIso }],
     payment_id: b.payment_id || b.payment_intent || '',
     from_location: b.from_location || '',
     to_location: b.to_location || b.dest_id || '',
     reference: b.reference || b.ref || 'NXG-' + Date.now().toString(36).toUpperCase(),
-    doc_type: type
+    doc_type: type,
+    created_at: nowIso
   };
   base.ref = base.reference;
 
@@ -128,7 +94,7 @@ function buildBookingRow(type, b) {
     case 'flight':
       base.dest_id = b.airline || 'Flight';
       base.to_location = b.to_location || b.flight_number || '';
-      base.special_requests = JSON.stringify({
+      base.special_requests = {
         flight_number: b.flight_number || '',
         departure_time: b.departure_time || '',
         arrival_time: b.arrival_time || '',
@@ -137,13 +103,13 @@ function buildBookingRow(type, b) {
         payment_intent: b.payment_intent || '',
         duffel_order_id: b.duffel_order_id || '',
         ...(b.extras ? { extras: b.extras } : {})
-      });
+      };
       break;
 
     case 'hotel':
       base.dest_id = b.hotel_name || 'Hotel';
       base.to_location = b.hotel_name || b.hotel_city || '';
-      base.special_requests = JSON.stringify({
+      base.special_requests = {
         hotel_name: b.hotel_name || '',
         hotel_city: b.hotel_city || '',
         hotel_country: b.hotel_country || '',
@@ -154,13 +120,13 @@ function buildBookingRow(type, b) {
         check_out: b.check_out || '',
         payment_intent: b.payment_intent || '',
         ...(b.extras ? { extras: b.extras } : {})
-      });
+      };
       break;
 
     case 'package':
       base.dest_id = b.package_name || 'Package';
       base.to_location = b.package_dest || '';
-      base.special_requests = JSON.stringify({
+      base.special_requests = {
         package_id: b.package_id || '',
         package_dest: b.package_dest || '',
         package_country: b.package_country || '',
@@ -171,17 +137,17 @@ function buildBookingRow(type, b) {
         includes: b.includes || [],
         payment_intent: b.payment_intent || '',
         ...(b.extras ? { extras: b.extras } : {})
-      });
+      };
       break;
 
     case 'visa':
       base.dest_id = 'Visa';
-      base.special_requests = JSON.stringify({
+      base.special_requests = {
         visa_type: b.visa_type || '',
         visa_label: b.visa_label || '',
         payment_intent: b.payment_intent || '',
         ...(b.extras ? { extras: b.extras } : {})
-      });
+      };
       break;
 
     case 'general':
@@ -220,52 +186,22 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = await readBody(req);
+    const db = getFirestore();
 
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      // Service role key bypasses RLS so guest + authenticated bookings always persist.
-      // Falls back to the anon key only for local/dev environments.
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-    );
-
-    const user_id = jwtSub((req.headers.authorization || '').replace(/^Bearer\s+/i, '')) || null;
+    const user_id = await userIdFromRequest(req);
 
     const bookingType = ['flight', 'hotel', 'package', 'visa'].includes(body.booking_type) ? body.booking_type : 'general';
     const row = buildBookingRow(bookingType, body);
     if (user_id) row.user_id = user_id;
 
-    // Retry the insert without any columns the live schema is missing, so a
-    // stale database never silently loses a booking.
-    let attempt = row;
-    let selectCols = 'id, reference, guest_name, guest_email, guests, total_amount, to_location, dest_id';
-    let data, error;
-    for (let round = 0; round < 6; round++) {
-      const result = await supabase
-        .from('bookings')
-        .insert(attempt)
-        .select(selectCols)
-        .single();
-      data = result.data;
-      error = result.error;
-      if (!error) break;
-      const missing = missingColumns(error.message);
-      if (missing.length === 0) break;
-      attempt = { ...attempt };
-      missing.forEach(col => {
-        delete attempt[col];
-        // Also drop the column from the returned selection if it doesn't exist
-        selectCols = selectCols.split(', ').filter(c => c !== col).join(', ');
-      });
-    }
-
-    if (error) throw error;
+    const ref = await db.collection('bookings').add(row);
+    const saved = Object.assign({ id: ref.id }, row);
 
     // Fire-and-forget confirmation email (no-op unless RESEND_API_KEY is set)
-    sendConfirmationEmail(data);
+    sendConfirmationEmail(saved);
 
     res.statusCode = 200;
-    res.end(JSON.stringify({ success: true, booking: data }));
+    res.end(JSON.stringify({ success: true, booking: saved }));
   } catch (e) {
     console.error('[Booking] confirm error:', e.message);
     res.statusCode = 500;

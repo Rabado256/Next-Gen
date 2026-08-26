@@ -84,9 +84,9 @@ ANIMATION CURVE:
 index.html          - Main homepage (2012 lines)
 css/style.css       - All styles (2389 lines)
 js/main.js          - Core application logic (689 lines)
-js/api.js           - Supabase API wrapper
-js/config.js        - Environment config
-js/supabase-client.js - Supabase client init
+js/api.js           - Firebase/Firestore API wrapper
+js/firebase-config.js - Firebase client config (gitignored)
+js/firebase-client.js - Firebase client init (auth + firestore)
 destination.html    - Individual destination detail page
 inspiration.html    - Inspiration theme detail page
 checkout.html       - Booking checkout page

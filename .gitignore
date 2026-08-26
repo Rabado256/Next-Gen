@@ -8,3 +8,6 @@ NUL
 *.png
 AGENCY/
 .env*
+
+# Real Firebase credentials — never commit
+js/firebase-config.js

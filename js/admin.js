@@ -35,11 +35,20 @@ const VIBE_LABELS = { romantic: 'Romantic', adventure: 'Adventure', solo: 'Solo 
 // Track which destination is being edited (null = new destination)
 let editingDestId = null;
 
+// Tolerant special_requests parser — Firestore stores the object directly,
+// legacy Supabase rows stored a JSON string.
+function parseSr(b) {
+  try {
+    if (typeof b.special_requests === 'string') return JSON.parse(b.special_requests || '{}');
+    return b.special_requests || {};
+  } catch (_) { return {}; }
+}
+
 // Render flight destination info — tries to extract flight number from special_requests
 function renderFlightDest(b) {
   var flightNum = '';
   try {
-    var sr = JSON.parse(b.special_requests || '{}');
+    var sr = parseSr(b);
     flightNum = sr.flight_number || '';
   } catch (_) {}
   var airline = b.dest_id || b.destination_id || 'Flight';
@@ -50,7 +59,7 @@ function renderFlightDest(b) {
 function renderHotelDest(b) {
   var info = '';
   try {
-    var sr = JSON.parse(b.special_requests || '{}');
+    var sr = parseSr(b);
     info = (sr.room_type || '') + (sr.nights ? ' • ' + sr.nights + ' night(s)' : '');
   } catch (_) {}
   var name = b.to_location || b.dest_id || b.destination_id || 'Hotel';
@@ -61,7 +70,7 @@ function renderHotelDest(b) {
 function renderPackageDest(b) {
   var info = '';
   try {
-    var sr = JSON.parse(b.special_requests || '{}');
+    var sr = parseSr(b);
     var pieces = [];
     if (sr.duration) pieces.push(sr.duration + ' days');
     if (sr.nights) pieces.push(sr.nights + ' nights');
@@ -75,7 +84,7 @@ function renderPackageDest(b) {
 // Render a document-type badge for a booking based on passport/ID card status
 function renderExtrasInfo(b) {
   try {
-    var sr = JSON.parse(b.special_requests || '{}');
+    var sr = parseSr(b);
     if (sr.extras && Array.isArray(sr.extras) && sr.extras.length > 0) {
       return sr.extras.map(function(e) { return e.name || e.id; }).join(', ');
     }
@@ -227,7 +236,7 @@ async function updateDashboardStats() {
     document.getElementById('stat-newsletter').textContent = stats.total_newsletter || 0;
     if (typeof CURRENCY !== 'undefined') CURRENCY.updateDisplay();
   } catch (_) {
-    // Fallback to localStorage if Supabase is unavailable
+    // Fallback to localStorage if Firestore is unavailable
     const activities = JSON.parse(localStorage.getItem('nextgen_activities') || '[]');
     const contacts = JSON.parse(localStorage.getItem('nextgen_contacts') || '[]');
     const newsletters = JSON.parse(localStorage.getItem('nextgen_newsletter') || '[]');
@@ -413,10 +422,9 @@ async function deleteBooking(id) {
 // Show a full booking detail overlay (reads the latest row directly)
 async function viewBookingDetail(id) {
   try {
-    const { data: b, error } = await SB.from('bookings').select('*').eq('id', id).single();
-    if (error) throw new Error(error.message);
+    const b = await api.getBooking(id);
 
-    const sr = (() => { try { return JSON.parse(b.special_requests || '{}'); } catch (_) { return {}; } })();
+    const sr = parseSr(b);
     const extras = Array.isArray(sr.extras) && sr.extras.length
       ? sr.extras.map(e => `<span class="status-badge" style="background:rgba(217,119,6,0.12);color:#d97706;">${escapeHtml(e.name || e.id)}</span>`).join(' ')
       : '—';
@@ -709,9 +717,7 @@ document.getElementById('users-search')?.addEventListener('input', renderUsers);
 
 async function viewUserProfile(userId) {
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+    const profile = await api.getProfileById(userId);
     if (!profile) { showToast('User not found', 'error'); return; }
     openOverlay('Client Profile', `
       <div style="text-align:center;margin-bottom:2rem">
@@ -745,8 +751,7 @@ async function updateUserProfile(userId) {
     emergency: document.getElementById('vu-emergency').value,
   };
   try {
-    const { error } = await supabaseClient.from('profiles').update(updates).eq('id', userId);
-    if (error) throw error;
+    await api.updateProfileById(userId, updates);
     showToast('Profile updated');
     closeOverlay();
     renderUsers();
@@ -1325,8 +1330,8 @@ function buildSummarySheet(sets) {
   return ws;
 }
 
-// Fetch all datasets for export. Prefers the service-role endpoint (bypasses
-// RLS so every table exports), falls back to direct Supabase queries.
+// Fetch all datasets for export. Prefers the server-side export endpoint
+// (service-account, bypasses security rules), falls back to direct queries.
 async function fetchExportData() {
   try {
     const token = api.getToken();

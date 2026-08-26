@@ -13,29 +13,11 @@ function readBody(req) {
   });
 }
 
-// Decode the `sub` (user id) from a Supabase access token JWT without
-// verifying the signature — the signature is verified by Supabase when the
-// token is presented as the Authorization header of the anon-key client below.
-// Authorization (is_admin) is enforced by RLS, never by this decode.
-function jwtSub(token) {
-  try {
-    const parts = String(token || '').split('.');
-    if (parts.length !== 3) return null;
-    let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    while (payload.length % 4 !== 0) payload += '=';
-    const data = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
-    return data && data.sub ? data.sub : null;
-  } catch (_) {
-    return null;
-  }
-}
-
 /**
  * POST /api/complete-bookings
  * Marks confirmed bookings whose travel date has passed as "completed",
- * appending to their status_history. Requires an admin JWT (verified via RLS);
- * the transition itself is guarded by the complete_expired_bookings()
- * SECURITY DEFINER function.
+ * appending to their status_history. Requires an admin Firebase ID token
+ * (verified server-side).
  */
 module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
@@ -57,54 +39,48 @@ module.exports = async function handler(req, res) {
   try {
     await readBody(req);
 
-    const { createClient } = require('@supabase/supabase-js');
-    const url = process.env.SUPABASE_URL;
-    if (!url) {
-      res.statusCode = 500;
-      res.end(JSON.stringify({ error: 'Supabase URL not configured' }));
-      return;
-    }
-
-    // Only admins may run the auto-complete job. RLS (is_admin()) gates the
-    // profiles read off auth.uid() from the verified JWT, so a forged token
-    // or spoofed `sub` is rejected.
-    const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-    const user_id = jwtSub(token);
-    if (!user_id) {
+    const admin = require('../firebase-admin');
+    const decoded = await admin.verifyToken(req);
+    if (!decoded) {
       res.statusCode = 401;
       res.end(JSON.stringify({ error: 'Authentication required' }));
       return;
     }
-    const authClient = createClient(url, process.env.SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: 'Bearer ' + token } }
-    });
-    const { data: profile, error: profileErr } = await authClient
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user_id)
-      .maybeSingle();
-    if (profileErr || !profile || profile.is_admin !== true) {
+
+    const db = admin.getFirestore();
+    const profileDoc = await db.collection('profiles').doc(decoded.uid).get();
+    if (!profileDoc.exists || profileDoc.data().is_admin !== true) {
       res.statusCode = 403;
       res.end(JSON.stringify({ error: 'Admin access required' }));
       return;
     }
 
-    const supabase = createClient(
-      url,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-    );
+    // Auto-complete bookings whose travel date is in the past.
+    const nowIso = new Date().toISOString();
+    const snap = await db.collection('bookings')
+      .where('status', '==', 'confirmed')
+      .get();
 
-    const { data, error } = await supabase.rpc('complete_expired_bookings');
-    if (error) {
-      // Function not deployed yet — degrade gracefully rather than failing
-      // the bookings page.
-      console.warn('[Complete] RPC not available:', error.message);
-      res.statusCode = 200;
-      res.end(JSON.stringify({ success: true, completed: 0, skipped: error.message }));
-      return;
-    }
+    const batch = db.batch();
+    let completed = 0;
+    const today = nowIso.split('T')[0];
 
-    const completed = Number(data) || 0;
+    snap.forEach((doc) => {
+      const b = doc.data();
+      const travelDate = String(b.booking_date || b.travel_date || '').slice(0, 10);
+      if (travelDate && travelDate < today) {
+        const history = Array.isArray(b.status_history) ? b.status_history : [];
+        batch.update(doc.ref, {
+          status: 'completed',
+          completed_at: nowIso,
+          status_history: [...history, { status: 'completed', at: nowIso }]
+        });
+        completed++;
+      }
+    });
+
+    if (completed > 0) await batch.commit();
+
     res.statusCode = 200;
     res.end(JSON.stringify({ success: true, completed }));
   } catch (e) {

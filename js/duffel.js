@@ -75,7 +75,7 @@ const DuffelAPI = (() => {
     
     /**
      * ── Flight search cache ─────────────────────────────────────────────
-     * Cache live offer responses in Supabase (flight_caches) keyed by a hash
+     * Cache live offer responses in Firestore (flight_caches) keyed by a hash
      * of the search params, so repeat searches skip the Duffel API. A small
      * in-memory cache avoids duplicate fetches within the same session.
      */
@@ -98,7 +98,7 @@ const DuffelAPI = (() => {
     }
 
     function cacheDb() {
-        return (typeof window !== 'undefined' && window.supabaseClient) ? window.supabaseClient : null;
+        return (typeof window !== 'undefined' && window.db) ? window.db : null;
     }
 
     async function readCache(key, ttlMs) {
@@ -106,21 +106,21 @@ const DuffelAPI = (() => {
         if (mem && (Date.now() - mem.at) < ttlMs) return mem.payload;
 
         try {
-            const sb = cacheDb();
-            if (!sb) return null;
-            const cutoff = new Date(Date.now() - ttlMs).toISOString();
-            const { data, error } = await sb.from('flight_caches')
-                .select('payload')
-                .eq('cache_key', key)
-                .gte('created_at', cutoff)
-                .maybeSingle();
-            if (error) {
-                console.warn('[Duffel] cache read failed:', error.message);
-                return null;
-            }
-            if (data && data.payload) {
-                memoryCache[key] = { at: Date.now(), payload: data.payload };
-                return data.payload;
+            const db = cacheDb();
+            if (!db) return null;
+            const cutoff = Date.now() - ttlMs;
+            const snap = await db.collection('flight_caches')
+                .where('cache_key', '==', key)
+                .where('created_at_ms', '>', cutoff)
+                .orderBy('created_at_ms', 'desc')
+                .limit(1)
+                .get();
+            if (!snap.empty) {
+                const doc = snap.docs[0].data();
+                if (doc && doc.payload) {
+                    memoryCache[key] = { at: Date.now(), payload: doc.payload };
+                    return doc.payload;
+                }
             }
         } catch (_) { }
         return null;
@@ -129,12 +129,14 @@ const DuffelAPI = (() => {
     async function writeCache(key, payload) {
         memoryCache[key] = { at: Date.now(), payload };
         try {
-            const sb = cacheDb();
-            if (!sb) return;
-            await sb.from('flight_caches').upsert(
-                { cache_key: key, payload, created_at: new Date().toISOString() },
-                { onConflict: 'cache_key' }
-            );
+            const db = cacheDb();
+            if (!db) return;
+            await db.collection('flight_caches').doc(key).set({
+                cache_key: key,
+                payload,
+                created_at: new Date().toISOString(),
+                created_at_ms: Date.now()
+            });
         } catch (e) {
             console.warn('[Duffel] cache write failed:', e.message);
         }

@@ -30,19 +30,34 @@
             <div class="mt-4"><a href="index.html" class="small text-white opacity-50">← Back to Home</a></div>
         </div>
     </div>
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
     <script src="js/env.js"></script>
-    <script src="js/supabase-client.js"></script>
+    <script src="js/firebase-client.js"></script>
 <script src="js/api.js"></script>
     <script>
         (async () => {
-            const hash = window.location.hash;
-            if (hash && hash.includes('access_token') && hash.includes('type=signup')) {
-                document.getElementById('result-icon').textContent = '✓';
-                document.getElementById('result-icon').style.color = '#22c55e';
-                document.getElementById('result-title').textContent = 'Email Verified!';
-                document.getElementById('result-msg').innerHTML = 'Your email has been verified. You can now <a href="index.html" style="color:#d4a373;">login to your account</a>.';
+            // Firebase email-verification links carry a one-time code (?oobCode=...)
+            const params = new URLSearchParams(window.location.search);
+            const oobCode = params.get('oobCode');
+            if (oobCode) {
+                try {
+                    await auth.applyActionCode(oobCode);
+                    // Refresh the signed-in user's verification state if present
+                    const user = auth.currentUser;
+                    if (user) { try { await user.reload(); } catch (_) {} }
+                    document.getElementById('result-icon').textContent = '✓';
+                    document.getElementById('result-icon').style.color = '#22c55e';
+                    document.getElementById('result-title').textContent = 'Email Verified!';
+                    document.getElementById('result-msg').innerHTML = 'Your email has been verified. You can now <a href="index.html" style="color:#d4a373;">login to your account</a>.';
+                } catch (err) {
+                    document.getElementById('result-icon').textContent = '✗';
+                    document.getElementById('result-icon').style.color = '#ef4444';
+                    document.getElementById('result-title').textContent = 'Verification Failed';
+                    document.getElementById('result-msg').innerHTML = 'This link is invalid or has expired. Please request a new verification email.';
+                }
             } else {
                 document.getElementById('result-icon').textContent = '⏳';
                 document.getElementById('result-title').textContent = 'No Action Needed';

@@ -30,8 +30,10 @@ function escapeHtml(str) {
 }
 
 function parseSpecialRequests(b) {
-  try { return JSON.parse(b.special_requests || '{}'); }
-  catch (_) { return {}; }
+  try {
+    if (typeof b.special_requests === 'string') return JSON.parse(b.special_requests || '{}');
+    return b.special_requests || {};
+  } catch (_) { return {}; }
 }
 
 function renderReceipt(b) {
@@ -192,23 +194,18 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-    );
+    const db = require('../firebase-admin').getFirestore();
 
-    const { data: booking, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('reference', ref)
-      .maybeSingle();
-    if (error) throw error;
-    if (!booking) {
+    const snap = await db.collection('bookings')
+      .where('reference', '==', ref)
+      .limit(1)
+      .get();
+    if (snap.empty) {
       res.statusCode = 404;
       res.end('Booking not found for that reference code.');
       return;
     }
+    const booking = Object.assign({ id: snap.docs[0].id }, snap.docs[0].data());
     if (email) {
       const guestEmail = String(booking.guest_email || '').trim().toLowerCase();
       if (guestEmail && guestEmail !== email) {

@@ -64,23 +64,20 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      // Service role bypasses RLS so guest bookings (no user_id) are findable
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
-    );
+    const db = require('../firebase-admin').getFirestore();
 
     // Reference + optional email check so a booking can't be pulled by an
     // unguessable code alone when an email is supplied
-    let query = supabase.from('bookings').select('*').eq('reference', ref);
-    const { data, error } = await query.maybeSingle();
-    if (error) throw error;
-    if (!data) {
+    const snap = await db.collection('bookings')
+      .where('reference', '==', ref)
+      .limit(1)
+      .get();
+    if (snap.empty) {
       res.statusCode = 404;
       res.end(JSON.stringify({ error: 'Booking not found. Please check your reference code.' }));
       return;
     }
+    const data = Object.assign({ id: snap.docs[0].id }, snap.docs[0].data());
     if (body.email) {
       const guestEmail = String(data.guest_email || '').trim().toLowerCase();
       const providedEmail = String(body.email).trim().toLowerCase();

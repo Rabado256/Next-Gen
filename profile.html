@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile | NextGen Travel</title>
+    <!-- Open Graph / Social Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="My Profile - NextGen Travel">
+    <meta property="og:description" content="Manage your account settings, preferences, and personal information.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200&h=630">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="My Profile - NextGen Travel">
+    <meta name="twitter:description" content="Manage your account settings, preferences, and personal information.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200&h=630">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="js/theme.js"></script>
@@ -375,10 +386,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
     <script src="js/env.js"></script>
-    <script src="js/supabase-client.js"></script>
+    <script src="js/firebase-client.js"></script>
     <script src="js/api.js"></script>
     <script src="js/currency.js"></script>
     <script src="js/main.js"></script>
@@ -566,18 +579,19 @@
             return;
         }
         try {
-            const { data: { user }, error: authErr } = await SB.auth.getUser();
-            if (authErr) throw authErr;
+            const user = auth.currentUser;
+            if (!user) throw new Error('Not authenticated');
             // Reauthenticate with current password
             const currentPass = document.getElementById('current-password').value;
-            const { error: loginErr } = await SB.auth.signInWithPassword({ email: user.email, password: currentPass });
-            if (loginErr) {
+            try {
+                const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPass);
+                await user.reauthenticateWithCredential(cred);
+            } catch (reauthErr) {
                 errEl.textContent = 'Current password is incorrect';
                 errEl.style.display = 'block';
                 return;
             }
-            const { error: updateErr } = await SB.auth.updateUser({ password: newPass });
-            if (updateErr) throw updateErr;
+            await user.updatePassword(newPass);
             bootstrap.Modal.getInstance(document.getElementById('password-modal')).hide();
             document.getElementById('password-form').reset();
             showToast('Password updated successfully');
@@ -594,12 +608,12 @@
     });
 
     // Auth state listener
-    SB.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_IN') {
+    auth.onAuthStateChanged((user) => {
+        if (user) {
             document.getElementById('login-required').style.display = 'none';
             document.getElementById('profile-content').style.display = 'block';
             loadProfile();
-        } else if (event === 'SIGNED_OUT') {
+        } else {
             document.getElementById('login-required').style.display = 'block';
             document.getElementById('profile-content').style.display = 'none';
         }

@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.is_admin == true;
+    }
+
+    // Destinations — public read, admin write
+    match /destinations/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Trips — public read; anyone may update booked_count (seat booking),
+    // only admins may create/delete
+    match /trips/{id} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || request.auth != null;
+    }
+
+    // Profiles — owner read/write own, admin everything
+    match /profiles/{id} {
+      allow read: if request.auth != null && (request.auth.uid == id || isAdmin());
+      allow write: if request.auth != null && (request.auth.uid == id || isAdmin());
+    }
+
+    // Bookings — owner read/update own, admin everything. New bookings are
+    // created server-side by /api/confirm-booking (Admin SDK, bypasses rules).
+    match /bookings/{id} {
+      allow read: if request.auth != null && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      allow update: if request.auth != null && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Saved searches — owner CRUD
+    match /saved_searches/{id} {
+      allow read: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      allow update: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+    }
+
+    // Custom itineraries — public read, owner manage
+    match /itineraries/{id} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.user_id == request.auth.uid;
+    }
+
+    // Reviews — public read + create (no account required), admin manage
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Contact form — public create, admin read/manage
+    match /contacts/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Newsletter subscribers — public create, admin read/delete
+    match /newsletter_subscribers/{id} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // Audit logs — admin only
+    match /audit_logs/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Flight search cache — public (cached Duffel API responses only)
+    match /flight_caches/{id} {
+      allow read, write: if true;
+    }
+  }
+}

@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complete Your Booking | NextGen Travel</title>
+    <!-- Open Graph / Social Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Secure Checkout - NextGen Travel">
+    <meta property="og:description" content="Complete your booking securely and get ready for an unforgettable travel experience.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200&h=630">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Secure Checkout - NextGen Travel">
+    <meta name="twitter:description" content="Complete your booking securely and get ready for an unforgettable travel experience.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200&h=630">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <script src="js/theme.js"></script>
@@ -527,10 +538,12 @@
         </div>
     </footer>
 
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
     <script src="js/env.js"></script>
-    <script src="js/supabase-client.js"></script>
+    <script src="js/firebase-client.js"></script>
 <script src="js/api.js"></script>
     <script src="js/currency.js"></script>
     <script src="js/extras.js"></script>
@@ -1212,7 +1225,7 @@
             if (chargeAmountEl) chargeAmountEl.textContent = formatNGN((await usdToNgnKobo(totalAmount)) / 100);
             const errEl = document.getElementById('paystack-error');
             if (!paystackKey || paystackKey.includes('REPLACE_ME') || paystackKey.includes('xxxx')) {
-                errEl.textContent = 'Paystack is not configured yet — bookings will be saved without a live charge. Add your PAYSTACK_PUBLIC_KEY to js/config.js when ready.';
+                errEl.textContent = 'Paystack is not configured yet — bookings will be saved without a live charge. Add your PAYSTACK_PUBLIC_KEY to js/firebase-config.js when ready.';
                 errEl.style.display = 'block';
             } else {
                 errEl.style.display = 'none';

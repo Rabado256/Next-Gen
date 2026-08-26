@@ -1,11 +1,13 @@
 /* ============================================
-   NextGen Travel — API Client (Supabase)
+   NextGen Travel — API Client (Firebase)
    Centralized data access layer for all
-   database operations and authentication
+   database operations (Firestore) and
+   authentication (Firebase Auth)
    ============================================ */
 
-// Reference to globally initialized Supabase client
-const SB = window.supabaseClient;
+// References to the globally initialized Firebase clients
+const auth = window.auth;
+const db = window.db;
 
 // HTML-escape a string to prevent XSS injection
 function escapeHtml(str) {
@@ -14,12 +16,84 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, ch => map[ch]);
 }
 
-// Core API object wrapping all Supabase interactions
+// ---- Firestore helpers ----------------------------------------------------
+
+// Convert a DocumentSnapshot into a plain object with `id` preserved
+function docToObj(doc) {
+  if (!doc || !doc.exists) return null;
+  return Object.assign({}, doc.data() || {}, { id: doc.id });
+}
+
+// Convert a QuerySnapshot into an array of plain objects
+function qsToArray(qs) {
+  return qs.docs.map(docToObj).filter(Boolean);
+}
+
+// Sort an array of objects by a field (Firestore-compatible value ordering)
+function sortBy(arr, field, descending) {
+  return arr.slice().sort((a, b) => {
+    const av = a ? a[field] : '';
+    const bv = b ? b[field] : '';
+    if (av === bv) return 0;
+    const cmp = av > bv ? 1 : -1;
+    return descending ? -cmp : cmp;
+  });
+}
+
+const nowIso = () => new Date().toISOString();
+
+// Map Firebase Auth error codes to friendly messages
+function friendlyAuthError(err) {
+  const code = err && err.code;
+  const map = {
+    'auth/email-already-in-use': 'An account with this email already exists.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/weak-password': 'Password should be at least 6 characters.',
+    'auth/user-not-found': 'No account found with this email.',
+    'auth/wrong-password': 'Incorrect email or password.',
+    'auth/invalid-login-credentials': 'Incorrect email or password.',
+    'auth/too-many-requests': 'Too many attempts. Please try again later.',
+    'auth/network-request-failed': 'Network error. Please check your connection.',
+    'auth/popup-closed-by-user': 'Sign-in popup was closed before finishing.',
+    'auth/popup-blocked': 'Pop-up blocked. Please allow pop-ups for this site.',
+    'auth/unauthorized-domain': 'This domain is not authorized. Add it in Firebase Console → Authentication → Authorized domains.'
+  };
+  return map[code] || (err && err.message) || 'Authentication failed';
+}
+
+// Build a normalized user object from a Firebase user + Firestore profile
+async function buildUserData(user) {
+  if (!user) return null;
+  const fallback = {
+    id: user.uid,
+    email: user.email || '',
+    name: user.displayName || (user.email ? user.email.split('@')[0] : ''),
+    is_admin: false,
+    email_verified: !!user.emailVerified
+  };
+  try {
+    const doc = await db.collection('profiles').doc(user.uid).get();
+    const profile = docToObj(doc);
+    if (profile) return Object.assign({}, fallback, profile, { id: user.uid, email: user.email || profile.email || '' });
+  } catch (_) { /* profile read failure falls back to auth metadata */ }
+  return fallback;
+}
+
+// Core API object wrapping all Firebase interactions
 const api = {
-  // --- Token management (localStorage-based session) ---
+  // --- Token management (Firebase ID token, mirrored to localStorage) ---
   getToken() { return localStorage.getItem('nextgen_token'); },
   setToken(token) { localStorage.setItem('nextgen_token', token); },
   clearToken() { localStorage.removeItem('nextgen_token'); },
+
+  // Refresh the stored ID token from the current Firebase user (if signed in)
+  async refreshToken() {
+    const user = auth.currentUser;
+    if (!user) return null;
+    const token = await user.getIdToken().catch(() => null);
+    if (token) this.setToken(token);
+    return token;
+  },
 
   // Build headers with auth token if available
   headers() {
@@ -55,112 +129,104 @@ const api = {
 
   // ==================== AUTHENTICATION ====================
 
-  // Restore session on page load — checks Supabase for existing session
+  // Restore session on page load — checks Firebase for the current user
   async syncSession() {
-    const { data: { session } } = await SB.auth.getSession();
-    if (session) {
-      this.setToken(session.access_token);
-      const { data: { user }, error: getUserErr } = await SB.auth.getUser();
-      if (user && !getUserErr) {
-        let userData;
-        try {
-          // Fetch user profile from the profiles table
-          const { data: profile } = await SB.from('profiles').select('*').eq('id', user.id).maybeSingle();
-          userData = profile || { id: user.id, email: user.email, name: user.user_metadata?.name || '' };
-        } catch (_) {
-          // Fallback: keep existing localStorage data if query fails
-          userData = JSON.parse(localStorage.getItem('nextgen_user') || 'null') || { id: user.id, email: user.email, name: user.user_metadata?.name || '' };
-        }
+    const user = auth.currentUser;
+    if (user) {
+      const token = await user.getIdToken().catch(() => null);
+      if (token) this.setToken(token);
+      const userData = await buildUserData(user);
+      if (userData) {
         localStorage.setItem('nextgen_user', JSON.stringify(userData));
-        return { user: userData, token: session.access_token };
-      } else {
-        // getUser failed — clear stale cached session data
-        this.clearToken();
-        localStorage.removeItem('nextgen_user');
+        return { user: userData, token };
       }
+      // buildUserData returned null only for a missing user
+      this.clearToken();
+      localStorage.removeItem('nextgen_user');
     }
     return null;
   },
 
-  // Register a new user via Supabase Auth
+  // Register a new user via Firebase Auth
   async signup(name, email, password) {
-    const { data, error } = await SB.auth.signUp({
-      email,
-      password,
-      options: { data: { name } }
-    });
-    if (error) throw new Error(error.message);
-    if (data.user) {
-      // Store initial user data locally
-      const userData = {
-        id: data.user.id,
-        name,
-        email,
-        is_admin: false,
-        passport: '',
-        identity_card: '',
-        emergency: '',
-        emergency_name: '',
-        pref_hotel: false,
-        pref_food: 'none',
-        avatar_url: ''
-      };
-      localStorage.setItem('nextgen_user', JSON.stringify(userData));
-      if (data.session?.access_token) {
-        this.setToken(data.session.access_token);
-      }
-      return { user: userData, token: data.session?.access_token || null };
+    let user;
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      user = cred.user;
+    } catch (err) {
+      throw new Error(friendlyAuthError(err));
     }
-    throw new Error('Signup failed. Check if email confirmation is required.');
+    if (!user) throw new Error('Signup failed. Check if email confirmation is required.');
+    if (name) {
+      try { await user.updateProfile({ displayName: name }); } catch (_) { /* best-effort */ }
+    }
+    // Send verification email (best-effort — never blocks signup)
+    try { await user.sendEmailVerification(); } catch (_) { /* verification disabled */ }
+
+    const userData = {
+      id: user.uid,
+      name,
+      email,
+      is_admin: false,
+      email_verified: !!user.emailVerified,
+      passport: '',
+      identity_card: '',
+      emergency: '',
+      emergency_name: '',
+      pref_hotel: false,
+      pref_food: 'none',
+      avatar_url: ''
+    };
+    // Persist initial profile in Firestore
+    try {
+      await db.collection('profiles').doc(user.uid).set(Object.assign({}, userData, { created_at: nowIso() }), { merge: true });
+    } catch (_) { /* profile write is best-effort */ }
+    localStorage.setItem('nextgen_user', JSON.stringify(userData));
+    const token = await user.getIdToken().catch(() => null);
+    if (token) this.setToken(token);
+    return { user: userData, token };
   },
 
   // Authenticate existing user with email/password
   async login(email, password) {
-    const { data, error } = await SB.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-    if (data.user) {
-      let userData;
-      try {
-        // Try to fetch full profile from database
-        const { data: profile } = await SB.from('profiles').select('*').eq('id', data.user.id).maybeSingle();
-        if (profile) {
-          userData = profile;
-        } else {
-          // Profile doesn't exist yet — create it via upsert
-          const { data: newProfile } = await SB.from('profiles').upsert({
-            id: data.user.id,
-            email,
-            name: data.user.user_metadata?.name || email.split('@')[0],
-            is_admin: false
-          }).select().single().catch(() => ({ data: null }));
-          userData = newProfile || { id: data.user.id, email };
-        }
-      } catch (_) {
-        // Fallback to auth metadata
-        userData = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.name || email.split('@')[0],
-          is_admin: data.user.user_metadata?.is_admin === true
-        };
-      }
-      localStorage.setItem('nextgen_user', JSON.stringify(userData));
-      if (data.session?.access_token) {
-        this.setToken(data.session.access_token);
-      }
-      return { user: userData, token: data.session?.access_token };
+    let user;
+    try {
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      user = cred.user;
+    } catch (err) {
+      throw new Error(friendlyAuthError(err));
     }
-    throw new Error('Login failed');
+    if (!user) throw new Error('Login failed');
+
+    let userData = await buildUserData(user);
+    if (userData && !userData.created_at) {
+      // No profile yet — create one on first login
+      try {
+        const row = {
+          id: user.uid,
+          email: user.email,
+          name: user.displayName || (user.email ? user.email.split('@')[0] : ''),
+          is_admin: false,
+          created_at: nowIso()
+        };
+        await db.collection('profiles').doc(user.uid).set(row, { merge: true });
+        userData = Object.assign({}, userData, row);
+      } catch (_) { /* fall through to auth metadata */ }
+    }
+    localStorage.setItem('nextgen_user', JSON.stringify(userData));
+    const token = await user.getIdToken().catch(() => null);
+    if (token) this.setToken(token);
+    return { user: userData, token };
   },
 
-  // Sign out — clears Supabase session and local data
+  // Sign out — clears Firebase session and local data
   async logout() {
-    await SB.auth.signOut().catch(() => {});
-    // Belt-and-braces: wipe any Supabase-persisted session tokens so a page
+    await auth.signOut().catch(() => {});
+    // Belt-and-braces: wipe any Firebase-persisted session tokens so a page
     // reload immediately after logout can't silently restore the session.
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
-      if (key && (key.startsWith('sb-') || key === 'nextgen_token')) {
+      if (key && (key.startsWith('firebase:') || key === 'nextgen_token')) {
         localStorage.removeItem(key);
       }
     }
@@ -169,27 +235,19 @@ const api = {
     localStorage.removeItem('nextgen_wishlist');
   },
 
-  // Fetch full profile from database and update local cache
+  // Fetch full profile from Firestore and update local cache
   async getProfile() {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    try {
-      const { data: profile } = await SB.from('profiles').select('*').eq('id', user.id).maybeSingle();
-      if (profile) {
-        localStorage.setItem('nextgen_user', JSON.stringify(profile));
-        return profile;
-      }
-      return user;
-    } catch (_) {
-      return JSON.parse(localStorage.getItem('nextgen_user') || 'null') || user;
-    }
+    const profile = await buildUserData(user);
+    if (profile) localStorage.setItem('nextgen_user', JSON.stringify(profile));
+    return profile || user;
   },
 
   // Update profile fields (only provided fields are changed)
   async updateProfile(profile) {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    // Build update object with only the fields that were provided
     const updates = {};
     if (profile.name !== undefined) updates.name = profile.name;
     if (profile.passport !== undefined) updates.passport = profile.passport;
@@ -203,39 +261,32 @@ const api = {
     if (profile.avatar !== undefined) updates.avatar_url = profile.avatar;
     if (Object.keys(updates).length === 0) return {};
 
-    // Upsert to create or update the profile row
-    const { data, error } = await SB.from('profiles').upsert({
-      id: user.id,
-      email: user.email,
-      ...updates
-    }).select().single();
-    if (error) throw new Error(error.message);
+    // Merge into the profile document (creates it on first save)
+    await db.collection('profiles').doc(user.uid).set(updates, { merge: true });
     // Merge updated data with local cache
     const current = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
-    const merged = { ...current, ...data };
+    const merged = { ...current, ...updates };
     localStorage.setItem('nextgen_user', JSON.stringify(merged));
-    return data;
+    return merged;
   },
 
   // ==================== DESTINATIONS ====================
 
   // Fetch all active destinations
   async getDestinations() {
-    const { data, error } = await SB.from('destinations').select('*').eq('is_active', true).order('created_at');
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('destinations').where('is_active', '==', true).get();
+    return sortBy(qsToArray(qs), 'created_at', false);
   },
 
   // Fetch a single destination by ID (slug)
   async getDestination(id) {
-    const { data, error } = await SB.from('destinations').select('*').eq('id', id).single();
-    if (error) throw new Error(error.message);
-    return data;
+    const doc = await db.collection('destinations').doc(id).get();
+    return docToObj(doc);
   },
 
-  // Create a new destination (admin only via RLS)
+  // Create a new destination (admin only)
   async createDestination(destData) {
-    const { data, error } = await SB.from('destinations').insert({
+    const data = {
       id: destData.id,
       title: destData.title,
       edition: destData.edition || '',
@@ -245,15 +296,16 @@ const api = {
       vibe: destData.vibe || 'romantic',
       img: destData.img || '',
       steps: destData.steps || [],
-      is_active: true
-    }).select().single();
-    if (error) throw new Error(error.message);
+      is_active: true,
+      created_at: nowIso()
+    };
+    await db.collection('destinations').doc(data.id).set(data, { merge: true });
     return data;
   },
 
-  // Update an existing destination (admin only via RLS)
+  // Update an existing destination (admin only)
   async updateDestination(id, destData) {
-    const { data, error } = await SB.from('destinations').update({
+    const data = {
       title: destData.title,
       edition: destData.edition || '',
       description: destData.desc || destData.description || '',
@@ -262,65 +314,62 @@ const api = {
       vibe: destData.vibe || 'romantic',
       img: destData.img || '',
       steps: destData.steps || []
-    }).eq('id', id).select().single();
-    if (error) throw new Error(error.message);
-    return data;
+    };
+    await db.collection('destinations').doc(id).set(data, { merge: true });
+    return Object.assign({ id }, data);
   },
 
-  // Delete a destination (admin only via RLS)
+  // Delete a destination (admin only)
   async deleteDestination(id) {
-    const { error } = await SB.from('destinations').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    await db.collection('destinations').doc(id).delete();
   },
 
   // ==================== SAVED SEARCHES ====================
 
   // Save the current search criteria for the signed-in user
   async saveSearch(searchType, params) {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Please sign in to save a search');
-    const { data, error } = await SB.from('saved_searches').insert({
-      user_id: user.id,
+    const ref = await db.collection('saved_searches').add({
+      user_id: user.uid,
       search_type: searchType,
-      params
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return data;
+      params: params || {},
+      created_at: nowIso()
+    });
+    const doc = await ref.get();
+    return docToObj(doc);
   },
 
   // List the signed-in user's saved searches, newest first
   async getSavedSearches() {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    const { data, error } = await SB.from('saved_searches')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('saved_searches').where('user_id', '==', user.uid).get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
-  // Remove a saved search by id (RLS ensures ownership)
+  // Remove a saved search by id (security rules ensure ownership)
   async deleteSavedSearch(id) {
-    const { error } = await SB.from('saved_searches').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not authenticated');
+    await db.collection('saved_searches').doc(id).delete();
   },
 
   // ==================== BOOKINGS ====================
 
   // Get all bookings for the currently authenticated user
   async getMyBookings() {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    const { data, error } = await SB.from('bookings').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('bookings').where('user_id', '==', user.uid).get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
   // Save a booking via the serverless endpoint. Guest-safe: works with or
-  // without a session (the service-role key bypasses RLS) and attributes the
-  // booking to a signed-in user via the JWT when present.
+  // without a session (Firebase Admin bypasses security rules) and attributes
+  // the booking to a signed-in user via the Firebase ID token when present.
   async saveBooking(bookingType, data) {
+    await this.refreshToken();
     const res = await fetch('/api/confirm-booking', {
       method: 'POST',
       headers: this.headers(),
@@ -336,7 +385,7 @@ const api = {
 
   // Create a new booking with auto-generated reference code
   async createBooking(bookingData) {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     return this.saveBooking('general', {
       dest_id: bookingData.dest_id || '',
       guest_name: bookingData.name || (user ? user.email : ''),
@@ -375,23 +424,23 @@ const api = {
 
   // Get all reviews for a destination
   async getReviews(destId) {
-    const { data, error } = await SB.from('reviews').select('*').eq('dest_id', destId).order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('reviews').where('dest_id', '==', destId).get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
   // Submit a review for a destination (requires authentication)
   async submitReview(destId, rating, comment) {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    const { data, error } = await SB.from('reviews').insert({
+    const ref = await db.collection('reviews').add({
       dest_id: destId,
-      user_id: user.id,
+      user_id: user.uid,
       rating,
-      comment
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return data;
+      comment,
+      created_at: nowIso()
+    });
+    const doc = await ref.get();
+    return docToObj(doc);
   },
 
   async createPackageBooking(data) {
@@ -406,91 +455,91 @@ const api = {
 
   // Submit a contact form message
   async submitContact(name, email, subject, message) {
-    const { error } = await SB.from('contacts').insert({ name, email, subject, message });
-    if (error) throw new Error(error.message);
+    await db.collection('contacts').add({
+      name, email, subject, message,
+      is_read: false,
+      created_at: nowIso()
+    });
   },
 
   // Get all contact submissions (admin only)
   async getContacts() {
-    const { data, error } = await SB.from('contacts').select('*').order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('contacts').get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
   // Get a single contact message by ID
   async getContact(id) {
-    const { data, error } = await SB.from('contacts').select('*').eq('id', id).single();
-    if (error) throw new Error(error.message);
-    return data;
+    const doc = await db.collection('contacts').doc(id).get();
+    return docToObj(doc);
   },
 
   // Mark a contact message as read
   async markContactRead(id) {
-    const { error } = await SB.from('contacts').update({ is_read: true }).eq('id', id);
-    if (error) throw new Error(error.message);
+    await db.collection('contacts').doc(id).set({ is_read: true }, { merge: true });
   },
 
   // Delete a contact message
   async deleteContact(id) {
-    const { error } = await SB.from('contacts').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    await db.collection('contacts').doc(id).delete();
   },
 
   // ==================== NEWSLETTER ====================
 
-  // Subscribe an email to the newsletter (duplicate emails are silently ignored — code 23505)
+  // Subscribe an email to the newsletter (duplicate emails are silently ignored)
   async subscribe(email) {
-    const { error } = await SB.from('newsletter_subscribers').insert({ email });
-    if (error && error.code === '23505') return; // Unique violation = already subscribed
-    if (error) throw new Error(error.message);
+    const existing = await db.collection('newsletter_subscribers')
+      .where('email', '==', email.trim().toLowerCase()).limit(1).get();
+    if (!existing.empty) return; // Already subscribed
+    await db.collection('newsletter_subscribers').add({
+      email: email.trim().toLowerCase(),
+      created_at: nowIso()
+    });
   },
 
   // Get all newsletter subscribers (admin only)
   async getNewsletterSubscribers() {
-    const { data, error } = await SB.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('newsletter_subscribers').get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
   // ==================== CUSTOM ITINERARIES ====================
 
   // Get all itineraries for the current user
   async getItineraries() {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) return [];
-    const { data, error } = await SB.from('itineraries').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('itineraries').where('user_id', '==', user.uid).get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
   // Create a new custom itinerary with day-by-day activities
   async createItinerary(data) {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    const { data: result, error } = await SB.from('itineraries').insert({
-      user_id: user.id,
+    const ref = await db.collection('itineraries').add({
+      user_id: user.uid,
       title: data.title || '',
       description: data.description || '',
-      days: data.days || []
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return result;
+      days: data.days || [],
+      created_at: nowIso()
+    });
+    const doc = await ref.get();
+    return docToObj(doc);
   },
 
   // Update an existing itinerary
   async updateItinerary(id, data) {
-    const { error } = await SB.from('itineraries').update({
+    await db.collection('itineraries').doc(id).set({
       title: data.title,
       description: data.description,
       days: data.days
-    }).eq('id', id);
-    if (error) throw new Error(error.message);
+    }, { merge: true });
   },
 
   // Delete an itinerary
   async deleteItinerary(id) {
-    const { error } = await SB.from('itineraries').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    await db.collection('itineraries').doc(id).delete();
   },
 
   // ==================== PAYMENTS (Paystack) ====================
@@ -509,7 +558,7 @@ const api = {
     return res.json();
   },
 
-  // Confirm booking in Supabase after Paystack payment succeeds
+  // Confirm booking in Firestore after Paystack payment succeeds
   async confirmPayment(data) {
     const booking = await this.saveBooking('general', {
       dest_id: data.dest_id,
@@ -536,30 +585,25 @@ const api = {
 
   // Cancel a booking by reference — updates status to 'cancelled'
   async cancelBooking(ref) {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    // Prefer the server-side RPC: ownership-checked and records the state
-    // transition in status_history. Falls back to a direct update for
-    // databases that predate the cancel_booking function.
-    try {
-      const { data, error } = await SB.rpc('cancel_booking', { p_ref: ref });
-      if (error) throw error;
-      if (data && data.error) throw new Error(data.error);
-      return data;
-    } catch (rpcErr) {
-      if (String(rpcErr.message).toLowerCase().includes('could not find the function')) {
-        const { data, error } = await SB.from('bookings')
-          .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
-          .eq('reference', ref)
-          .eq('user_id', user.id)
-          .select()
-          .single();
-        if (error) throw new Error(error.message);
-        if (!data) throw new Error('Booking not found');
-        return data;
-      }
-      throw rpcErr;
-    }
+    const qs = await db.collection('bookings')
+      .where('reference', '==', ref)
+      .where('user_id', '==', user.uid)
+      .limit(1)
+      .get();
+    if (qs.empty) throw new Error('Booking not found');
+    const doc = qs.docs[0];
+    const data = docToObj(doc);
+    if (data.status === 'cancelled') throw new Error('Booking is already cancelled');
+    const history = Array.isArray(data.status_history) ? data.status_history : [];
+    const now = nowIso();
+    await db.collection('bookings').doc(doc.id).set({
+      status: 'cancelled',
+      cancelled_at: now,
+      status_history: [...history, { status: 'cancelled', at: now }]
+    }, { merge: true });
+    return Object.assign({}, data, { status: 'cancelled', cancelled_at: now });
   },
 
   // Fetch a single booking by its reference code (public lookup).
@@ -579,94 +623,110 @@ const api = {
 
   // Update booking date (modify flow)
   async updateBookingDate(ref, newDate) {
-    const { data: { user } } = await SB.auth.getUser();
+    const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
-    const { data, error } = await SB.from('bookings')
-      .update({ booking_date: newDate })
-      .eq('reference', ref)
-      .eq('user_id', user.id)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error('Booking not found');
-    return data;
+    const qs = await db.collection('bookings')
+      .where('reference', '==', ref)
+      .where('user_id', '==', user.uid)
+      .limit(1)
+      .get();
+    if (qs.empty) throw new Error('Booking not found');
+    const doc = qs.docs[0];
+    await db.collection('bookings').doc(doc.id).set({ booking_date: newDate }, { merge: true });
+    return Object.assign({ id: doc.id }, doc.data(), { booking_date: newDate });
   },
 
   // ==================== AVAILABILITY ====================
 
-  // Get bookings for the current user
+  // Get bookings for the current user (by email OR user id)
   async getUserBookings() {
-    const user = JSON.parse(localStorage.getItem('nextgen_user'));
+    const user = JSON.parse(localStorage.getItem('nextgen_user') || 'null');
     if (!user) return [];
-    const { data, error } = await SB.from('bookings')
-      .select('*')
-      .or(`guest_email.eq.${user.email},user_id.eq.${user.id}`)
-      .order('created_at', { ascending: false });
-    if (error) return [];
-    return data || [];
+    try {
+      let results = [];
+      if (user.email) {
+        const byEmail = await db.collection('bookings').where('guest_email', '==', user.email).get();
+        results = results.concat(qsToArray(byEmail));
+      }
+      if (user.id) {
+        const byUid = await db.collection('bookings').where('user_id', '==', user.id).get();
+        results = results.concat(qsToArray(byUid));
+      }
+      const seen = new Set();
+      const deduped = results.filter(b => {
+        const key = b.id || b.reference;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      return sortBy(deduped, 'created_at', true);
+    } catch (_) {
+      return [];
+    }
   },
 
   // Get booked dates for a destination (aggregated guest counts)
   async getAvailability(destId) {
-    const { data, error } = await SB.from('bookings').select('booking_date, guests').eq('dest_id', destId).eq('status', 'confirmed');
-    if (error) return { dates: [] };
-    const grouped = {};
-    (data || []).forEach(b => {
-      if (b.booking_date) {
-        grouped[b.booking_date] = (grouped[b.booking_date] || 0) + (b.guests || 1);
-      }
-    });
-    return {
-      dates: Object.entries(grouped).map(([date, count]) => ({ date, booked: count }))
-    };
+    try {
+      const qs = await db.collection('bookings')
+        .where('dest_id', '==', destId)
+        .where('status', '==', 'confirmed')
+        .get();
+      const grouped = {};
+      qsToArray(qs).forEach(b => {
+        if (b.booking_date) {
+          grouped[b.booking_date] = (grouped[b.booking_date] || 0) + (b.guests || 1);
+        }
+      });
+      return {
+        dates: Object.entries(grouped).map(([date, count]) => ({ date, booked: count }))
+      };
+    } catch (_) {
+      return { dates: [] };
+    }
   },
 
   // ==================== TRIPS ====================
 
   // Get all scheduled trips
   async getTrips() {
-    const { data, error } = await SB.from('trips').select('*').order('departure_date');
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('trips').get();
+    return sortBy(qsToArray(qs), 'departure_date', false);
   },
 
   // Get a single trip by ID
   async getTrip(id) {
-    const { data, error } = await SB.from('trips').select('*').eq('id', id).single();
-    if (error) throw new Error(error.message);
-    return data;
+    const doc = await db.collection('trips').doc(id).get();
+    return docToObj(doc);
   },
 
-  // Check trip availability for a route — queries active trips matching from/to locations
-  // Returns trips with calculated available_spots (max_capacity - booked_count)
+  // Check trip availability for a route — returns trips with calculated
+  // available_spots (max_capacity - booked_count), excluding fully booked ones
   async checkTripAvailability(fromLocation, toLocation, date) {
     try {
-      let query = SB.from('trips')
-        .select('*')
-        .eq('status', 'active');
+      const qs = await db.collection('trips').where('status', '==', 'active').get();
+      let trips = qsToArray(qs);
 
       if (fromLocation) {
-        query = query.ilike('from_location', `%${fromLocation}%`);
+        const needle = String(fromLocation).toLowerCase();
+        trips = trips.filter(t => String(t.from_location || '').toLowerCase().includes(needle));
       }
       if (toLocation) {
-        query = query.ilike('to_location', `%${toLocation}%`);
+        const needle = String(toLocation).toLowerCase();
+        trips = trips.filter(t => String(t.to_location || '').toLowerCase().includes(needle));
       }
       if (date) {
-        query = query.eq('departure_date', date);
+        trips = trips.filter(t => t.departure_date === date);
       }
 
-      const { data, error } = await query.order('departure_date');
-      if (error) throw new Error(error.message);
-
-      // Calculate remaining spots and filter out fully booked trips
-      const tripsWithSpots = (data || [])
+      const tripsWithSpots = trips
         .map(t => ({
           ...t,
           available_spots: Math.max(0, (t.max_capacity || 0) - (t.booked_count || 0))
         }))
         .filter(t => t.available_spots > 0);
 
-      return tripsWithSpots;
+      return sortBy(tripsWithSpots, 'departure_date', false);
     } catch (err) {
       console.warn('[NextGen] checkTripAvailability failed:', err.message);
       return [];
@@ -676,7 +736,7 @@ const api = {
   // Create a new trip schedule (admin only)
   async createTrip(tripData) {
     const capacity = Math.max(1, parseInt(tripData.max_capacity) || 20);
-    const { data, error } = await SB.from('trips').insert({
+    const ref = await db.collection('trips').add({
       from_location: tripData.from_location,
       to_location: tripData.to_location,
       destination_id: tripData.destination_id || '',
@@ -684,20 +744,18 @@ const api = {
       departure_time: tripData.departure_time || '',
       max_capacity: capacity,
       booked_count: tripData.booked_count || 0,
-      status: 'active'
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return data;
+      status: 'active',
+      created_at: nowIso()
+    });
+    const doc = await ref.get();
+    return docToObj(doc);
   },
 
   // Update an existing trip (admin only)
   async updateTrip(id, tripData) {
     // Check capacity if max_capacity is being reduced
     if (tripData.max_capacity !== undefined) {
-      const { data: current } = await SB.from('trips')
-        .select('booked_count')
-        .eq('id', id)
-        .single();
+      const current = await this.getTrip(id);
       if (current && tripData.max_capacity < (current.booked_count || 0)) {
         throw new Error(`Capacity cannot be less than ${current.booked_count} existing booking(s)`);
       }
@@ -711,56 +769,52 @@ const api = {
     if (tripData.max_capacity !== undefined) updates.max_capacity = Math.max(1, tripData.max_capacity);
     if (tripData.booked_count !== undefined) updates.booked_count = tripData.booked_count;
     if (tripData.status !== undefined) updates.status = tripData.status;
-    const { error } = await SB.from('trips').update(updates).eq('id', id);
-    if (error) throw new Error(error.message);
+    await db.collection('trips').doc(id).set(updates, { merge: true });
   },
 
-  // Book a seat on a trip — validates capacity before incrementing booked_count
+  // Book a seat on a trip — transactionally validates capacity before incrementing
   async bookTrip(tripId, seatsToBook = 1) {
-    // Fetch current trip state to check capacity
-    const { data: trip, error: fetchErr } = await SB.from('trips')
-      .select('max_capacity, booked_count, status')
-      .eq('id', tripId)
-      .single();
-    if (fetchErr) throw new Error(fetchErr.message);
-    if (!trip) throw new Error('Trip not found');
-    if (trip.status !== 'active') throw new Error('Trip is not active');
-
-    const available = (trip.max_capacity || 0) - (trip.booked_count || 0);
-    if (available < seatsToBook) {
-      throw new Error(`Only ${available} seat${available !== 1 ? 's' : ''} available on this trip`);
+    const ref = db.collection('trips').doc(tripId);
+    try {
+      await db.runTransaction(async (t) => {
+        const snap = await t.get(ref);
+        if (!snap.exists) throw new Error('Trip not found');
+        const trip = snap.data();
+        if (trip.status !== 'active') throw new Error('Trip is not active');
+        const available = (trip.max_capacity || 0) - (trip.booked_count || 0);
+        if (available < seatsToBook) {
+          throw new Error(`Only ${available} seat${available !== 1 ? 's' : ''} available on this trip`);
+        }
+        t.update(ref, { booked_count: (trip.booked_count || 0) + seatsToBook });
+      });
+    } catch (err) {
+      if (err && err.message && String(err.message).indexOf('Trip') !== -1) throw err;
+      throw new Error('Trip is now fully booked. Please choose another trip.');
     }
-
-    // Atomically increment booked_count only if capacity allows
-    const { error: updateErr } = await SB.from('trips')
-      .update({ booked_count: (trip.booked_count || 0) + seatsToBook })
-      .eq('id', tripId)
-      .lte('booked_count', trip.max_capacity - seatsToBook);
-    if (updateErr) throw new Error('Trip is now fully booked. Please choose another trip.');
     return true;
   },
 
   // Release seats on a trip (e.g. on booking cancellation)
   async releaseTripSeats(tripId, seatsToRelease = 1) {
-    const { data: trip, error: fetchErr } = await SB.from('trips')
-      .select('booked_count')
-      .eq('id', tripId)
-      .single();
-    if (fetchErr) throw new Error(fetchErr.message);
-    if (!trip) throw new Error('Trip not found');
-
-    const newCount = Math.max(0, (trip.booked_count || 0) - seatsToRelease);
-    const { error } = await SB.from('trips')
-      .update({ booked_count: newCount })
-      .eq('id', tripId);
-    if (error) throw new Error(error.message);
+    const ref = db.collection('trips').doc(tripId);
+    try {
+      await db.runTransaction(async (t) => {
+        const snap = await t.get(ref);
+        if (!snap.exists) throw new Error('Trip not found');
+        const trip = snap.data();
+        const newCount = Math.max(0, (trip.booked_count || 0) - seatsToRelease);
+        t.update(ref, { booked_count: newCount });
+      });
+    } catch (err) {
+      if (err && err.message && String(err.message).indexOf('Trip') !== -1) throw err;
+      throw new Error('Could not release seats');
+    }
     return true;
   },
 
   // Delete a trip (admin only)
   async deleteTrip(id) {
-    const { error } = await SB.from('trips').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    await db.collection('trips').doc(id).delete();
   },
 
   // ==================== ADMIN DASHBOARD ====================
@@ -768,30 +822,26 @@ const api = {
   // Get aggregate statistics for the admin dashboard
   async getAdminStats() {
     try {
-      const { count: total_bookings } = await SB.from('bookings').select('*', { count: 'exact', head: true });
-      let total_users = 0;
-      try {
-        const result = await SB.from('profiles').select('id', { count: 'exact', head: true });
-        total_users = result.count || 0;
-      } catch (_) {
-        total_users = 1;
-      }
-      const { count: total_contacts } = await SB.from('contacts').select('*', { count: 'exact', head: true });
-      const { count: total_reviews } = await SB.from('reviews').select('*', { count: 'exact', head: true });
-      const { count: total_newsletter } = await SB.from('newsletter_subscribers').select('*', { count: 'exact', head: true });
-      const { data: revenueData } = await SB.from('bookings').select('total');
-      const total_revenue = (revenueData || []).reduce((sum, b) => sum + parseFloat(b.total || 0), 0);
+      const [bookings, users, contacts, reviews, newsletter] = await Promise.all([
+        db.collection('bookings').get(),
+        db.collection('profiles').get(),
+        db.collection('contacts').get(),
+        db.collection('reviews').get(),
+        db.collection('newsletter_subscribers').get()
+      ]);
+      const bookingList = qsToArray(bookings);
+      const total_revenue = bookingList.reduce((sum, b) => sum + parseFloat(b.total || b.total_amount || 0), 0);
       return {
-        total_bookings: total_bookings || 0,
-        total_users,
-        total_contacts: total_contacts || 0,
-        total_reviews: total_reviews || 0,
-        total_newsletter: total_newsletter || 0,
+        total_bookings: bookings.size || 0,
+        total_users: users.size || 0,
+        total_contacts: contacts.size || 0,
+        total_reviews: reviews.size || 0,
+        total_newsletter: newsletter.size || 0,
         total_revenue
       };
     } catch (_) {
       return {
-        total_bookings: 0, total_users: 1, total_contacts: 0,
+        total_bookings: 0, total_users: 0, total_contacts: 0,
         total_reviews: 0, total_newsletter: 0, total_revenue: 0
       };
     }
@@ -799,49 +849,47 @@ const api = {
 
   // Get the 10 most recent bookings for the dashboard
   async getAdminRecentBookings() {
-    const { data, error } = await SB.from('bookings').select('*').order('created_at', { ascending: false }).limit(10);
-    if (error) return [];
-    return data || [];
+    try {
+      const qs = await db.collection('bookings').get();
+      return sortBy(qsToArray(qs), 'created_at', true).slice(0, 10);
+    } catch (_) {
+      return [];
+    }
   },
 
   // Get the 10 most recent contact submissions for the dashboard
   async getAdminRecentContacts() {
-    const { data, error } = await SB.from('contacts').select('*').order('created_at', { ascending: false }).limit(10);
-    if (error) return [];
-    return data || [];
+    try {
+      const qs = await db.collection('contacts').get();
+      return sortBy(qsToArray(qs), 'created_at', true).slice(0, 10);
+    } catch (_) {
+      return [];
+    }
   },
 
   // Get all bookings (admin only)
   async getAllBookings() {
-    const { data, error } = await SB.from('bookings').select('*').order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('bookings').get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
   // Update the status of a booking (confirmed / pending / cancelled / completed)
   // Records the transition in status_history and stamps the matching timestamp.
   async updateBookingStatus(id, status) {
-    const { data: current, error: fetchErr } = await SB.from('bookings')
-      .select('status_history')
-      .eq('id', id)
-      .maybeSingle();
-    if (fetchErr) throw new Error(fetchErr.message);
-
+    const doc = await db.collection('bookings').doc(id).get();
+    const current = docToObj(doc) || {};
     const updates = { status };
-    if (status === 'confirmed') updates.confirmed_at = new Date().toISOString();
-    if (status === 'completed') updates.completed_at = new Date().toISOString();
-    if (status === 'cancelled') updates.cancelled_at = new Date().toISOString();
-    if (current) {
-      const history = Array.isArray(current.status_history) ? current.status_history : [];
-      updates.status_history = [...history, { status, at: new Date().toISOString() }];
-    }
-
-    const { error } = await SB.from('bookings').update(updates).eq('id', id);
-    if (error) throw new Error(error.message);
+    if (status === 'confirmed') updates.confirmed_at = nowIso();
+    if (status === 'completed') updates.completed_at = nowIso();
+    if (status === 'cancelled') updates.cancelled_at = nowIso();
+    const history = Array.isArray(current.status_history) ? current.status_history : [];
+    updates.status_history = [...history, { status, at: nowIso() }];
+    await db.collection('bookings').doc(id).set(updates, { merge: true });
   },
 
-  // Server-side admin verification — the DB is the source of truth for is_admin
+  // Server-side admin verification — Firestore is the source of truth for is_admin
   async adminVerify() {
+    await this.refreshToken();
     const res = await fetch('/api/admin-verify', {
       method: 'POST',
       headers: this.headers(),
@@ -856,6 +904,7 @@ const api = {
   // Auto-complete bookings whose travel date has passed (server-side transition)
   async completeExpiredBookings() {
     try {
+      await this.refreshToken();
       const res = await fetch('/api/complete-bookings', {
         method: 'POST',
         headers: this.headers(),
@@ -871,16 +920,14 @@ const api = {
 
   // Delete a booking (admin only)
   async deleteBooking(id) {
-    const { error } = await SB.from('bookings').delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    await db.collection('bookings').doc(id).delete();
   },
 
   // Get all registered users/profiles (admin only)
   async getAllUsers() {
     try {
-      const { data, error } = await SB.from('profiles').select('*').order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return data || [];
+      const qs = await db.collection('profiles').get();
+      return sortBy(qsToArray(qs), 'created_at', true);
     } catch (_) {
       return [];
     }
@@ -889,9 +936,8 @@ const api = {
   // Get all audit log entries (admin only)
   async getAuditLogs() {
     try {
-      const { data, error } = await SB.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100);
-      if (error) throw new Error(error.message);
-      return data || [];
+      const qs = await db.collection('audit_logs').get();
+      return sortBy(qsToArray(qs), 'created_at', true).slice(0, 100);
     } catch (_) {
       return [];
     }
@@ -899,23 +945,37 @@ const api = {
 
   // Get ALL destinations including inactive ones (admin only)
   async getAdminDestinations() {
-    const { data, error } = await SB.from('destinations').select('*').order('created_at');
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('destinations').get();
+    return sortBy(qsToArray(qs), 'created_at', false);
   },
 
   // Get all reviews (admin only)
   async getAllReviews() {
-    const { data, error } = await SB.from('reviews').select('*').order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('reviews').get();
+    return sortBy(qsToArray(qs), 'created_at', true);
+  },
+
+  // Get a single booking by id
+  async getBooking(id) {
+    const doc = await db.collection('bookings').doc(id).get();
+    return docToObj(doc);
+  },
+
+  // Get a single profile by id (admin only)
+  async getProfileById(id) {
+    const doc = await db.collection('profiles').doc(id).get();
+    return docToObj(doc);
+  },
+
+  // Update a profile by id (admin only)
+  async updateProfileById(id, updates) {
+    await db.collection('profiles').doc(id).set(updates, { merge: true });
   },
 
   // Get all custom itineraries (admin only)
   async getAllItineraries() {
-    const { data, error } = await SB.from('itineraries').select('*').order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data || [];
+    const qs = await db.collection('itineraries').get();
+    return sortBy(qsToArray(qs), 'created_at', true);
   },
 
 };

@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile | NextGen Travel</title>
+    <!-- Open Graph / Social Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Dashboard Profile - NextGen Travel">
+    <meta property="og:description" content="View and update your dashboard profile and account preferences.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200&h=630">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dashboard Profile - NextGen Travel">
+    <meta name="twitter:description" content="View and update your dashboard profile and account preferences.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&q=80&w=1200&h=630">
     <script src="js/theme.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -196,10 +207,12 @@
 
 <div id="toast" style="position:fixed;bottom:2rem;right:2rem;background:#111;color:#d4a373;padding:0.75rem 1.5rem;border-radius:12px;font-size:0.85rem;font-weight:600;display:none;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
 <script src="js/env.js"></script>
-<script src="js/supabase-client.js"></script>
+<script src="js/firebase-client.js"></script>
 <script>
     let currentUser = null;
 
@@ -223,12 +236,15 @@
 
     async function loadProfile() {
         try {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.href = 'index.html'; return; }
+            const user = auth.currentUser;
+            if (!user) { window.location.href = 'index.html'; return; }
 
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
-            currentUser = profile || { id: user.id, email: user.email, name: user.user_metadata?.name || '' };
+            let profile = null;
+            try {
+                const doc = await db.collection('profiles').doc(user.uid).get();
+                if (doc.exists) profile = Object.assign({}, doc.data(), { id: doc.id });
+            } catch (_) {}
+            currentUser = profile || { id: user.uid, email: user.email, name: user.displayName || '' };
 
             const fullName = (currentUser.name || currentUser.email || 'User').split(' ');
             const first = fullName[0] || '';
@@ -244,7 +260,7 @@
 
             const avatarEl = document.querySelector('.profile-card-avatar');
             if (avatarEl) {
-                avatarEl.src = user.avatar_url || user.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23d4a373%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2215%22 fill=%22%23fff%22/%3E%3Cpath d=%22M20 80 Q50 55 80 80%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3C/svg%3E';
+                avatarEl.src = user.photoURL || currentUser.avatar_url || currentUser.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23d4a373%22/%3E%3Ccircle cx=%2250%22 cy=%2235%22 r=%2215%22 fill=%22%23fff%22/%3E%3Cpath d=%22M20 80 Q50 55 80 80%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%226%22/%3E%3C/svg%3E';
             }
 
             document.getElementById('val-firstname').textContent = first || 'Natashia';
@@ -258,7 +274,7 @@
     }
 
     async function logout() {
-        await supabaseClient.auth.signOut();
+        await auth.signOut();
         localStorage.removeItem('nextgen_user');
         localStorage.removeItem('nextgen_token');
         window.location.href = 'index.html';

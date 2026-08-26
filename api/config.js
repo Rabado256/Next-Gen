@@ -8,7 +8,11 @@ module.exports = function handler(req, res) {
   res.statusCode = 200;
   res.end(JSON.stringify({
     paystack_public_key: process.env.PAYSTACK_PUBLIC_KEY || '',
-    supabase_url: process.env.SUPABASE_URL || '',
-    supabase_anon_key: process.env.SUPABASE_ANON_KEY || ''
+    firebase_api_key: process.env.FIREBASE_API_KEY || '',
+    firebase_auth_domain: process.env.FIREBASE_AUTH_DOMAIN || '',
+    firebase_project_id: process.env.FIREBASE_PROJECT_ID || '',
+    firebase_storage_bucket: process.env.FIREBASE_STORAGE_BUCKET || '',
+    firebase_messaging_sender_id: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+    firebase_app_id: process.env.FIREBASE_APP_ID || ''
   }));
 };

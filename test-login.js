@@ -1,96 +1,56 @@
 /**
  * NextGen Travel — Admin Login Diagnostic Script
  *
- * Tests whether the admin user already exists in Supabase Auth
+ * Tests whether the admin user already exists in Firebase Auth
  * and attempts various password patterns. Useful for recovering
  * a forgotten admin password.
  *
  * Usage:
- *   SUPABASE_URL=https://xxx.supabase.co SUPABASE_ANON_KEY=xxx ADMIN_EMAIL=admin@example.com node test-login.js
+ *   ADMIN_EMAIL=admin@example.com node test-login.js
+ *
+ * Requires Firebase Admin credentials in env (see firebase-admin.js):
+ *   FIREBASE_SERVICE_ACCOUNT (JSON), GOOGLE_APPLICATION_CREDENTIALS (path),
+ *   or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY.
  *
  * Or create a .env file (gitignored) with these variables.
  */
 
 require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+const { getAdmin } = require('./firebase-admin');
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !ADMIN_EMAIL) {
-  console.error('Missing required environment variables.');
-  console.error('Required: SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_EMAIL');
+if (!ADMIN_EMAIL) {
+  console.error('Missing required environment variable: ADMIN_EMAIL');
+  console.error('Set it as an env var or add it to a .env file.');
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const TEST_PASSWORDS = ['admin123!', 'password', 'admin123', 'Password123!'];
-
 async function main() {
+  const admin = getAdmin();
   console.log('=== Admin login diagnostic ===\n');
   console.log('Email:', ADMIN_EMAIL, '\n');
 
-  console.log('Trying signup to check if user exists...');
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-    email: ADMIN_EMAIL,
-    password: TEST_PASSWORDS[0],
-    options: { data: { name: 'Admin' } }
-  });
-
-  if (signUpError) {
-    if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists') || signUpError.message.includes('User already')) {
-      console.log('  => User already EXISTS in auth.users!');
-      console.log('  Error:', signUpError.message);
-
-      for (const pw of TEST_PASSWORDS) {
-        console.log(`\nTrying login with "${pw}"...`);
-        const { error: e } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password: pw });
-        if (e) {
-          console.log(`  FAILED - ${e.message}`);
-        } else {
-          console.log(`  SUCCESS!`);
-          process.exit(0);
-        }
-      }
-
-      console.log('\n=== CONCLUSION ===');
-      console.log('User exists but password is not matching known patterns.');
-      console.log('Best approach: go to Supabase Dashboard > Authentication > Users,');
-      console.log('find the user, and reset their password or delete and recreate.');
-    } else {
-      console.log('  Signup error:', signUpError.message);
-      console.log('  Full error:', JSON.stringify(signUpError));
-    }
-  } else {
-    console.log('  Signup SUCCEEDED (user was not previously created)');
-    console.log('  User:', signUpData.user?.email);
-    console.log('  Has session:', signUpData.session ? 'YES' : 'NO');
-
-    if (signUpData.session) {
-      const { error: upErr } = await supabase
-        .from('profiles')
-        .update({ is_admin: true })
-        .eq('id', signUpData.user.id);
-
-      if (upErr) {
-        console.log('  Update admin error:', upErr.message);
-        const { error: upsErr } = await supabase
-          .from('profiles')
-          .upsert({ id: signUpData.user.id, email: ADMIN_EMAIL, is_admin: true, name: 'Admin' });
-
-        if (upsErr) console.log('  Upsert error:', upsErr.message);
-        else console.log('  Admin status set via upsert!');
-      } else {
-        console.log('  Admin status updated!');
-      }
-    } else {
-      console.log('  No session - email confirmation required.');
-      console.log('  Run this SQL in Supabase SQL Editor:');
-      console.log(`  UPDATE auth.users SET email_confirmed_at = NOW() WHERE email = '${ADMIN_EMAIL}';`);
-    }
+  console.log('Checking if the user exists in Firebase Auth...');
+  try {
+    const user = await admin.auth().getUserByEmail(ADMIN_EMAIL);
+    console.log('  => User EXISTS (uid: ' + user.uid + ')');
+    console.log('  Email verified:', user.emailVerified);
+    console.log('  Disabled:', user.disabled);
+  } catch (e) {
+    console.log('  => User does NOT exist.');
+    console.log('  Error:', e.code || e.message);
+    console.log('\n  Create them with:');
+    console.log('  ADMIN_EMAIL=' + ADMIN_EMAIL + ' ADMIN_PASSWORD=<password> node create-admin.js');
+    process.exit(0);
   }
+
+  console.log('\n=== CONCLUSION ===');
+  console.log('Firebase Admin can inspect but not test passwords (Firebase never');
+  console.log('stores passwords in a recoverable form). To reset:');
+  console.log('  Firebase Console > Authentication > Users > find the user >');
+  console.log('  "Reset password" (sends a reset email), or delete + recreate');
+  console.log('  via create-admin.js.');
 
   process.exit(0);
 }

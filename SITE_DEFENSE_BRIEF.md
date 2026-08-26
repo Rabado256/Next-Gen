@@ -70,7 +70,7 @@ A pure-logic classifier shared across 4 pages, with a **unit test suite** (`test
 
 ### c) Checkout & Payments (`checkout.html`)
 Two-step flow: traveler details → Paystack pop-up. On submit:
-1. `resolvePaystackKey()` fetches `/api/config` (falls back to the hardcoded public key in `js/config.js`).
+1. `resolvePaystackKey()` fetches `/api/config` (falls back to the hardcoded public key in `js/firebase-config.js`).
 2. The USD order total is converted to NGN via live rates (`usdToNgnKobo()`), then `PaystackPop.setup({ key, email, amount, currency: 'NGN', ref })` opens the Paystack pop-up (amount in kobo).
 3. On success Paystack returns a reference; `api.paystackVerify(reference)` → `/api/paystack-verify` (Vercel fn) re-verifies the charge server-side with the **secret** key before any booking is saved.
 4. On success, one of **five** booking branches runs (flight / hotel / package / visa / destination), each generating its own reference prefix (`FL-`, `HT-`, `PK-`, `VS-`, `NG-`).
@@ -106,8 +106,8 @@ Gate = `profiles.is_admin` (checked via the auth session, backed by RLS so the a
 
 ## 6. Known weak spots (be honest, have a plan)
 
-- The `admin.html` gate relies on the JWT being for an admin user; there's no separate admin session — the defense is RLS on the data layer, which is sound.
-- `jwtSub` in `confirm-booking.js` decodes without signature verification — fine for *attribution*, but don't describe it as auth.
+- The `admin.html` gate relies on the Firebase ID token belonging to a user whose Firestore profile has `is_admin: true`; the check is re-verified server-side (`/api/admin-verify`) — never trust the client copy in localStorage.
+- Firebase ID tokens are verified with the Admin SDK (`verifyIdToken`) on every sensitive endpoint — no unverified JWT decoding remains.
 - Mock flight prices are deterministic, not live market prices.
-- `js/config.js` contains real keys but is gitignored (there's a `config.example.js`); if this repo ever goes public, **rotate the anon key** (anon keys are low-risk, but still).
+- `js/firebase-config.js` contains the web config (public) but is gitignored; the real secret — the service account — lives only in server env vars. If this repo ever goes public, regenerate the service account in Firebase Console.
 - Flight search requires the airport to resolve in the mock's airport table; unknown routes still produce a result via a fallback code path.
