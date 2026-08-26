@@ -9,17 +9,10 @@
     "vercel-build": "echo 'Static build complete'",
     "test": "node tests/document-detection.test.js && node tests/api-client.test.js && node tests/security.test.js",
     "test:admin": "node create-admin.js",
-    "seed": "node scripts/seed.js",
-    "migrate": "node scripts/migrate-supabase-to-firebase.js",
-    "fb:login": "firebase login",
-    "fb:deploy-rules": "firebase deploy --only firestore:rules"
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",
-    "dotenv": "^17.4.2",
-    "firebase-admin": "^12.7.0"
-  },
-  "devDependencies": {
-    "firebase-tools": "^15.26.0"
+    "dotenv": "^17.4.2"
   }
 }
