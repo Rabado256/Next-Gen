@@ -2,7 +2,6 @@ require('dotenv').config();
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { getFirestore } = require('./firebase-admin');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -10,16 +9,17 @@ const ROOT = __dirname;
 // ── Auto-seed on first launch ─────────────────────────────────
 (async () => {
   try {
-    const db = getFirestore();
-    const snap = await db.collection('destinations').get();
-    if (snap.empty) {
+    const { getDb } = require('./supabase-admin');
+    const db = getDb();
+    const { data } = await db.from('destinations').select('id').limit(1);
+    if (!data || data.length === 0) {
       console.log('[Seed] No destinations found — running seed...');
       require('./scripts/seed');
     } else {
-      console.log(`[Seed] ${snap.size} destinations already present, skipping.`);
+      console.log(`[Seed] Destinations already present, skipping.`);
     }
   } catch (e) {
-    console.log('[Seed] Skipped (Firebase Admin not configured or offline):', e.message);
+    console.log('[Seed] Skipped (Supabase Admin not configured or offline):', e.message);
   }
 })();
 // ──────────────────────────────────────────────────────────────
@@ -76,12 +76,8 @@ async function handleAPI(req, res) {
   if (url === '/api/config' && req.method === 'GET') {
     json(res, 200, {
       paystack_public_key: process.env.PAYSTACK_PUBLIC_KEY || '',
-      firebase_api_key: process.env.FIREBASE_API_KEY || '',
-      firebase_auth_domain: process.env.FIREBASE_AUTH_DOMAIN || '',
-      firebase_project_id: process.env.FIREBASE_PROJECT_ID || '',
-      firebase_storage_bucket: process.env.FIREBASE_STORAGE_BUCKET || '',
-      firebase_messaging_sender_id: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
-      firebase_app_id: process.env.FIREBASE_APP_ID || ''
+      supabase_url: process.env.SUPABASE_URL || '',
+      supabase_anon_key: process.env.SUPABASE_ANON_KEY || ''
     });
     return true;
   }
@@ -91,7 +87,7 @@ async function handleAPI(req, res) {
     return invokeServerless('paystack-verify.js', 'Paystack', req, res);
   }
 
-  // POST /api/confirm-booking — saves booking to Firestore after payment
+  // POST /api/confirm-booking — saves booking to Supabase after payment
   if (url === '/api/confirm-booking' && req.method === 'POST') {
     return invokeServerless('confirm-booking.js', 'Booking', req, res);
   }
@@ -101,7 +97,7 @@ async function handleAPI(req, res) {
     return invokeServerless('lookup-booking.js', 'Booking', req, res);
   }
 
-  // POST /api/export-data — admin-only full data export (service-account fetch)
+  // POST /api/export-data — admin-only full data export (service-role fetch)
   if (url === '/api/export-data' && req.method === 'POST') {
     return invokeServerless('export-data.js', 'Export', req, res);
   }

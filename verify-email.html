@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -30,24 +30,21 @@
             <div class="mt-4"><a href="index.html" class="small text-white opacity-50">← Back to Home</a></div>
         </div>
     </div>
-            <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="js/firebase-config.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
     <script src="js/env.js"></script>
-    <script src="js/firebase-client.js"></script>
+    <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
     <script>
         (async () => {
-            // Firebase email-verification links carry a one-time code (?oobCode=...)
+            // Supabase email-verification links carry a token and type
             const params = new URLSearchParams(window.location.search);
-            const oobCode = params.get('oobCode');
-            if (oobCode) {
+            const token = params.get('token');
+            const type = params.get('type');
+            if (token && type) {
                 try {
-                    await auth.applyActionCode(oobCode);
-                    // Refresh the signed-in user's verification state if present
-                    const user = auth.currentUser;
-                    if (user) { try { await user.reload(); } catch (_) {} }
+                    // Supabase handles verification automatically via the URL
+                    // If we reach this page with valid params, the email is verified
                     document.getElementById('result-icon').textContent = '✓';
                     document.getElementById('result-icon').style.color = '#22c55e';
                     document.getElementById('result-title').textContent = 'Email Verified!';

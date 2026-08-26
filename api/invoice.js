@@ -1,14 +1,12 @@
 require('dotenv').config();
+const { getDb } = require('../supabase-admin');
 
 function readBody(req) {
   if (req.body && typeof req.body === 'object') return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
     let raw = '';
     req.on('data', (chunk) => { raw += chunk; if (raw.length > 1e6) req.destroy(); });
-    req.on('end', () => {
-      try { resolve(JSON.parse(raw || '{}')); }
-      catch (e) { reject(e); }
-    });
+    req.on('end', () => { try { resolve(JSON.parse(raw || '{}')); } catch (e) { reject(e); } });
     req.on('error', reject);
   });
 }
@@ -24,9 +22,7 @@ function queryParams(req) {
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
-  return String(str).replace(/[&<>"']/g, ch => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[ch]);
+  return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 }
 
 function parseSpecialRequests(b) {
@@ -46,7 +42,6 @@ function renderReceipt(b) {
   const statusBg = status === 'confirmed' ? '#d4edda' : status === 'pending' ? '#fff3cd' : status === 'cancelled' ? '#f8d7da' : '#cfe2ff';
   const paid = b.payment_id ? true : false;
 
-  // Service lines — pull flight/hotel/package detail from special_requests
   const lines = [];
   if (b.doc_type === 'flight') {
     lines.push([escapeHtml(sr.airline || b.dest_id || 'Airline'), escapeHtml((sr.flight_number || ''))]);
@@ -149,12 +144,6 @@ function renderReceipt(b) {
 </html>`;
 }
 
-/**
- * GET /api/invoice?reference=XXXX&email=optional
- * POST /api/invoice  { reference, email }
- * Renders a print-friendly receipt/confirmation page for a booking.
- * Service-role lookup so guest bookings (no user_id) are findable.
- */
 module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -171,7 +160,6 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // Public endpoint keyed by booking reference — rate limit to blunt brute-force.
   const { allow } = require('./_rate-limit');
   const { allowed, retryAfter } = allow(req);
   if (!allowed) {
@@ -194,18 +182,15 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const db = require('../firebase-admin').getFirestore();
-
-    const snap = await db.collection('bookings')
-      .where('reference', '==', ref)
-      .limit(1)
-      .get();
-    if (snap.empty) {
+    const db = getDb();
+    const { data: bookings, error } = await db.from('bookings').select('*').eq('reference', ref).limit(1);
+    if (error) throw error;
+    if (!bookings || bookings.length === 0) {
       res.statusCode = 404;
       res.end('Booking not found for that reference code.');
       return;
     }
-    const booking = Object.assign({ id: snap.docs[0].id }, snap.docs[0].data());
+    const booking = bookings[0];
     if (email) {
       const guestEmail = String(booking.guest_email || '').trim().toLowerCase();
       if (guestEmail && guestEmail !== email) {

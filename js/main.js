@@ -11,7 +11,7 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // Initialize everything once the DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    // Restore Firebase auth session
+    // Restore Supabase auth session
     await api.syncSession();
 
     // ==========================================
@@ -455,18 +455,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         try {
-            const user = auth.currentUser;
-            if (!user) throw new Error('Not authenticated');
+            if (!supabaseClient) throw new Error('Not authenticated');
+            // Re-authenticate by signing in again with current password
             const currentPass = document.getElementById('pfl-current-password').value;
-            try {
-                const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPass);
-                await user.reauthenticateWithCredential(cred);
-            } catch (reauthErr) {
+            const user = JSON.parse(localStorage.getItem('nextgen_user') || '{}');
+            if (!user.email) throw new Error('Not authenticated');
+            const { error: reauthErr } = await supabaseClient.auth.signInWithPassword({
+                email: user.email,
+                password: currentPass
+            });
+            if (reauthErr) {
                 errEl.textContent = 'Current password is incorrect';
                 errEl.style.display = 'block';
                 return;
             }
-            await user.updatePassword(newPass);
+            // Update to new password
+            const { error: updateErr } = await supabaseClient.auth.updateUser({ password: newPass });
+            if (updateErr) throw updateErr;
             bootstrap.Modal.getInstance(document.getElementById('password-modal')).hide();
             document.getElementById('pfl-password-form').reset();
             showPflAlert('Password updated successfully');
@@ -477,7 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Logout — await the session teardown before leaving the page, otherwise
-    // the reload can race ahead of Firebase clearing its persisted session and
+    // the reload can race ahead of Supabase clearing its persisted session and
     // the user gets logged straight back in.
     document.getElementById('pfl-btn-logout')?.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -571,38 +576,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Google OAuth sign-in
+    // Google OAuth sign-in (Supabase)
     const googleLoginBtn = document.getElementById('google-login-btn');
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
             googleLoginBtn.disabled = true;
             googleLoginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Connecting...';
             try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-                const userData = {
-                    id: user.uid,
-                    email: user.email,
-                    name: user.displayName || (user.email || '').split('@')[0],
-                    is_admin: false,
-                    email_verified: !!user.emailVerified
-                };
-                localStorage.setItem('nextgen_user', JSON.stringify(userData));
-                try { await db.collection('profiles').doc(user.uid).set({
-                    id: user.uid,
-                    email: user.email,
-                    name: userData.name,
-                    is_admin: false,
-                    avatar_url: user.photoURL || '',
-                    created_at: new Date().toISOString()
-                }, { merge: true }); } catch (_) {}
-                api.setToken(await user.getIdToken());
-                updateAuthUI();
-                const modalEl = document.getElementById('authModal');
-                if (modalEl) bootstrap.Modal.getInstance(modalEl)?.hide();
-                googleLoginBtn.disabled = false;
-                googleLoginBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34A853" d="M12.255 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.515 21.3 7.565 24 12.255 24z"/><path fill="#FBBC05" d="M5.525 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62h-3.98a11.86 11.86 0 0 0 0 10.76l3.98-3.09z"/><path fill="#EA4335" d="M12.255 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C18.205 1.19 15.495 0 12.255 0c-4.69 0-8.74 2.7-10.71 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/></svg> Continue with Google';
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.origin + window.location.pathname }
+                });
+                if (error) throw error;
+                // OAuth redirects, so UI update happens on next page load via syncSession
             } catch (err) {
                 showAuthError(authLogin, friendlyAuthError ? friendlyAuthError(err) : (err.message || 'Google sign-in failed'));
                 googleLoginBtn.disabled = false;

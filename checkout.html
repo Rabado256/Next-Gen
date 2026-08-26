@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -538,12 +538,10 @@
         </div>
     </footer>
 
-            <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="js/firebase-config.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
     <script src="js/env.js"></script>
-    <script src="js/firebase-client.js"></script>
+    <script src="js/supabase-client.js"></script>
 <script src="js/api.js"></script>
     <script src="js/currency.js"></script>
     <script src="js/extras.js"></script>
@@ -1225,7 +1223,7 @@
             if (chargeAmountEl) chargeAmountEl.textContent = formatNGN((await usdToNgnKobo(totalAmount)) / 100);
             const errEl = document.getElementById('paystack-error');
             if (!paystackKey || paystackKey.includes('REPLACE_ME') || paystackKey.includes('xxxx')) {
-                errEl.textContent = 'Paystack is not configured yet — bookings will be saved without a live charge. Add your PAYSTACK_PUBLIC_KEY to js/firebase-config.js when ready.';
+                errEl.textContent = 'Paystack is not configured yet — bookings will be saved without a live charge. Add your PAYSTACK_PUBLIC_KEY to js/supabase-config.js when ready.';
                 errEl.style.display = 'block';
             } else {
                 errEl.style.display = 'none';

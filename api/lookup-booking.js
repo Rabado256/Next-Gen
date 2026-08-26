@@ -1,7 +1,6 @@
 require('dotenv').config();
+const { getDb } = require('../supabase-admin');
 
-// Mask sensitive PII so a booking can't be pulled in full by a reference code
-// alone. Only a supplied matching email unlocks the raw values.
 function maskValue(v) {
   const s = String(v || '');
   if (!s) return '';
@@ -22,10 +21,7 @@ function readBody(req) {
   return new Promise((resolve, reject) => {
     let raw = '';
     req.on('data', (chunk) => { raw += chunk; if (raw.length > 1e6) req.destroy(); });
-    req.on('end', () => {
-      try { resolve(JSON.parse(raw || '{}')); }
-      catch (e) { reject(e); }
-    });
+    req.on('end', () => { try { resolve(JSON.parse(raw || '{}')); } catch (e) { reject(e); } });
     req.on('error', reject);
   });
 }
@@ -34,18 +30,10 @@ module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');  if (req.method === 'OPTIONS') {
-    res.statusCode = 204;
-    res.end();
-    return;
-  }
-  if (req.method !== 'POST') {
-    res.statusCode = 405;
-    res.end(JSON.stringify({ error: 'Method not allowed' }));
-    return;
-  }
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
+  if (req.method !== 'POST') { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); return; }
 
-  // Public endpoint keyed by booking reference — rate limit to blunt brute-force.
   const { allow } = require('./_rate-limit');
   const { allowed, retryAfter } = allow(req);
   if (!allowed) {
@@ -64,20 +52,15 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const db = require('../firebase-admin').getFirestore();
-
-    // Reference + optional email check so a booking can't be pulled by an
-    // unguessable code alone when an email is supplied
-    const snap = await db.collection('bookings')
-      .where('reference', '==', ref)
-      .limit(1)
-      .get();
-    if (snap.empty) {
+    const db = getDb();
+    const { data: bookings, error } = await db.from('bookings').select('*').eq('reference', ref).limit(1);
+    if (error) throw error;
+    if (!bookings || bookings.length === 0) {
       res.statusCode = 404;
       res.end(JSON.stringify({ error: 'Booking not found. Please check your reference code.' }));
       return;
     }
-    const data = Object.assign({ id: snap.docs[0].id }, snap.docs[0].data());
+    const data = bookings[0];
     if (body.email) {
       const guestEmail = String(data.guest_email || '').trim().toLowerCase();
       const providedEmail = String(body.email).trim().toLowerCase();
@@ -88,8 +71,6 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Full PII only when the caller proves ownership by supplying the matching
-    // booking email. Otherwise mask passport, ID card, phone and email.
     const isOwner = !!(body.email && data.guest_email &&
       String(data.guest_email).trim().toLowerCase() === String(body.email).trim().toLowerCase());
     const booking = isOwner ? data : {

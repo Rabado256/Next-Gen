@@ -7,14 +7,13 @@
  * Usage:
  *   node scripts/seed.js
  *
- * Requires .env with Firebase Admin credentials (see firebase-admin.js):
- *   FIREBASE_SERVICE_ACCOUNT (JSON), GOOGLE_APPLICATION_CREDENTIALS (path),
- *   or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY.
+ * Requires .env with Supabase Admin credentials:
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  *   Plus ADMIN_EMAIL / ADMIN_PASSWORD (and optional ADMIN_NAME).
  */
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
-const { getAdmin, getFirestore } = require('../firebase-admin');
+const { getDb, fetchAll } = require('../supabase-admin');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@nextgen.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123!';
@@ -23,36 +22,52 @@ const ADMIN_NAME = process.env.ADMIN_NAME || 'Admin';
 let seeded = 0;
 
 async function seed() {
-  const admin = getAdmin();
-  const db = getFirestore();
+  const db = getDb();
   console.log('=== NextGen Seed ===\n');
 
   // ---- 1. Admin user ----
   console.log('[1/4] Admin user...');
   let adminId = null;
   try {
-    const user = await admin.auth().getUserByEmail(ADMIN_EMAIL);
-    adminId = user.uid;
-    console.log('  Already exists:', ADMIN_EMAIL);
-  } catch (_) {
-    const created = await admin.auth().createUser({
-      email: ADMIN_EMAIL,
-      password: ADMIN_PASSWORD,
-      displayName: ADMIN_NAME
-    });
-    adminId = created.uid;
-    console.log('  Created user:', ADMIN_EMAIL);
-    seeded++;
+    // Check if admin profile already exists
+    const existing = await db.from('profiles').select('id').eq('email', ADMIN_EMAIL).limit(1);
+    if (existing.data && existing.data.length > 0) {
+      adminId = existing.data[0].id;
+      console.log('  Already exists:', ADMIN_EMAIL);
+    } else {
+      // Create user via Supabase Auth admin
+      const { data, error } = await db.auth.admin.createUser({
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        email_confirm: true,
+        user_metadata: { name: ADMIN_NAME }
+      });
+      if (error) throw error;
+      adminId = data.user.id;
+      console.log('  Created user:', ADMIN_EMAIL);
+      seeded++;
+    }
+  } catch (e) {
+    console.log('  User creation note:', e.message);
+    // Try to find existing user
+    try {
+      const { data: users } = await db.auth.admin.listUsers();
+      const found = users?.users?.find(u => u.email === ADMIN_EMAIL);
+      if (found) adminId = found.id;
+    } catch (_) {}
   }
-  await db.collection('profiles').doc(adminId).set({
-    id: adminId,
-    email: ADMIN_EMAIL,
-    name: ADMIN_NAME,
-    is_admin: true,
-    country: 'Global',
-    created_at: new Date().toISOString()
-  }, { merge: true });
-  console.log('  Admin flag ensured');
+
+  if (adminId) {
+    await db.from('profiles').upsert({
+      id: adminId,
+      email: ADMIN_EMAIL,
+      name: ADMIN_NAME,
+      is_admin: true,
+      country: 'Global',
+      created_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+    console.log('  Admin flag ensured');
+  }
 
   // ---- 2. Sample destinations ----
   console.log('\n[2/4] Sample destinations...');
@@ -62,11 +77,12 @@ async function seed() {
     { id: 'bali', title: 'Bali Temple', edition: 'Edition 03 // Ubud', price: 3800, country: 'Indonesia', vibe: 'solo', description: 'Rice terraces, sacred temples, and the island of the gods.', img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800' }
   ];
   for (const d of destinations) {
-    await db.collection('destinations').doc(d.id).set({
+    await db.from('destinations').upsert({
       id: d.id,
       ...d,
+      is_active: true,
       created_at: new Date().toISOString()
-    }, { merge: true });
+    }, { onConflict: 'id' });
     seeded++;
   }
   console.log(`  ${destinations.length} destinations synced`);
@@ -79,25 +95,23 @@ async function seed() {
     { from_location: 'Dubai', to_location: 'Bali Temple', destination_id: 'bali', departure_date: '2026-11-10', departure_time: '10:00', max_capacity: 25, booked_count: 8, status: 'active' }
   ];
   for (const t of trips) {
-    const id = `trip-${t.destination_id}-${t.departure_date}`;
-    await db.collection('trips').doc(id).set({
-      id,
+    await db.from('trips').upsert({
       ...t,
       created_at: new Date().toISOString()
-    }, { merge: true });
+    }, { onConflict: 'id' });
     seeded++;
   }
   console.log(`  ${trips.length} trips synced`);
 
   // ---- 4. Verify ----
   console.log('\n[4/4] Verification...');
-  const destCount = (await db.collection('destinations').get()).size;
-  const tripCount = (await db.collection('trips').get()).size;
-  console.log(`  Destinations: ${destCount}`);
-  console.log(`  Trips: ${tripCount}`);
+  const { data: destCount } = await db.from('destinations').select('id');
+  const { data: tripCount } = await db.from('trips').select('id');
+  console.log(`  Destinations: ${(destCount || []).length}`);
+  console.log(`  Trips: ${(tripCount || []).length}`);
   console.log(`  Admin: ${ADMIN_EMAIL}`);
 
   console.log(`\nSeeded ${seeded} new records. Done.`);
 }
 
-seed().catch(err => { console.error('Seed failed:', err); process.exit(1); });
+seed().catch(err => { console.error('Seed failed:', err.message); process.exit(1); });

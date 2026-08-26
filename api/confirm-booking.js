@@ -1,8 +1,7 @@
 require('dotenv').config();
-const { getFirestore, userIdFromRequest } = require('../firebase-admin');
+const { getDb, userIdFromRequest, insertRow } = require('../supabase-admin');
 
 function readBody(req) {
-  // Support a pre-parsed body (e.g. when invoked from server.js in dev)
   if (req.body && typeof req.body === 'object') return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
     let raw = '';
@@ -15,8 +14,7 @@ function readBody(req) {
   });
 }
 
-// Best-effort confirmation email via Resend's REST API. No-op unless
-// RESEND_API_KEY is configured, so the booking is never blocked by email.
+// Best-effort confirmation email via Resend's REST API
 async function sendConfirmationEmail(booking) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM || 'NextGen Travel <bookings@nextgentravel.com>';
@@ -39,16 +37,8 @@ async function sendConfirmationEmail(booking) {
   try {
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + apiKey
-      },
-      body: JSON.stringify({
-        from,
-        to: booking.guest_email,
-        subject: 'Your NextGen Travel booking is confirmed (' + (booking.reference || '') + ')',
-        html
-      })
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
+      body: JSON.stringify({ from, to: booking.guest_email, subject: 'Your NextGen Travel booking is confirmed (' + (booking.reference || '') + ')', html })
     });
     if (!resp.ok) console.warn('[Email] Resend returned ' + resp.status);
   } catch (e) {
@@ -58,9 +48,7 @@ async function sendConfirmationEmail(booking) {
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
-  return String(str).replace(/[&<>"']/g, ch => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[ch]);
+  return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 }
 
 function buildBookingRow(type, b) {
@@ -77,8 +65,6 @@ function buildBookingRow(type, b) {
     total_amount: amount,
     currency: b.currency || 'usd',
     status: 'confirmed',
-    // State machine: every booking starts confirmed (it was created after
-    // payment or as a valid booking).
     confirmed_at: nowIso,
     status_history: [{ status: 'confirmed', at: nowIso }],
     payment_id: b.payment_id || b.payment_intent || '',
@@ -94,62 +80,42 @@ function buildBookingRow(type, b) {
     case 'flight':
       base.dest_id = b.airline || 'Flight';
       base.to_location = b.to_location || b.flight_number || '';
-      base.special_requests = {
-        flight_number: b.flight_number || '',
-        departure_time: b.departure_time || '',
-        arrival_time: b.arrival_time || '',
-        duration: b.duration || '',
-        offer_id: b.offer_id || '',
-        payment_intent: b.payment_intent || '',
-        duffel_order_id: b.duffel_order_id || '',
-        ...(b.extras ? { extras: b.extras } : {})
-      };
+      base.special_requests = JSON.stringify({
+        flight_number: b.flight_number || '', departure_time: b.departure_time || '',
+        arrival_time: b.arrival_time || '', duration: b.duration || '',
+        offer_id: b.offer_id || '', payment_intent: b.payment_intent || '',
+        duffel_order_id: b.duffel_order_id || '', ...(b.extras ? { extras: b.extras } : {})
+      });
       break;
-
     case 'hotel':
       base.dest_id = b.hotel_name || 'Hotel';
       base.to_location = b.hotel_name || b.hotel_city || '';
-      base.special_requests = {
-        hotel_name: b.hotel_name || '',
-        hotel_city: b.hotel_city || '',
-        hotel_country: b.hotel_country || '',
-        room_type: b.room_type || '',
-        nights: b.nights || 1,
-        rooms: b.rooms || 1,
-        check_in: b.check_in || '',
-        check_out: b.check_out || '',
-        payment_intent: b.payment_intent || '',
-        ...(b.extras ? { extras: b.extras } : {})
-      };
+      base.special_requests = JSON.stringify({
+        hotel_name: b.hotel_name || '', hotel_city: b.hotel_city || '',
+        hotel_country: b.hotel_country || '', room_type: b.room_type || '',
+        nights: b.nights || 1, rooms: b.rooms || 1,
+        check_in: b.check_in || '', check_out: b.check_out || '',
+        payment_intent: b.payment_intent || '', ...(b.extras ? { extras: b.extras } : {})
+      });
       break;
-
     case 'package':
       base.dest_id = b.package_name || 'Package';
       base.to_location = b.package_dest || '';
-      base.special_requests = {
-        package_id: b.package_id || '',
-        package_dest: b.package_dest || '',
-        package_country: b.package_country || '',
-        duration: b.duration || 0,
-        nights: b.nights || 0,
-        hotel: b.hotel || '',
-        room_type: b.room_type || '',
-        includes: b.includes || [],
-        payment_intent: b.payment_intent || '',
+      base.special_requests = JSON.stringify({
+        package_id: b.package_id || '', package_dest: b.package_dest || '',
+        package_country: b.package_country || '', duration: b.duration || 0,
+        nights: b.nights || 0, hotel: b.hotel || '', room_type: b.room_type || '',
+        includes: b.includes || [], payment_intent: b.payment_intent || '',
         ...(b.extras ? { extras: b.extras } : {})
-      };
+      });
       break;
-
     case 'visa':
       base.dest_id = 'Visa';
-      base.special_requests = {
-        visa_type: b.visa_type || '',
-        visa_label: b.visa_label || '',
-        payment_intent: b.payment_intent || '',
-        ...(b.extras ? { extras: b.extras } : {})
-      };
+      base.special_requests = JSON.stringify({
+        visa_type: b.visa_type || '', visa_label: b.visa_label || '',
+        payment_intent: b.payment_intent || '', ...(b.extras ? { extras: b.extras } : {})
+      });
       break;
-
     case 'general':
     default:
       base.passport = b.passport || '';
@@ -173,33 +139,22 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 204;
-    res.end();
-    return;
-  }
-  if (req.method !== 'POST') {
-    res.statusCode = 405;
-    res.end(JSON.stringify({ error: 'Method not allowed' }));
-    return;
-  }
+  if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
+  if (req.method !== 'POST') { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); return; }
 
   try {
     const body = await readBody(req);
-    const db = getFirestore();
-
+    const db = getDb();
     const user_id = await userIdFromRequest(req);
 
     const bookingType = ['flight', 'hotel', 'package', 'visa'].includes(body.booking_type) ? body.booking_type : 'general';
     const row = buildBookingRow(bookingType, body);
     if (user_id) row.user_id = user_id;
 
-    const ref = await db.collection('bookings').add(row);
-    const saved = Object.assign({ id: ref.id }, row);
+    const { data: saved, error } = await db.from('bookings').insert(row).select().single();
+    if (error) throw error;
 
-    // Fire-and-forget confirmation email (no-op unless RESEND_API_KEY is set)
     sendConfirmationEmail(saved);
-
     res.statusCode = 200;
     res.end(JSON.stringify({ success: true, booking: saved }));
   } catch (e) {

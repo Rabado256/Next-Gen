@@ -1,15 +1,15 @@
 /* ============================================
    NextGen Travel — Runtime environment bootstrap
-   Resolves Firebase config from the serverless
+   Resolves Supabase config from the serverless
    /api/config endpoint (reads Vercel env vars),
-   falling back to the local js/firebase-config.js
+   falling back to the local js/supabase-config.js
    for pure-static local dev.
-   Must run AFTER js/firebase-config.js and BEFORE
-   js/firebase-client.js.
+   Must run AFTER js/supabase-config.js and BEFORE
+   js/supabase-client.js.
    ============================================ */
 (function () {
   function merge(obj) {
-    window.__FIREBASE_CONFIG__ = Object.assign({}, window.__FIREBASE_CONFIG__, obj);
+    window.__SUPABASE_CONFIG__ = Object.assign({}, window.__SUPABASE_CONFIG__, obj);
   }
   try {
     var xhr = new XMLHttpRequest();
@@ -18,15 +18,12 @@
     if (xhr.status >= 200 && xhr.status < 300) {
       var data = JSON.parse(xhr.responseText || '{}');
       var cfg = {};
-      if (data.firebase_api_key) cfg.apiKey = data.firebase_api_key;
-      if (data.firebase_auth_domain) cfg.authDomain = data.firebase_auth_domain;
-      if (data.firebase_project_id) cfg.projectId = data.firebase_project_id;
-      if (data.firebase_storage_bucket) cfg.storageBucket = data.firebase_storage_bucket;
-      if (data.firebase_messaging_sender_id) cfg.messagingSenderId = data.firebase_messaging_sender_id;
-      if (data.firebase_app_id) cfg.appId = data.firebase_app_id;
+      if (data.supabase_url) cfg.url = data.supabase_url;
+      if (data.supabase_anon_key) cfg.anonKey = data.supabase_anon_key;
+      if (data.paystack_public_key) window.__PAYSTACK_PUBLIC_KEY__ = data.paystack_public_key;
       if (Object.keys(cfg).length) merge(cfg);
     }
   } catch (e) {
-    // /api/config unavailable (e.g. static-only serve) — js/firebase-config.js wins.
+    // /api/config unavailable (e.g. static-only serve) — js/supabase-config.js wins.
   }
 })();
